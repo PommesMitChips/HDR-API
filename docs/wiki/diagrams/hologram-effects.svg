@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="820" viewBox="0 0 1120 820" role="img" aria-labelledby="title desc">
+  <title id="title">Retained holograms, animated by each client</title>
+  <desc id="desc">A caller defines artwork and effect settings once. Each viewing client samples a shared animation clock and draws the original artwork, depth copies, cosmetic particles and projector rays within its remaining budget. These geometric effects do not create physical volumetric lighting.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#46747b"/></marker>
+    <linearGradient id="beam" x1="0" y1="1" x2="0" y2="0"><stop stop-color="#00bdc8" stop-opacity=".35"/><stop offset="1" stop-color="#00bdc8" stop-opacity="0"/></linearGradient>
+    <g id="ship" fill="#dff7f6" stroke="#16858c" stroke-width="2"><path d="M0-58 19-26 16 7 44 28 43 43 12 26 12 47-12 47-12 26-43 43-44 28-16 7-19-26Z"/><path d="M0-32 9-13 9 14-9 14-9-13Z" fill="#f3c36b"/><path d="M-34 31-15 15M34 31 15 15M-11 37H11" fill="none"/></g>
+  </defs>
+  <style>
+    text{font-family:Segoe UI,Arial,sans-serif;fill:#243541}.heading{font-size:28px;font-weight:700}.sub{font-size:15px;fill:#526573}.label{font-size:19px;font-weight:600}.body{font-size:15px}.small{font-size:13px;fill:#526573}.card{stroke-width:1.5}.teal{fill:#e3f0ef;stroke:#568b8b}.gold{fill:#fbf0d9;stroke:#b59657}.neutral{fill:#fff;stroke:#adbcc4}.flow{fill:none;stroke:#46747b;stroke-width:2.5;marker-end:url(#arrow)}.divider{stroke:#c4d0d7;stroke-width:1.3;stroke-dasharray:5 5}
+  </style>
+  <rect width="1120" height="820" rx="18" fill="#f4f7f9"/>
+  <text x="40" y="52" class="heading">Retained holograms, animated by each client</text>
+  <text x="40" y="82" class="sub">SVG, text and geometry keep their authored data; effects are a separate presentation layer.</text>
+
+  <rect x="40" y="124" width="310" height="208" rx="14" class="card teal"/>
+  <text x="62" y="158" class="label">1 · Declare once</text>
+  <text x="62" y="192" class="body">Artwork + named object</text>
+  <text x="62" y="220" class="body">Effect parameters + deterministic seed</text>
+  <text x="62" y="248" class="body">Transition direction + start time</text>
+  <text x="62" y="289" class="small">PB: authorized LCD / Console / Projector</text>
+  <text x="62" y="312" class="small">Mod: owner-scoped HUD / world context</text>
+  <path d="M353 224H397" class="flow"/>
+
+  <rect x="405" y="124" width="310" height="208" rx="14" class="card teal"/>
+  <text x="427" y="158" class="label">2 · Sample the clock</text>
+  <text x="427" y="192" class="body">Flicker: smooth seeded changes</text>
+  <text x="427" y="220" class="body">Refresh bar: position + brightness</text>
+  <text x="427" y="248" class="body">Fade / wipe / dissolve progression</text>
+  <text x="427" y="289" class="small">No repeated PB frame uploads</text>
+  <text x="427" y="312" class="small">Hidden content continues its timeline</text>
+  <path d="M718 224H762" class="flow"/>
+
+  <rect x="770" y="124" width="310" height="208" rx="14" class="card gold"/>
+  <text x="792" y="158" class="label">3 · Draw bounded detail</text>
+  <text x="792" y="192" class="body">Original + clipped refresh bar</text>
+  <text x="792" y="220" class="body">Then copies / particles / rays</text>
+  <text x="792" y="248" class="body">Respect clipping and caller ownership</text>
+  <text x="792" y="289" class="small">Per-object effect ceiling + shared budget</text>
+  <text x="792" y="312" class="small">Clipping can trim cosmetic detail</text>
+
+  <rect x="40" y="363" width="500" height="356" rx="14" class="card neutral"/>
+  <text x="62" y="398" class="label">A flat SVG with a holographic body</text>
+  <path d="M281 662 189 453 397 495Z" fill="url(#beam)"/>
+  <path d="M281 662 237 478M281 662 331 505M281 662 355 531" stroke="#26b0b6" stroke-width="2" opacity=".36"/>
+  <use href="#ship" transform="translate(332 494) rotate(-12) scale(1.22)" opacity=".15"/>
+  <use href="#ship" transform="translate(312 489) rotate(-12) scale(1.22)" opacity=".27"/>
+  <use href="#ship" transform="translate(291 484) rotate(-12) scale(1.22)"/>
+  <path d="M217 495 342 469" stroke="#08c0cb" stroke-width="10" opacity=".32"/>
+  <circle cx="204" cy="520" r="3" fill="#1ba8b0"/><circle cx="356" cy="554" r="2.5" fill="#1ba8b0"/><circle cx="242" cy="421" r="2" fill="#dc9c32"/><circle cx="391" cy="483" r="3" fill="#1ba8b0"/><circle cx="259" cy="575" r="2" fill="#1ba8b0"/>
+  <ellipse cx="281" cy="665" rx="67" ry="16" fill="#e3f0ef" stroke="#16858c" stroke-width="2"/>
+  <ellipse cx="281" cy="660" rx="33" ry="7" fill="#c8e8e7" stroke="#16858c"/>
+  <text x="66" y="452" class="small">Local Z ghost copies</text><path d="M184 450 240 459" stroke="#6d8990" fill="none"/>
+  <text x="65" y="611" class="small">Cosmetic particles</text><path d="M188 607 252 577" stroke="#6d8990" fill="none"/>
+  <text x="359" y="640" class="small">Emitter rays</text><path d="M356 629 323 589" stroke="#6d8990" fill="none"/>
+  <text x="62" y="700" class="small">Concept drawing: geometric glow; no world-light scattering.</text>
+
+  <rect x="570" y="363" width="510" height="156" rx="14" class="card teal"/>
+  <text x="592" y="398" class="label">Compose with existing HDR features</text>
+  <text x="592" y="432" class="body">Object pose → map view → anchor transform</text>
+  <text x="592" y="460" class="body">Flat vector: depth / rays in world space</text>
+  <text x="592" y="488" class="body">Curved: raster artwork for spatial effects</text>
+
+  <rect x="570" y="543" width="510" height="176" rx="14" class="card gold"/>
+  <text x="592" y="579" class="label">Keep rendering and gameplay separate</text>
+  <text x="592" y="613" class="body">Particles have no collision or simulation entities</text>
+  <text x="592" y="641" class="body">Rays do not cast shadows or illuminate blocks</text>
+  <text x="592" y="669" class="body">Depth copies add parallax; they do not extrude a mesh</text>
+  <text x="592" y="697" class="small">Core vector effects need no native plugin; raster needs its uploader.</text>
+
+  <text x="40" y="768" class="body">Clear, remove, script retirement or mod-context disposal releases owned effect state.</text>
+  <text x="40" y="799" class="small">HDR API · special effects · illustrative geometry, not a captured game screenshot</text>
+</svg>

@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>HDRClientRenderer</AssemblyName>
+    <Version>0.9.13</Version>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GameBin Condition="'$(GameBin)' == ''">C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64</GameBin>
+    <HarmonyPath Condition="'$(HarmonyPath)' == ''">$(APPDATA)/Pulsar/Libraries/Interim/0Harmony.dll</HarmonyPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Source/*.cs" />
+    <Reference Include="0Harmony" HintPath="$(HarmonyPath)" Private="false" />
+    <Reference Include="Sandbox.Common" HintPath="$(GameBin)/Sandbox.Common.dll" Private="false" />
+    <Reference Include="Sandbox.Game" HintPath="$(GameBin)/Sandbox.Game.dll" Private="false" />
+    <Reference Include="Sandbox.Graphics" HintPath="$(GameBin)/Sandbox.Graphics.dll" Private="false" />
+    <Reference Include="SpaceEngineers.Game" HintPath="$(GameBin)/SpaceEngineers.Game.dll" Private="false" />
+    <Reference Include="VRage" HintPath="$(GameBin)/VRage.dll" Private="false" />
+    <Reference Include="VRage.Game" HintPath="$(GameBin)/VRage.Game.dll" Private="false" />
+    <Reference Include="VRage.Input" HintPath="$(GameBin)/VRage.Input.dll" Private="false" />
+    <Reference Include="VRage.Library" HintPath="$(GameBin)/VRage.Library.dll" Private="false" />
+    <Reference Include="VRage.Math" HintPath="$(GameBin)/VRage.Math.dll" Private="false" />
+    <Reference Include="VRage.Render" HintPath="$(GameBin)/VRage.Render.dll" Private="false" />
+  </ItemGroup>
+</Project>

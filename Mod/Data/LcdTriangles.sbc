@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+ <LCDTextures>
+  <LCDTextureDefinition><Id><TypeId>LCDTextureDefinition</TypeId><SubtypeId>HDRAPI_TriangleLeft</SubtypeId></Id><TexturePath>Textures\HDRAPI\TriangleLeft.dds</TexturePath><SpritePath>Textures\HDRAPI\TriangleLeft.dds</SpritePath></LCDTextureDefinition>
+  <LCDTextureDefinition><Id><TypeId>LCDTextureDefinition</TypeId><SubtypeId>HDRAPI_TriangleRight</SubtypeId></Id><TexturePath>Textures\HDRAPI\TriangleRight.dds</TexturePath><SpritePath>Textures\HDRAPI\TriangleRight.dds</SpritePath></LCDTextureDefinition>
+ </LCDTextures>
+</Definitions>

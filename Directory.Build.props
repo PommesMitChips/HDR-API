@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <GameBin Condition="'$(GameBin)' == ''">C:/Program Files (x86)/Steam/steamapps/common/SpaceEngineers/Bin64</GameBin>
+    <HarmonyPath Condition="'$(HarmonyPath)' == ''">$(APPDATA)/Pulsar/Libraries/Interim/0Harmony.dll</HarmonyPath>
+  </PropertyGroup>
+</Project>

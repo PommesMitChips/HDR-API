@@ -1,0 +1,275 @@
+﻿using System;
+using System.Collections.Generic;
+using VRageMath;
+using HudNodeHookData = VRage.MyTuple<
+	System.Func<object, int, object>, // 1 -  GetOrSetApiMemberFunc
+	System.Action, // 2 - InputDepthAction
+	System.Action, // 3 - InputAction
+	System.Action, // 4 - SizingAction
+	System.Action<bool>, // 5 - LayoutAction
+	System.Action // 6 - DrawAction
+>;
+using HudSpaceOriginFunc = System.Func<VRageMath.Vector3D>;
+
+namespace RichHudFramework
+{
+	namespace UI.Server
+	{
+		using static NodeConfigIndices;
+
+		public partial class HudMain
+		{
+			/// <summary>
+			/// Contains node configuration information required for updates
+			/// </summary>
+			public struct NodeState
+			{
+				public IReadOnlyList<uint> ParentConfig;
+				public uint[] Config;
+			}
+
+			public struct NodeHook<T>
+			{
+				/// <summary>
+				/// Callback to be invoked for a node on a given update stage
+				/// </summary>
+				public Action<T> Callback;
+
+				/// <summary>
+				/// Unique index corresponding to a NodeState. -1 if one is not assigned.
+				/// </summary>
+				public int NodeID;
+			}
+
+			public struct NodeHook
+			{
+				/// <summary>
+				/// Callback to be invoked for a node on a given update stage
+				/// </summary>
+				public Action Callback;
+
+				/// <summary>
+				/// Unique index corresponding to a NodeState. -1 if one is not assigned.
+				/// </summary>
+				public int NodeID;
+			}
+
+			/// <summary>
+			/// Contains callbacks for updating a UI node subtree
+			/// </summary>
+			public class NodeHooks
+			{
+				// Updates + node indices - -1 for no node data
+				public List<NodeHook> SizingActions;
+				public List<NodeHook<bool>> LayoutActions;
+				public List<NodeHook> DrawActions;
+				public List<NodeHook> InputDepthActions;
+				public List<NodeHook> InputActions;
+
+				public NodeHooks(int capacity)
+				{
+					SizingActions = new List<NodeHook>(capacity);
+					LayoutActions = new List<NodeHook<bool>>(capacity);
+					DrawActions = new List<NodeHook>(capacity);
+					InputDepthActions = new List<NodeHook>(capacity);
+					InputActions = new List<NodeHook>(capacity);
+				}
+
+				public void TrimExcess()
+				{
+					SizingActions.TrimExcess();
+					LayoutActions.TrimExcess();
+					DrawActions.TrimExcess();
+					InputDepthActions.TrimExcess();
+					InputActions.TrimExcess();
+				}
+
+				public void EnsureCapacity(int capacity)
+				{
+					SizingActions.EnsureCapacity(capacity);
+					LayoutActions.EnsureCapacity(capacity);
+					DrawActions.EnsureCapacity(capacity);
+					InputDepthActions.EnsureCapacity(capacity);
+					InputActions.EnsureCapacity(capacity);
+				}
+
+				public void Clear()
+				{
+					SizingActions.Clear();
+					LayoutActions.Clear();
+					DrawActions.Clear();
+					InputDepthActions.Clear();
+					InputActions.Clear();
+				}
+			}
+
+			public class FlatSubtree
+			{
+				/// <summary>
+				/// Set true if active, sorted members need to be rebuilt from inactive data
+				/// </summary>
+				public bool IsActiveStale;
+
+				/// <summary>
+				/// Returns the inner Z-sorting offset used for the subtree
+				/// </summary>
+				public byte InnerZLayer => (byte)((RootConfig?[FullZOffsetID] ?? GetLayerFuncOld()) >> 8);
+
+				/// <summary>
+				/// Configuration reference to subtree root
+				/// </summary>
+				public uint[] RootConfig;
+
+				/// <summary>
+				/// Legacy ZOffset delegate for subtree root
+				/// </summary>
+				public Func<ushort> GetLayerFuncOld;
+
+				/// <summary>
+				/// Delegate for retrieving the origin of the subtree in world space
+				/// </summary>
+				public HudSpaceOriginFunc GetOriginFunc;
+
+				/// <summary>
+				/// Reference to the tree client that owns the subtree
+				/// </summary>
+				public TreeClient Owner;
+
+				/// <summary>
+				/// Number of active UI nodes loaded in the subtree
+				/// </summary>
+				public int ActiveCount;
+
+				/// <summary>
+				/// Number of inactive UI nodes loaded in the subtree
+				/// </summary>
+				public int InactiveCount;
+
+				/// <summary>
+				/// Adaptive bias applied to increase the inactive element threshold required for 
+				/// pruning.
+				/// </summary>
+				public int InactiveTare;
+
+				/// <summary>
+				/// Tracks the last time the subtree was pruned or rebuilt
+				/// </summary>
+				public int PruneTick;
+
+				// Parallel with inactive data for vID 13+ - unused for vID 12 and older
+				public readonly List<NodeState> StateData;
+
+				public readonly FlatSubtreeData Inactive;
+				public readonly SortedSubtreeData Active;
+
+				public FlatSubtree(int capacity = 0)
+				{
+					StateData = new List<NodeState>(capacity);
+					Inactive = new FlatSubtreeData(capacity);
+					Active = new SortedSubtreeData(capacity);
+					IsActiveStale = true;
+				}
+
+				/// <summary>
+				/// Truncates the buffers to the given length
+				/// </summary>
+				public void TruncateInactive(int newLength)
+				{
+					if (newLength >= Inactive.OuterOffsets.Count)
+						return;
+
+					int start = newLength;
+					int count = Inactive.OuterOffsets.Count - newLength;
+
+					if (StateData.Count != 0)
+						StateData.RemoveRange(start, count);
+
+					Inactive.OuterOffsets.RemoveRange(start, count);
+					Inactive.HookData.RemoveRange(start, count);
+				}
+
+				public void Clear()
+				{			
+					IsActiveStale = true;
+					RootConfig = null;
+					GetLayerFuncOld = null;
+					GetOriginFunc = null;
+
+					StateData.Clear();
+					Inactive.Clear();
+					Active.Clear();
+					Owner = null;
+
+					ActiveCount = 0;
+					InactiveCount = 0;
+					PruneTick = 0;
+					InactiveTare = 0;
+				}
+
+				public void ResetCounters()
+				{
+					if (InactiveTare == 0)
+						InactiveTare = InactiveCount;
+
+					ActiveCount = 0;
+					InactiveCount = 0;
+				}
+			}
+
+			public class FlatSubtreeData
+			{
+				public List<byte> OuterOffsets; // Sorting only
+				public List<HudNodeHookData> HookData;
+
+				public FlatSubtreeData(int capacity = 0)
+				{
+					OuterOffsets = new List<byte>(capacity);
+					HookData = new List<HudNodeHookData>(capacity);
+				}
+
+				public void TrimExcess()
+				{
+					OuterOffsets.TrimExcess();
+					HookData.TrimExcess();
+				}
+
+				public void EnsureCapacity(int capacity)
+				{
+					OuterOffsets.EnsureCapacity(capacity);
+					HookData.EnsureCapacity(capacity);
+				}
+
+				public void Clear()
+				{
+					OuterOffsets.Clear();
+					HookData.Clear();
+				}
+			}
+
+			public class SortedSubtreeData
+			{
+				public NodeHooks Hooks;
+
+				public SortedSubtreeData(int capacity = 0)
+				{
+					Hooks = new NodeHooks(capacity);
+				}
+
+				public void TrimExcess()
+				{
+					Hooks.TrimExcess();
+				}
+
+				public void EnsureCapacity(int capacity)
+				{
+					Hooks.EnsureCapacity(capacity);
+				}
+
+				public void Clear()
+				{
+					Hooks.Clear();
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <GameBin Condition="'$(GameBin)' == ''">C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64</GameBin>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CodeAnalysis" HintPath="$(GameBin)/Microsoft.CodeAnalysis.dll" />
+    <Reference Include="Microsoft.CodeAnalysis.CSharp" HintPath="$(GameBin)/Microsoft.CodeAnalysis.CSharp.dll" />
+    <Reference Include="VRage.Math" HintPath="$(GameBin)/VRage.Math.dll" />
+    <Reference Include="VRage.Library" HintPath="$(GameBin)/VRage.Library.dll" />
+    <Reference Include="VRage" HintPath="$(GameBin)/VRage.dll" />
+    <Reference Include="Sandbox.Common" HintPath="$(GameBin)/Sandbox.Common.dll" />
+    <Reference Include="Sandbox.Game" HintPath="$(GameBin)/Sandbox.Game.dll" />
+    <Reference Include="SpaceEngineers.ObjectBuilders" HintPath="$(GameBin)/SpaceEngineers.ObjectBuilders.dll" />
+    <Reference Include="VRage.Game" HintPath="$(GameBin)/VRage.Game.dll" />
+    <Reference Include="VRage.Render" HintPath="$(GameBin)/VRage.Render.dll" />
+    <Reference Include="VRage.Input" HintPath="$(GameBin)/VRage.Input.dll" />
+    <Reference Include="ProtoBuf.Net.Core" HintPath="$(GameBin)/ProtoBuf.Net.Core.dll" />
+    <Reference Include="ProtoBuf.Net" HintPath="$(GameBin)/ProtoBuf.Net.dll" />
+    <Compile Include="../../Mod/Data/Scripts/HoloMap/*.cs" Link="Mod/%(Filename)%(Extension)" />
+    <Compile Include="../../Api/Mods/HdrModApi.cs" Link="Api/HdrModApi.cs" />
+  </ItemGroup>
+</Project>

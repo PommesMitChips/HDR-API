@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="Interop/**/*.cs" />
+    <Compile Remove="DirectCaptureBridges/**/*.cs" />
+    <Compile Include="../Source/RasterStore.cs" Link="RasterStore.cs" />
+    <Compile Include="../Source/LcdStore.cs" Link="LcdStore.cs" />
+    <Compile Include="../Source/CaptureIsolation.cs" Link="CaptureIsolation.cs" />
+    <Compile Include="../Source/TextureCopyQueue.cs" Link="TextureCopyQueue.cs" />
+    <Compile Include="../Source/CubeCaptureGuard.cs" Link="CubeCaptureGuard.cs" />
+    <Compile Include="../Source/PanoramaStore.cs" Link="PanoramaStore.cs" />
+    <Compile Include="../Source/PanoramaDemand.cs" Link="PanoramaDemand.cs" />
+    <Compile Include="../Source/PanoramaDensity.cs" Link="PanoramaDensity.cs" />
+    <Compile Include="../Source/PanoramaTile.cs" Link="PanoramaTile.cs" />
+    <Compile Include="../Source/ClientRenderSettings.cs" Link="ClientRenderSettings.cs" />
+    <Compile Include="../Source/ClientPixelBudget.cs" Link="ClientPixelBudget.cs" />
+    <Compile Include="../Source/PanoramaShader.cs" Link="PanoramaShader.cs" />
+    <Compile Include="../Source/PanoramaQueue.cs" Link="PanoramaQueue.cs" />
+    <Compile Include="../Source/DirectCameraCapturePolicy.cs" Link="DirectCameraCapturePolicy.cs" />
+  </ItemGroup>
+</Project>

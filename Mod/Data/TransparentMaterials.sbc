@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <TransparentMaterials>
+    <TransparentMaterial>
+      <Id><TypeId>TransparentMaterialDefinition</TypeId><SubtypeId>HoloMap_Fill</SubtypeId></Id>
+      <Texture>Textures\Particles\Square.dds</Texture>
+      <CanBeAffectedByOtherLights>false</CanBeAffectedByOtherLights>
+      <SoftParticleDistanceScale>0</SoftParticleDistanceScale>
+      <AlphaMistingEnable>false</AlphaMistingEnable>
+      <Reflectivity>0</Reflectivity>
+    </TransparentMaterial>
+    <TransparentMaterial>
+      <Id><TypeId>TransparentMaterialDefinition</TypeId><SubtypeId>HoloMap_Line</SubtypeId></Id>
+      <Texture>Textures\Particles\WeaponLaser.dds</Texture>
+      <CanBeAffectedByOtherLights>false</CanBeAffectedByOtherLights>
+      <SoftParticleDistanceScale>0</SoftParticleDistanceScale>
+      <AlphaMistingEnable>false</AlphaMistingEnable>
+      <Reflectivity>0</Reflectivity>
+    </TransparentMaterial>
+  </TransparentMaterials>
+</Definitions>

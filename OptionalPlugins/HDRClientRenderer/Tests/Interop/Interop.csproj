@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <UseAppHost>false</UseAppHost>
+    <GameBin Condition="'$(GameBin)' == ''">C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers\Bin64</GameBin>
+    <HarmonyPath Condition="'$(HarmonyPath)' == ''">$(APPDATA)/Pulsar/Libraries/Interim/0Harmony.dll</HarmonyPath>
+    <ClientDll Condition="'$(ClientDll)' == ''">../../artifacts/Interim/HDRClientRenderer.dll</ClientDll>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Source/CaptureIsolation.cs" Link="CaptureIsolation.cs" />
+    <Compile Include="../../Source/CameraLcdCompatibility.cs" Link="CameraLcdCompatibility.cs" />
+    <Compile Include="../../Source/NativeTextureCopy.cs" Link="NativeTextureCopy.cs" />
+    <Compile Include="../../Source/TextureCopyQueue.cs" Link="TextureCopyQueue.cs" />
+    <Compile Include="../../Source/PanoramaStore.cs" Link="PanoramaStore.cs" />
+    <Compile Include="../../Source/PanoramaGeneratedTarget.cs" Link="PanoramaGeneratedTarget.cs" />
+    <Compile Include="../../Source/PanoramaDemand.cs" Link="PanoramaDemand.cs" />
+    <Compile Include="../../Source/PanoramaDensity.cs" Link="PanoramaDensity.cs" />
+    <Compile Include="../../Source/PanoramaTile.cs" Link="PanoramaTile.cs" />
+    <Compile Include="../../Source/NativeRasterUpload.cs" Link="NativeRasterUpload.cs" />
+    <Compile Include="../../Source/RasterStore.cs" Link="RasterStore.cs" />
+    <Compile Include="../../Source/ClientRenderSettings.cs" Link="ClientRenderSettings.cs" />
+    <Compile Include="../../Source/ClientPixelBudget.cs" Link="ClientPixelBudget.cs" />
+    <Compile Include="../../Source/ClientPixelBudgetNative.cs" Link="ClientPixelBudgetNative.cs" />
+    <Compile Include="../../Source/PanoramaShader.cs" Link="PanoramaShader.cs" />
+    <Compile Include="../../Source/PanoramaQueue.cs" Link="PanoramaQueue.cs" />
+    <Compile Include="../../Source/NativePanoramaGpu.cs" Link="NativePanoramaGpu.cs" />
+    <Reference Include="0Harmony" HintPath="$(HarmonyPath)" />
+    <Reference Include="VRage.Render" HintPath="$(GameBin)/VRage.Render.dll" />
+    <Reference Include="VRage" HintPath="$(GameBin)/VRage.dll" />
+    <Reference Include="VRage.Library" HintPath="$(GameBin)/VRage.Library.dll" />
+    <Reference Include="VRage.Math" HintPath="$(GameBin)/VRage.Math.dll" />
+    <None Include="$(ClientDll)" Link="HDRClientRenderer.dll" CopyToOutputDirectory="Always" />
+  </ItemGroup>
+</Project>

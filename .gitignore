@@ -1,0 +1,13 @@
+**/bin/
+**/obj/
+**/artifacts/
+
+# Local IDE state and user-specific settings.
+.vs/
+.idea/
+*.user
+*.suo
+
+# Operating-system metadata.
+.DS_Store
+Thumbs.db
