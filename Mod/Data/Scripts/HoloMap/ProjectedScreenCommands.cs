@@ -23,7 +23,7 @@ namespace HoloMap
     string op=command==null?null:command.ToLowerInvariant();
     if(op=="target"||op=="finddisplay"||op=="findtarget"||op=="lcdgroup")context.ScreenId=null;
     if(op!=null&&(op.StartsWith("screen",StringComparison.Ordinal)||op=="sprites"))return ProjectedCommand(context,op,new DrawArgs(values));
-    if(context.ScreenId==null||op=="capabilities"||op=="plugin-status"||op=="effect-types")return DrawCommandCore(context,command,values);
+    if(context.ScreenId==null||op=="capabilities"||op=="plugin-status"||op=="effect-types"||op=="measure-text"||op=="geometry-cost")return DrawCommandCore(context,command,values);
     var screen=SelectedScreen(context);string prefix=ScreenPrefix(context.ScreenId);_screenWritePrefix=prefix;_screenWriteLayerPrefix=ScreenLayer(context.ScreenId,"x").Substring(0,ScreenLayer(context.ScreenId,"x").Length-1);_screenWriteCaller=context.Caller.EntityId;_screenWriteAnchor=context.Target.EntityId;
     if(op=="clear"){new DrawArgs(values).End();ClearScreenContent(GetScene(context.Target.EntityId),screen);return true;}
     if(op=="view"||op=="setview")

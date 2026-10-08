@@ -24,6 +24,7 @@ GUIDES = [
     ("Programmable-Blocks", "Programmable blocks"),
     ("Drawing", "Drawing and animation"),
     ("Interactive-Controls", "Interactive controls"),
+    ("HTML-Frontend", "HTML/CSS frontend prototype"),
     ("Special-Effects", "Hologram effects"),
     ("Display-Surfaces", "Display surfaces"),
     ("Cameras-and-Portals", "Cameras and visual portals"),
@@ -280,6 +281,7 @@ and [API boundaries]({WIKI}/API-Boundaries) when integrating a feature.
 
 - [Drawing and animation]({WIKI}/Drawing)
 - [Interactive controls]({WIKI}/Interactive-Controls)
+- [HTML/CSS frontend]({WIKI}/HTML-Frontend)
 - [Hologram effects]({WIKI}/Special-Effects)
 - [Display surfaces]({WIKI}/Display-Surfaces)
 - [Cameras and visual portals]({WIKI}/Cameras-and-Portals)

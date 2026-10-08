@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="1520" viewBox="0 0 1120 1520" role="img" aria-labelledby="html-title html-desc">
+  <title id="html-title">Local mod and server PB HTML authoring use existing HDR renderers</title>
+  <desc id="html-desc">A consumer mod owns client-local documents and cooperative input, using retained vector, grouped SVG or explicitly owned Debug LCD sprites. The PB HDR.Html property separately owns authenticated server documents. PB bind publishes Inter core SVG/UI through existing scene replication to LCD, Console and Projector viewers; its display is plugin-free, while both buttons and ranges require existing Client Renderer 0.9.13 on the interacting viewer. PB bind-sprites draws real Debug MySprite frames on an explicitly owned physical SCRIPT/NONE source LCD, directly without a plugin or through the existing opaque LCD-texture Console/Projector relay requiring existing renderer 0.9.13 on every viewer. Native PB pointer input is cooperative and events use published document revisions with player zero. PB status is server publication, not viewer-visible acknowledgement. Off-screen browser rasterization and curved HTML are future work. No JavaScript, Canvas or web-resource loading is implemented.</desc>
+  <defs>
+    <marker id="html-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#35636b"/></marker>
+  </defs>
+  <style>
+    text{font-family:Segoe UI,Arial,sans-serif;fill:#20343f}.heading{font-size:27px;font-weight:700}.sub{font-size:15px;fill:#435c68}.label{font-size:20px;font-weight:600}.body{font-size:15px}.small{font-size:14px;fill:#435c68}.card{stroke-width:1.5}.teal{fill:#e3f0ef;stroke:#568b8b}.gold{fill:#fbf0d9;stroke:#ad8b45}.white{fill:#fff;stroke:#a2b5bf}.future{fill:#f0edf7;stroke:#817199;stroke-dasharray:7 5}.flow{fill:none;stroke:#35636b;stroke-width:2.5;marker-end:url(#html-arrow)}.divider{stroke:#a5c2c3;stroke-width:1.2}
+  </style>
+  <rect width="1120" height="1520" rx="18" fill="#f4f7f9"/>
+  <text x="40" y="48" class="heading">HTML/CSS authoring, existing HDR renderers</text>
+  <text x="40" y="78" class="sub">ALPHA · frontend 0.1.1 · HDR.HTML/Profile1 · local mod and server PB routes</text>
+
+  <g>
+    <rect x="40" y="110" width="1040" height="102" rx="14" class="card white"/>
+    <text x="62" y="143" class="label">Consumer mod owns the local document and input session</text>
+    <text x="62" y="172" class="body">Local HTML/CSS strings · plain text/data updates · authored pointer coordinates · polled click/change events</text>
+    <text x="62" y="194" class="small">Unique owner endpoint; rebuild on generation change; cancel on focus loss; dispose on unload</text>
+  </g>
+  <path d="M560 212 V247" class="flow"/>
+
+  <g>
+    <rect x="40" y="249" width="1040" height="176" rx="14" class="card teal"/>
+    <text x="62" y="283" class="label">Client-local HDR.Html/0.1 frontend</text>
+    <line x1="383" y1="307" x2="383" y2="402" class="divider"/>
+    <line x1="720" y1="307" x2="720" y2="402" class="divider"/>
+    <text x="62" y="325" class="body">1. Parse strict Profile1</text>
+    <text x="62" y="351" class="body">Validate tags, CSS and bounds</text>
+    <text x="62" y="377" class="body">Reject unsupported authoring</text>
+    <text x="408" y="325" class="body">2. Measure and lay out</text>
+    <text x="408" y="351" class="body">Fixed top-left logical viewport</text>
+    <text x="408" y="377" class="body">Metrics match selected painter</text>
+    <text x="746" y="325" class="body">3. Retain visible paint + hits</text>
+    <text x="746" y="351" class="body">Coalesce dirty updates</text>
+    <text x="746" y="377" class="body">Input follows committed output</text>
+  </g>
+  <path d="M215 425 V469" class="flow"/>
+  <path d="M560 425 V469" class="flow"/>
+  <path d="M905 425 V469" class="flow"/>
+
+  <g>
+    <rect x="40" y="471" width="310" height="217" rx="14" class="card teal"/>
+    <text x="62" y="505" class="label">HDR retained vector</text>
+    <text x="62" y="537" class="body">Plugin-free · core 0.9.10+</text>
+    <text x="62" y="563" class="body">Meshes / Inter text / small SVGs</text>
+    <text x="62" y="589" class="body">Separate dirty owned items</text>
+    <text x="62" y="615" class="body">Exact packaged cap metrics</text>
+    <text x="62" y="653" class="small">Local HUD or flat world plane</text>
+    <rect x="405" y="471" width="310" height="217" rx="14" class="card teal"/>
+    <text x="427" y="505" class="label">HDR grouped SVG</text>
+    <text x="427" y="537" class="body">Plugin-free · core 0.9.10+</text>
+    <text x="427" y="563" class="body">Same retained glyph geometry</text>
+    <text x="427" y="589" class="body">Fewer items; rebuild dirty chunks</text>
+    <text x="427" y="615" class="body">Exact packaged cap metrics</text>
+    <text x="427" y="653" class="small">Local HUD or flat world plane</text>
+    <rect x="770" y="471" width="310" height="217" rx="14" class="card gold"/>
+    <text x="792" y="505" class="label">Owned native LCD</text>
+    <text x="792" y="537" class="body">Vanilla surface sprites</text>
+    <text x="792" y="563" class="body">Rectangles / Debug text / scissor</text>
+    <text x="792" y="589" class="body">Measured target font; proxy ink</text>
+    <text x="792" y="615" class="body">SCRIPT; no selected LCD script</text>
+    <text x="792" y="653" class="small">One frontend document per surface</text>
+  </g>
+
+  <g>
+    <rect x="40" y="718" width="1040" height="77" rx="14" class="card future"/>
+    <text x="62" y="750" class="label">Future only: off-screen HTML/browser rasterizer</text>
+    <text x="62" y="776" class="body">Needs a separate pixel producer; actual native LCD texture relay is implemented below</text>
+  </g>
+  <text x="40" y="832" class="small">Local mod input is cooperative and plugin-free; the consumer owns its GUI session.</text>
+  <text x="40" y="858" class="small">Solid boxes = implemented · dashed = future · no JavaScript / Canvas / web-resource loading</text>
+  <line x1="40" y1="884" x2="1080" y2="884" class="divider"/>
+  <text x="40" y="920" class="label">PB property HDR.Html · HDR.HtmlPB/0.1 · authenticated server adapter</text>
+  <g>
+    <rect x="40" y="945" width="310" height="185" rx="14" class="card teal"/>
+    <text x="62" y="979" class="label">PB bind / core SVG</text>
+    <text x="62" y="1011" class="body">Own source, dirty layout and edits</text>
+    <text x="62" y="1037" class="body">Published revision is server state</text>
+    <text x="62" y="1063" class="body">Only prefixed document cleanup</text>
+    <text x="62" y="1101" class="small">LCD / Console / Projector target</text>
+    <rect x="405" y="945" width="310" height="185" rx="14" class="card teal"/>
+    <text x="427" y="979" class="label">Core scene replication</text>
+    <text x="427" y="1011" class="body">SVG / artwork / UI values</text>
+    <text x="427" y="1037" class="body">Existing server admission</text>
+    <text x="427" y="1063" class="body">Viewers render core geometry</text>
+    <text x="427" y="1101" class="small">Display plugin-free; no browser parse</text>
+    <rect x="770" y="945" width="310" height="185" rx="14" class="card gold"/>
+    <text x="792" y="979" class="label">Core SVG pointer events</text>
+    <text x="792" y="1011" class="body">Existing Client Renderer 0.9.13+</text>
+    <text x="792" y="1037" class="body">Required on interacting viewer</text>
+    <text x="792" y="1063" class="body">Owned filtered event polling</text>
+    <text x="792" y="1101" class="small">data-action is data; no TryRun</text>
+  </g>
+  <path d="M350 1037 H405" class="flow"/>
+  <path d="M715 1037 H770" class="flow"/>
+  <text x="40" y="1153" class="small">Core SVG LCD: manual Content → HDR API; Inter geometry also applies in the core native LCD renderer.</text>
+  <text x="40" y="1186" class="label">PB bind-sprites · real native source LCD · measured Debug text</text>
+  <g>
+    <rect x="40" y="1204" width="470" height="182" rx="14" class="card gold"/>
+    <text x="62" y="1238" class="label">Owned physical LCD / native sprites</text>
+    <text x="62" y="1270" class="body">Manual SCRIPT/NONE; explicit surface ownership</text>
+    <text x="62" y="1296" class="body">SurfaceSize viewport; real game DrawFrame</text>
+    <text x="62" y="1322" class="body">Direct anchor = source: plugin-free</text>
+    <text x="62" y="1360" class="small">Shared process claim; caller excludes outside writers</text>
+    <rect x="610" y="1204" width="470" height="182" rx="14" class="card gold"/>
+    <text x="632" y="1238" class="label">Console/Projector texture relay</text>
+    <text x="632" y="1270" class="body">Existing Client Renderer 0.9.13+ on every viewer</text>
+    <text x="632" y="1296" class="body">Real native texture size, padding and update limits</text>
+    <text x="632" y="1322" class="body">Opaque RGB; transparent canvas pixels are lost</text>
+    <text x="632" y="1360" class="small">Physical source required; no virtual LCD creation</text>
+  </g>
+  <path d="M510 1296 H610" class="flow"/>
+  <text x="522" y="1277" class="small">same LCD</text>
+  <g>
+    <rect x="40" y="1407" width="1040" height="65" rx="14" class="card white"/>
+    <text x="62" y="1435" class="label">Native pointer / pointer-cancel: caller-owned GUI, touch or eye input</text>
+    <text x="62" y="1459" class="small">No automatic core mouse input; events carry published document revision and player 0; data-action stays data</text>
+  </g>
+  <text x="40" y="1501" class="small">PB publication has no client-visible acknowledgement · core world depth limits apply · no live GPU/FPS guarantee</text>
+</svg>

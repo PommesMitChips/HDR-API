@@ -53,7 +53,7 @@ namespace HoloMap
                     foreach(var context in contexts)
                     {
                         int budget=contextShare;if(!context.Visible||budget<=0)continue;
-                        var items=context.DrawItems;items.Clear();foreach(var item in context.Items.Values)items.Add(item);items.Sort((a,b)=>a.Order.CompareTo(b.Order));
+                        var items=context.DrawItems;items.Clear();foreach(var item in context.Items.Values)items.Add(item);items.Sort((a,b)=>a.Order!=b.Order?a.Order.CompareTo(b.Order):string.CompareOrdinal(a.Id,b.Id));
                         foreach(var item in items)
                         {
                             if(!item.Visible||budget<=0)continue;

@@ -9,6 +9,8 @@ ROOT = Path(__file__).resolve().parent.parent
 PAGES = [ROOT / "README.md", ROOT / "Api/README.md", ROOT / "Examples/README.md",
          ROOT / "docs/README.md", ROOT / "docs/Contributing.md"]
 PAGES += sorted((ROOT / "docs/wiki").glob("*.md"))
+PAGES += [ROOT / "OptionalMods/HDRHtmlFrontend/README.md"]
+PAGES += sorted((ROOT / "OptionalMods/HDRHtmlFrontend/Docs").glob("*.md"))
 errors = []
 links = 0
 

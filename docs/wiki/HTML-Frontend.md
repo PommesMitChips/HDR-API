@@ -1,0 +1,55 @@
+# Optional HTML/CSS frontend
+
+**ALPHA — initial prototype.** [`HDRHtmlFrontend` 0.1.1](../../OptionalMods/HDRHtmlFrontend/README.md) is an optional mod-native frontend for **`HDR.HTML/Profile1`**. It translates a strict HTML/CSS UI subset into HDR's existing retained drawing paths. Client mods own local documents; the `HDR.Html` PB property owns authenticated server documents on shared block displays. Both are separate from the display renderer; neither implements a complete HTML5 browser.
+
+![HTML authoring, local ownership and rendering alternatives](diagrams/html-frontend.svg)
+
+## Setup and first output
+
+Manually install and explicitly add both the core **HDR API 0.9.10+** world mod and the **HDR HTML frontend 0.1.1** world mod. Nothing is auto-installed or enabled. On startup the frontend registers its services and draws no demo.
+
+Enter `/hdrhtml hud vector` or `/hdrhtml world svg`. Either location accepts `vector` or `svg`; the world demo stays at the flat plane placed three metres in front of the camera. `/hdrhtml status` reports backend, desired/visible revision, layout builds and errors. `/hdrhtml clear` releases only the demo owner. These commands do not capture game input, modify PBs/blocks, change preferences or load network resources.
+
+For a PB display, paste the whole [`HtmlPbDemo.cs`](../../OptionalMods/HDRHtmlFrontend/Examples/HtmlPbDemo.cs) script, name a dedicated LCD/Console/Projector **`HTML Display`**, and run `demo`. A physical LCD needs **Content → HDR API** selected manually first. The script uses exact block-name lookup, polls events in `Update10`, assigns range changes to `_level`, and feeds only changed data back. `set 60`, `status` and `clear` are explicit commands; reset assigns 60. It makes no gameplay writes and clears only its own document.
+
+For actual native sprites, use the separate [`HtmlPbSpritesDemo.cs`](../../OptionalMods/HDRHtmlFrontend/Examples/HtmlPbSpritesDemo.cs). Manually configure **`HTML Sprite Source`** as **SCRIPT with no selected script (NONE)** and reserve it exclusively. `lcd`/`demo` draws directly, plugin-free; `world` relays that real LCD texture to Console/Projector **`HTML Display`**, requiring existing Client Renderer 0.9.13+ on **every viewer**. It uses actual source size/Debug text, never creates a virtual LCD and makes no automatic mode/background writes.
+
+## Supported authoring boundary
+
+Profile1 accepts block containers, paragraphs/headings, inline spans, line breaks, buttons and range controls; styling covers solid boxes, content dimensions, margins/padding, single-row/column flex growth, measured text and rectangular clipping. It accepts embedded/inline CSS and compound element/class/ID selectors. See the [complete accepted/rejected profile](../../OptionalMods/HDRHtmlFrontend/Docs/Profile.md) before adapting browser markup.
+
+There is no JavaScript, browser DOM, Canvas, WebGL, network loading, iframe, URL asset loading or HTML event-handler execution. The parser rejects unsupported tags/styles explicitly, including `<img>`, `<svg>`, `strong`, `em`, form/text-input controls, grid, positioning and wrapping flex. The `svg` backend groups generated paint; it does not accept arbitrary SVG markup through HTML.
+
+Vector/SVG uses the same packaged Inter outlines as core HDR text and the exact **`HDR.TextMetrics/1:Inter:cap-height`** metric schema. A 16px font means 16 logical pixels of capital height, not a browser em box. Unsupported Unicode scalars render as `?`; shaping, kerning, ligatures, bidi and system-font fallback are absent. Native LCD instead measures the actual target's Debug font and uses a line-height proxy. Fonts and layout cannot be assumed interchangeable between these backends.
+
+## Choose a renderer
+
+| Path | Implemented behavior |
+| --- | --- |
+| Retained vector | Plugin-free local HUD/world plane; separate owned mesh/text/SVG items favor small dirty changes |
+| Grouped SVG | Plugin-free local HUD/world plane; contiguous chunks lower item/call count, but a dirty chunk recompiles all members |
+| Native LCD | Explicitly owned vanilla surface in `ContentType.SCRIPT` with no selected text-surface script; solid rectangle/Debug text/scissor subset |
+| PB core SVG | Server parses/layouts dirty documents and publishes bounded core SVG/UI declarations; display plugin-free, buttons/ranges need existing Client Renderer 0.9.13+ |
+| PB direct sprites | Actual native frames on an owned physical SCRIPT/NONE LCD, Debug metrics, plugin-free; supplied cooperative pointer input |
+| PB native world relay | Actual owned source LCD texture through existing `lcd-texture` projected screen; existing Client Renderer 0.9.13+ on every viewer; supplied cooperative pointer input |
+| Off-screen HTML/browser rasterizer | Future alternative only; not implemented |
+
+The native one-document-per-surface guard protects frontend owners from each other; the consumer still excludes arbitrary outside sprite writers. Native LCD retains vanilla texture/update limits. Curved HTML is unimplemented. The PB route retains existing [display-surface](Display-Surfaces.md) and [PB](Programmable-Blocks.md) renderer contracts, including physical LCD cadence/model restrictions and Console/Projector world depth/composition limits. It does not guarantee browser CSS paint ordering.
+
+Unchanged documents reuse layout/paint; updates coalesce. Geometry admission counts the actual packaged text/SVG output and rejects exceeded grants instead of reducing detail. The [rendering comparison](../../OptionalMods/HDRHtmlFrontend/Docs/Rendering.md) includes actual fixture geometry and one offline CPU run: grouping reduced retained calls while preserving triangle count, and initial preparation was slower in that run. This evidence makes no live GPU, FPS, input or multiplayer promise.
+
+## Integrate a programmable block
+
+Use the [PB API reference](../../OptionalMods/HDRHtmlFrontend/Docs/PB-API.md) for the raw `HDR.Html` delegate, version **`HDR.HtmlPB/0.1`**, or the complete demo above. Its status reports **server publication**, not the client-local API's visible revision. Existing scene replication carries bounded geometry and controls to viewers; clients do not receive executable HTML/JavaScript. A published document can still be culled, occluded or disabled on a viewer.
+
+Core SVG display is plugin-free. **Both core SVG button and range events require HDR Client Renderer 0.9.13+ on the interacting viewer**, using the existing [persistent control viewer](Interactive-Controls.md); no additional plugin update is required. The sprite backend instead accepts `pointer`/`pointer-cancel` from an already owned GUI/touch/eye provider, or explicit synthetic terminal tests. It does not automatically attach core mouse input or read global mouse state. Native events use published document revisions and player ID zero; core SVG uses core value revisions and player IDs.
+
+Native physical output needs no plugin, but the world sprite relay requires existing Client Renderer 0.9.13+ on every viewer. Its source is opaque RGB with native resolution/update/padding and background behavior; transparent canvas pixels cannot be recovered. Existing whole-projection opacity remains a full-plane effect. Source/generation or target/source retirement invalidates documents before automatic redraw. Rebind deliberately after correcting the cause. Shared same-process native claims prevent competing frontend documents, while external writer ownership remains the caller's responsibility. Owned cleanup and filtered polling preserve unrelated core declarations/events. `data-action` is descriptive data, never a `TryRun` instruction.
+
+## Integrate a consumer mod
+
+Copy [`HdrHtmlApi.cs`](../../Api/Mods/HdrHtmlApi.cs) into the consumer mod and adapt the [cooperative input example](../../OptionalMods/HDRHtmlFrontend/Examples/HtmlConsumerExample.cs). Use the [local API reference](../../OptionalMods/HDRHtmlFrontend/Docs/Local-API.md) for discovery, owner IDs, document methods, generation changes, events and cleanup. Native frontend classes do not cross the local delegate boundary.
+
+The consumer supplies authored logical pointer coordinates from a GUI/input session it already owns and blocks; the frontend reads no global mouse buttons. Poll button/range events, interpret `data-action` as data and feed accepted values back with `SetData`. Cancel on focus loss. Input follows the last committed visible revision, so inspect status when a replacement is pending or fails. Release/dispose affects only that owner's documents.
+
+Continue with [mod integration](Mod-Integration.md), [API boundaries](API-Boundaries.md) and [performance/troubleshooting](Performance-and-Troubleshooting.md) for core HDR behavior.

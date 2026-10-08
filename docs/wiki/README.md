@@ -1,6 +1,6 @@
 # HDR API wiki
 
-HDR API **0.9.9**, scene protocol **19**, optional Client Renderer **0.9.13**.
+HDR API **0.9.10**, scene protocol **19**, optional Client Renderer **0.9.13**.
 
 > **ALPHA:** Native rendering and input remain experimental. Offline compilation and checks do not establish live GPU, GUI/input or multiplayer acceptance.
 
@@ -18,6 +18,7 @@ Start with the API boundary for your caller. Programmable blocks declare shared 
 | [Drawing](Drawing.md) | Geometry, text, SVG, images, layers, animation and block UI |
 | [Hologram effects](Special-Effects.md) | Flicker, refresh bars, depth layers, particles, projector rays and transitions |
 | [Interactive controls](Interactive-Controls.md) | Numeric values, line/polyline/rotation constraints, two-way bindings and the persistent bundle viewer |
+| [HTML/CSS frontend](HTML-Frontend.md) | Optional plugin-free UI prototype, supported profile, backends and consumer-owned input |
 | [Display surfaces](Display-Surfaces.md) | LCD backends, floating/curved/mesh surfaces and raster UI |
 | [Cameras and portals](Cameras-and-Portals.md) | Direct camera images, panorama composition and capture shells |
 | [Mod integration](Mod-Integration.md) | HUD/menu consumers, source providers and renderer backends |

@@ -59,6 +59,22 @@ public sealed class HdrIngameApi
         capabilities = value;
         return true;
     }
+    // Exact Inter source metrics: max line advance, cap height, line advance; ink minX,minY,maxX,maxY in Y-up.
+    // Does not select a target or build geometry. Height is cap height, not CSS em.
+    public bool TryMeasureText(string text, double height, double lineHeight,
+        out VRage.MyTuple<string, VRage.MyTuple<double,double,double>, VRage.MyTuple<double,double,double,double>, int, bool> metrics,
+        out string reason)
+    {
+        metrics = new VRage.MyTuple<string, VRage.MyTuple<double,double,double>, VRage.MyTuple<double,double,double,double>, int, bool>();
+        object result;
+        if (!TryCall("measure-text", new object[] { text, height, lineHeight }, out result, out reason)) return false;
+        if (!(result is VRage.MyTuple<string, VRage.MyTuple<double,double,double>, VRage.MyTuple<double,double,double,double>, int, bool>))
+        { reason = "Unsupported text metric response."; return false; }
+        var value = (VRage.MyTuple<string, VRage.MyTuple<double,double,double>, VRage.MyTuple<double,double,double,double>, int, bool>)result;
+        if (value.Item1 != "HDR.TextMetrics/1:Inter:cap-height" || value.Item4 != 1)
+        { reason = "Unsupported text metric profile."; return false; }
+        metrics = value; return true;
+    }
     // Item1: known feature; Item2: registered/available locally; Item3: explanation.
     // Registration does NOT prove GPU/capture readiness. Dedicated servers cannot know
     // remote viewers' plugins; never use this result to gate replicated declarations.

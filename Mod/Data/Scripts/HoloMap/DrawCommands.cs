@@ -35,6 +35,8 @@ namespace HoloMap
             var a=new DrawArgs(values);string op=command.ToLowerInvariant();
             // Utility queries are deliberately closed; there is no reflection or dynamic invocation.
             if(op=="version"){a.End();return "HDR.Draw/1";}
+            if(op=="measure-text")return MeasureTextCommand(a);
+            if(op=="geometry-cost")return GeometryCostCommand(a);
             if(op=="effect-types"){a.End();return HologramEffectTypes();}
             if(op=="capabilities"){var capabilityTarget=a.Has?a.Typed<PbBlock>():context.Target;a.End();return GetDisplayCapabilities(caller,capabilityTarget);}
             if(op=="plugin-status"){string feature=a.Text();a.End();return LocalPluginStatus(feature);}

@@ -14,6 +14,10 @@ HDR API is a display and hologram rendering library for **Space Engineers**. Pro
 - Create buttons, menus and [numeric sliders, constrained handles and rotation controls](docs/wiki/Interactive-Controls.md), with two-way script/mod values and retained artwork poses.
 - With the optional **HDR Client Renderer**, display camera feeds, raster interfaces and visual portals.
 
+An optional [HTML/CSS frontend prototype](OptionalMods/HDRHtmlFrontend/README.md) lets programmable blocks author interfaces on LCDs, Projectors and Consoles, and lets client mods build HUDs and flat world panels. Its bounded profile uses existing vector/SVG renderers without a plugin; client mods can also select explicitly owned native LCD sprites. PB mouse controls use the existing optional input provider. It is not a complete browser and does not run JavaScript.
+
+PBs can also select native sprites on a caller-owned LCD, or project that LCD's native texture onto a Console/Projector with the existing client renderer. See the [PB HTML/CSS guide](OptionalMods/HDRHtmlFrontend/Docs/PB-API.md) for backend selection, input and source-surface setup.
+
 Ordinary vector displays, hologram effects, numeric source writes and cooperative mod controls work **without a client plugin**. Native PB mouse controls require **HDR Client Renderer 0.9.13+**; an absent provider leaves them inactive with a printable `Requires plugin` reason. Camera scanning and reconstruction belong to separate data-provider mods.
 
 ## Simple setup
@@ -43,6 +47,7 @@ See the [client renderer setup guide](OptionalPlugins/HDRClientRenderer/README.m
 - [Hologram effects](docs/wiki/Special-Effects.md)
 - [Interactive artwork controls](docs/wiki/Interactive-Controls.md)
 - [HUDs, menus and integration with other mods](docs/wiki/Mod-Integration.md)
+- [HTML/CSS frontend prototype](docs/wiki/HTML-Frontend.md)
 - [API boundaries](docs/wiki/API-Boundaries.md) and [security](Security.md)
 - [Release history](CHANGELOG.md)
 

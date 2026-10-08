@@ -95,7 +95,7 @@ namespace HoloMap
         {
             if (_registered) return;
             RegisterHologramEffectsApi();
-            _api.Add("Version", new Func<string>(() => "0.9.9"));
+            _api.Add("Version", new Func<string>(() => "0.9.10"));
             _api.Add("ApiVersion", new Func<string>(() => "HDR.Api/1"));
             _api.Add("GetDisplayCapabilities", new Func<PbBlock, PbBlock, MyTuple<string, string, int>>(GetDisplayCapabilities));
             _api.Add("PutWires", new Func<PbBlock, PbBlock, string, Vector3D[], Vector2I[], Vector4, float, MyTuple<bool, string>>(PutWires));

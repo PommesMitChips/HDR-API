@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <Import Project="../GameReferences.props" />
+  <ItemGroup>
+    <AssemblyMetadata Include="HtmlPbDemoPath" Value="$(FrontendRoot)/Examples/HtmlPbDemo.cs" />
+    <AssemblyMetadata Include="HtmlPbSpritesDemoPath" Value="$(FrontendRoot)/Examples/HtmlPbSpritesDemo.cs" />
+    <Compile Include="$(RepositoryRoot)/Mod/Data/Scripts/HoloMap/*.cs" />
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/*.cs" />
+    <Compile Include="$(RepositoryRoot)/Api/Mods/HdrHtmlApi.cs" />
+    <Compile Include="$(RepositoryRoot)/Tools/Checks/DrawCommandTests.cs" />
+    <Compile Include="$(RepositoryRoot)/Tools/Checks/ClientReplicationTests.cs" />
+    <Compile Include="PbFixture.cs" />
+    <Compile Include="PbTests.cs" />
+    <Compile Include="PbNativeTests.cs" />
+  </ItemGroup>
+</Project>

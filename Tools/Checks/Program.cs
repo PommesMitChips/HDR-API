@@ -130,6 +130,7 @@ internal static class Program
             _checks+=NativeUiDragNetworkTests.Run();
             _checks+=NativeUiDragInputTests.Run();
             _checks+=UiDragLifecycleIntegrationTests.Run();
+            _checks+=HtmlPbCoreSeamTests.Run();
             _checks+=PersistentUiDragTests.Run();
             _checks+=UiDragHitTests.Run();
             _checks+=UiDragTransportTests.Run();

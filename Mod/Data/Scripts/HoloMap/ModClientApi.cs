@@ -27,6 +27,9 @@ namespace HoloMap
             if(!_modClientActive)throw new ArgumentException("HDR client service has stopped.");
             var a=new DrawArgs(args);
             if(command=="version"){a.End();return "HDR.ModClient/1";}
+            if(command=="rendering-enabled"){a.End();return ClientRenderingEnabled;}
+            if(command=="measure-text")return MeasureTextCommand(a);
+            if(command=="geometry-cost"){if(_modClientDrawing)throw new ArgumentException("Compile geometry outside HDR drawing.");return GeometryCostCommand(a);}
             if(command=="capabilities"){a.End();return new[]{"client-local","hud-vector-postpp","world-vector-depth","text","svg","registered-material-uv","cooperative-pointer","event-poll","hologram-effects","procedural-particles","hologram-transitions","constrained-controls","values-cas","cooperative-drag"};}
             if(command=="plugin-status"){string feature=a.Text();a.End();return LocalPluginStatus(feature);}
             if(command=="draw-budget"){if(_modClientDrawing)throw new ArgumentException("Configure budget outside Draw.");int limit=a.Integer(20000);a.End();if(limit<16||limit>131072)throw new ArgumentException("Shared mod draw budget requires 16–131072 triangles per frame.");_modClientDrawBudget=limit;return true;}
@@ -45,8 +48,13 @@ namespace HoloMap
         {
             if(op=="valid"){var validArgs=new DrawArgs(values);validArgs.End();return ModClientCurrent(owner);}
             if(!ModClientCurrent(owner))throw new ArgumentException("HDR consumer endpoint has been revoked.");
+            if(op=="rendering-enabled"){var stateArgs=new DrawArgs(values);stateArgs.End();return ClientRenderingEnabled;}
+            if(op=="measure-text")return MeasureTextCommand(new DrawArgs(values));
             if(_modClientDrawing)throw new ArgumentException("Mutate contexts on the client simulation thread outside Draw.");
             var a=new DrawArgs(values);
+            if(op=="geometry-cost")return GeometryCostCommand(a);
+            if(op=="context-valid"){long queried=a.Typed<long>();a.End();return owner.Contexts.ContainsKey(queried);}
+            if(op=="geometry-usage"){a.End();return ModClientGeometryUsage(owner);}
             if(op=="plugin-status"){string feature=a.Text();a.End();return LocalPluginStatus(feature);}
             if(op=="release"){a.End();foreach(var old in owner.Contexts.Values)ModClientCancel(old,"owner-released");owner.Released=true;owner.Contexts.Clear();owner.DrawContexts.Clear();_modClientDrawOwners.Clear();_modClientOwners.Remove(owner.Id);return true;}
             if(op=="create-hud"||op=="create-world")
@@ -70,6 +78,8 @@ namespace HoloMap
             if(op=="poll-events"){a.End();var result=c.Events.ToArray();c.Events.Clear();return result;}
             string id=ModClientRules.Id(a.Text());
             object interactionResult;if(ModClientInteractionCommand(owner,c,op,id,a,out interactionResult))return interactionResult;
+            if(op=="item-order")
+            {if(!a.Has)throw new ArgumentException("Missing drawing argument.");int order=a.Integer(0);a.End();ModClientItem found;if(!c.Items.TryGetValue(id,out found))throw new ArgumentException("Unknown context item.");found.Order=order;c.DrawItems.Clear();return true;}
             if(op=="bounds"){var rect=a.Typed<Vector4>();a.End();ModClientRules.Bound(rect);if(!c.Bounds.ContainsKey(id)&&c.Bounds.Count>=64)throw new ArgumentException("Context hit region limit reached.");c.Bounds[id]=rect;c.BoundsOrder.Remove(id);c.BoundsOrder.Add(id);return true;}
             if(op=="remove-bounds"){a.End();if(c.Capture!=null&&c.Capture.Control.Id==id)ModClientCancel(c,"bounds-removed");c.Bounds.Remove(id);c.BoundsOrder.Remove(id);if(c.Hover==id)c.Hover=null;return true;}
             if(op=="remove"){a.End();ModClientRemoveItemControls(c,id);ModClientDeclare(owner,c);c.DrawItems.Clear();return c.Items.Remove(id);}

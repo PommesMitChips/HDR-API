@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
+  <Import Project="../GameReferences.props" />
+  <ItemGroup>
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/*.cs" />
+    <Compile Include="$(RepositoryRoot)/Api/Mods/HdrHtmlApi.cs" />
+    <Compile Include="$(FrontendRoot)/Examples/HtmlConsumerExample.cs" />
+    <Compile Include="HostTests.cs" />
+  </ItemGroup>
+</Project>

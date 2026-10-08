@@ -1,0 +1,66 @@
+[
+  {
+    "Fixture": "Parser/HtmlParserChecks.cs",
+    "Original": "artifacts/html-prototype/parser/HtmlParserChecks.cs",
+    "SHA256": "674536161CEA45C2E959887C98C2685D06CA8BFC53795130E77883C32DA67844"
+  },
+  {
+    "Fixture": "Layout/LayoutTests.cs",
+    "Original": "artifacts/html-prototype/layout/LayoutTests.cs",
+    "SHA256": "F5CADD98A93DA24238C97E4E10F0C86E8B4B236D4C67C8211CA208CF85C1C06D"
+  },
+  {
+    "Fixture": "Retained/RendererChecks.cs",
+    "Original": "artifacts/html-prototype/renderers/RendererChecks.cs",
+    "SHA256": "986EDAC4A4E674971A31B9E2B33EE50F91315964E7861CD373263C467608C7CE"
+  },
+  {
+    "Fixture": "NativeLcd/NativeLcdChecks.cs",
+    "Original": "artifacts/html-prototype/renderers/lcd/NativeLcdChecks.cs",
+    "SHA256": "5460F211A485993C2A952E612F4CA04DBDCB122D3C393EE6217E6DF9FEC81B51"
+  },
+  {
+    "Fixture": "Host/HostTests.cs",
+    "Original": "artifacts/html-prototype/host/HostTests.cs",
+    "SHA256": "C669DA1C4D9E9E0EA76429FBF885297FA8DBB1A3EA47BA6D449B933C4941214A"
+  },
+  {
+    "Fixture": "CoreSeams/CoreSeamTests.cs",
+    "Original": "artifacts/html-prototype/core-seams/tests/CoreSeamTests.cs",
+    "SHA256": "1C0AD63BA9511106B79E65DF3091596C582E7F6C3A4CD0AF5F3CAA7E6911C4D2"
+  },
+  {
+    "Fixture": "CoreSeams/Program.cs",
+    "Original": "artifacts/html-prototype/core-seams/tests/Program.cs",
+    "SHA256": "28BD64CF238FF174EE0960746E41EF913A197397A36A50C9180B5062F7CA026D"
+  },
+  {
+    "Fixture": "Whitelist/Program.cs",
+    "Original": "artifacts/html-prototype/whitelist-gate/compatibility-target/Program.cs",
+    "SHA256": "56B75F594AD8E7F88BE0DB51AB74D05B099A7B1106D9987C46F4CEDE6AC2FA84"
+  },
+  {
+    "Fixture": "Pb/PbTests.cs",
+    "Original": "Tools/HtmlChecks/Pb/PbTests.cs",
+    "Commission": "PB HTML adapter delta",
+    "SHA256": "A6F918608AA112209B457B29AAD2394F85D7AC3870B1BCC9DABD68F60AD7A446"
+  },
+  {
+    "Fixture": "Pb/PbFixture.cs",
+    "Original": "Tools/HtmlChecks/Pb/PbFixture.cs",
+    "Commission": "PB HTML adapter delta",
+    "SHA256": "E388AFA34A0CBECF1B6D2AE839C7109A038DC66E6D9749A9D1E91FB8DE3E1EBA"
+  },
+  {
+    "Fixture": "Pb/PbTests.csproj",
+    "Original": "Tools/HtmlChecks/Pb/PbTests.csproj",
+    "Commission": "PB HTML adapter delta",
+    "SHA256": "52216D3BCE240E313AD7EA291014F2F72C5225D248964BCCDB3133E791615E45"
+  },
+  {
+    "Fixture": "Pb/PbNativeTests.cs",
+    "Original": "Tools/HtmlChecks/Pb/PbNativeTests.cs",
+    "Commission": "PB native sprite and world relay delta",
+    "SHA256": "36ABBF46EDB214C9391610BB9262723138E8B61865FBA221D579B4511C24D025"
+  }
+]

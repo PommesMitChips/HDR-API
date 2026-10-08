@@ -1,0 +1,46 @@
+[
+  {
+    "Name": "Parser",
+    "Project": "Parser/HtmlParserChecks.csproj",
+    "Pattern": "HTML parser/cascade: (\\d+) assertions",
+    "Expected": 238
+  },
+  {
+    "Name": "Layout",
+    "Project": "Layout/LayoutTests.csproj",
+    "Pattern": "HTML pure layout: (\\d+) assertions",
+    "Expected": 829
+  },
+  {
+    "Name": "Retained",
+    "Project": "Retained/RendererChecks.csproj",
+    "Pattern": "Renderer assertions: (\\d+)",
+    "Expected": 6202,
+    "EvidenceDirectory": "retained-evidence"
+  },
+  {
+    "Name": "NativeLcd",
+    "Project": "NativeLcd/NativeLcdChecks.csproj",
+    "Pattern": "Native LCD checks passed: (\\d+)",
+    "Expected": 196
+  },
+  {
+    "Name": "Host",
+    "Project": "Host/HostTests.csproj",
+    "Pattern": "HTML host tests: \\d+ cases, (\\d+) assertions",
+    "Expected": 407
+  },
+  {
+    "Name": "CoreSeams",
+    "Project": "CoreSeams/CoreSeams.Tests.csproj",
+    "Pattern": "PASS (\\d+) core seam assertions",
+    "Expected": 2364
+  },
+  {
+    "Name": "Pb",
+    "Project": "Pb/PbTests.csproj",
+    "Pattern": "PB HTML tests: (\\d+) assertions",
+    "Expected": 383,
+    "EvidenceDirectory": "pb-evidence"
+  }
+]

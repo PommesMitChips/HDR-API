@@ -2,6 +2,17 @@
 
 These notes preserve release-time behavior and validation limits. Later releases supersede earlier defaults and limits. Current setup and commands are in [README.md](README.md) and the [client renderer guide](OptionalPlugins/HDRClientRenderer/README.md).
 
+## HDR API 0.9.10 / HTML Frontend 0.1.1 — alpha prototype
+
+- Optional client-local HTML/CSS source frontend, separated from the core display API. `HDR.HTML/Profile1` supports bounded block/flex layout, measured text, rectangles, clipping, buttons and ranges. Unsupported features report errors; there is no JavaScript or complete browser engine.
+- Plugin-free retained vector and grouped SVG output for HUD/flat world contexts; an explicitly owned native LCD sprite alternative uses the actual Debug font metrics. Curved HTML surfaces and a separate offscreen HTML raster backend remain unimplemented.
+- Optional `HDR.Html` PB property exposes `HDR.HtmlPB/0.1` documents on LCDs, Projectors and Consoles. The adapter lays out dirty sources on the host and publishes standard retained HDR declarations. Button/range polling uses the existing Client Renderer 0.9.13 input provider; data-action values are event data, never executable commands.
+- Explicit PB native sprite output paints a caller-owned LCD with the actual Debug font. It can display directly there or relay its native texture to a Console/Projector using the existing client plugin. Relay output inherits source resolution, letterboxing and an opaque background. Cooperative native input remains caller-supplied.
+- Shared surface claims prevent conflicting native frontend writers in the same process. PB source/power/target changes retire documents; cleanup affects only their owned artwork, controls, values, frames and screens.
+- Dirty updates preserve the last committed visible frame for input; failures, owner replacement and unload release only owned documents. Input is supplied by the consuming mod's existing GUI session.
+- Added mesh-free Inter text metrics, exact geometry-cost/usage queries, context/rendering status and explicit retained mod item order to the typed API. Generic PB utilities provide exact compiler cost, filtered UI event polling and unbound-value removal. Scene protocol 19 and Client Renderer 0.9.13 are unchanged.
+- Prototype compilation, sandbox acceptance and test evidence are recorded by its separate build gate. Live visual, input and GPU acceptance is pending; the frontend is not installed or enabled automatically.
+
 ## HDR API 0.9.9 / Client Renderer 0.9.13 — alpha
 
 - Retained numeric controls: stepped ranges, line/polyline movement and constrained rotation, with explicit PB event polling and mod getter/setter bindings.

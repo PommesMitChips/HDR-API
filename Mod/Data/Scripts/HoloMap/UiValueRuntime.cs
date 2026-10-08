@@ -76,13 +76,28 @@ namespace HoloMap
         {widget.Control.ReferencePose=MatrixValues(item.Transform);widget.Control.ReferenceValue=value==null?0:value.Value;widget.Control.SourceRevision=source;}
         bool TryUiValueCommand(DrawContext context,string op,DrawArgs args,out object result)
         {
-            result=null;switch(op){case "value":case "control":case "bind-value":case "draggable":case "constraint":case "get-value":case "set-value":case "poll-value-events":case "value-notify":break;default:return false;}
-            UiValueServer();var target=op=="get-value"?AuthorizeAccess(context.Caller,context.Target):Authorize(context.Caller,context.Target);if(!context.Caller.IsWorking||!target.IsWorking)throw new ArgumentException("UI values require a working PB and display.");bool create=op!="get-value"&&op!="set-value"&&op!="poll-value-events";var owner=UiValueOwnerFor(context.Caller,target,create);if(owner==null)throw new ArgumentException("UI value owner is inactive.");var old=GetUiDisplay(context.Caller.EntityId,target.EntityId);
+            result=null;switch(op){case "value":case "control":case "bind-value":case "draggable":case "constraint":case "get-value":case "set-value":case "poll-value-events":case "remove-value":case "value-notify":break;default:return false;}
+            UiValueServer();var target=op=="get-value"?AuthorizeAccess(context.Caller,context.Target):Authorize(context.Caller,context.Target);if(!context.Caller.IsWorking||!target.IsWorking)throw new ArgumentException("UI values require a working PB and display.");bool create=op!="get-value"&&op!="set-value"&&op!="poll-value-events"&&op!="remove-value";var owner=UiValueOwnerFor(context.Caller,target,create);if(owner==null)throw new ArgumentException("UI value owner is inactive.");var old=GetUiDisplay(context.Caller.EntityId,target.EntityId);
             if(op=="get-value"){string id=UiRules.Id(args.Text());args.End();var v=UiFindValue(old,id);if(v==null)throw new ArgumentException("UI value does not exist.");result=new MyTuple<double,long>(v.Value,v.Revision);return true;}
             if(op=="set-value"){string id=UiRules.Id(args.Text());double requested=args.Number();long expected=args.Has?UiRevisionArgument(args.Value()):-1;args.End();result=UiSetValue(context.Caller.EntityId,target.EntityId,id,requested,expected,0,null,false);return true;}
             if(op=="poll-value-events")
-            {args.End();var a=new MyTuple<string,string,string,MyTuple<double,long,long>>[owner.Events.Count];for(int i=0;i<a.Length;i++){var e=owner.Events[i];a[i]=new MyTuple<string,string,string,MyTuple<double,long,long>>(e.Kind,e.Control,e.ValueId,new MyTuple<double,long,long>(e.Value,e.Revision,e.Player));}owner.Events.Clear();_uiValueWakePending.Remove(UiKey(owner.Caller,owner.Target));result=a;return true;}
+            {
+                string prefix=args.Text("");args.End();if(prefix.Length>0)UiRules.Id(prefix);
+                var matching=new List<MyTuple<string,string,string,MyTuple<double,long,long>>>();
+                foreach(var e in owner.Events)if(UiValueEventMatches(e,prefix))matching.Add(new MyTuple<string,string,string,MyTuple<double,long,long>>(e.Kind,e.Control,e.ValueId,new MyTuple<double,long,long>(e.Value,e.Revision,e.Player)));
+                var events=matching.ToArray();owner.Events.RemoveAll(e=>UiValueEventMatches(e,prefix));
+                if(owner.Events.Count==0)_uiValueWakePending.Remove(UiKey(owner.Caller,owner.Target));result=events;return true;
+            }
             var next=old==null?new UiDisplay{CallerId=context.Caller.EntityId,TargetId=target.EntityId}:UiRules.Copy(old);
+            if(op=="remove-value")
+            {
+                string id=UiRules.Id(args.Text());args.End();var value=UiFindValue(next,id);
+                if(value==null){result=false;return true;}
+                foreach(var w in next.Widgets)if(w.Control!=null&&w.Control.ValueId==id)throw new ArgumentException("Unbind every control before removing its numeric value.");
+                next.Values.Remove(value);next.DataRevision=UiNextDataRevision();UiCommitNumericDefinition(context,next,owner);
+                owner.Events.RemoveAll(e=>e.ValueId==id);
+                if(owner.Events.Count==0)_uiValueWakePending.Remove(UiKey(owner.Caller,owner.Target));result=true;return true;
+            }
             if(op=="value-notify"){next.ValueNotify=args.Text("");args.End();if(next.ValueNotify.Length>128)throw new ArgumentException("Value notification uses at most 128 fixed argument characters.");UiCommitNumericDefinition(context,next,owner);result=true;return true;}
             if(op=="value")
             {
@@ -109,6 +124,8 @@ namespace HoloMap
             }
             UiRebaseControl(widget,UiFindValue(next,c.ValueId),sourceItem,epoch);UiCommitNumericDefinition(context,next,owner);result=true;return true;
         }
+        static bool UiValueEventMatches(UiValueEvent value,string prefix)
+        {return prefix.Length==0||value.Control!=null&&value.Control.StartsWith(prefix,StringComparison.Ordinal)||value.ValueId!=null&&value.ValueId.StartsWith(prefix,StringComparison.Ordinal);}
         static long UiRevisionArgument(object value)
         {if(value is long)return (long)value;if(value is int)return (int)value;throw new ArgumentException("Expected revision must be an integer.");}
         UiBindingTrack UiTrack(UiDisplay display,UiWidget widget)

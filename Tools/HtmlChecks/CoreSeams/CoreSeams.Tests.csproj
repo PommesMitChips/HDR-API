@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- The preserved test doubles use modern host syntax; production has a separate C#6 gate. -->
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <Import Project="../GameReferences.props" />
+  <ItemGroup>
+    <Compile Include="$(RepositoryRoot)/Mod/Data/Scripts/HoloMap/*.cs" />
+    <Compile Include="$(RepositoryRoot)/Api/Mods/HdrModApi.cs" />
+    <Compile Include="$(GeneratedPbHelper)" />
+    <Compile Include="CoreSeamTests.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="$(RepositoryRoot)/Tools/Checks/DrawCommandTests.cs" />
+    <Compile Include="$(RepositoryRoot)/Tools/Checks/ClientReplicationTests.cs" />
+  </ItemGroup>
+  <Target Name="RequireGeneratedPbHelper" BeforeTargets="CoreCompile" Condition="'$(GeneratedPbHelper)' == '' Or !Exists('$(GeneratedPbHelper)')">
+    <Error Text="Run Tools/HtmlChecks/Check.ps1 to generate the PB import wrapper from the canonical API source." />
+  </Target>
+</Project>

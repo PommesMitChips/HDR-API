@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
+  <Import Project="../PureLayoutSources.props" />
+  <ItemGroup><Compile Include="LayoutTests.cs" /></ItemGroup>
+</Project>

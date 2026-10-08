@@ -1,0 +1,15 @@
+{
+  "Helper": "Api/Ingame/HdrHtmlIngameApi.cs",
+  "Demos": [
+    {
+      "Source": "OptionalMods/HDRHtmlFrontend/Examples/HtmlPbDemo.cs",
+      "Wrapper": "SvgDemoProgram.cs",
+      "PasteArtifact": "HtmlPbDemo.pb.cs"
+    },
+    {
+      "Source": "OptionalMods/HDRHtmlFrontend/Examples/HtmlPbSpritesDemo.cs",
+      "Wrapper": "SpritesDemoProgram.cs",
+      "PasteArtifact": "HtmlPbSpritesDemo.pb.cs"
+    }
+  ]
+}

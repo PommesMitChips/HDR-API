@@ -1,0 +1,12 @@
+<Project>
+  <ItemGroup>
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlContracts.cs" />
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlParseException.cs" />
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlParser.cs" />
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlCss.cs" />
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlLayoutCss.cs" />
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlPaintValidation.cs" />
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlLayout.cs" />
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlDocumentController.cs" />
+  </ItemGroup>
+</Project>

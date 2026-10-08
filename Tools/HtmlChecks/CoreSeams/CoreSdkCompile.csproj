@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Library</OutputType></PropertyGroup>
+  <Import Project="../GameReferences.props" />
+  <ItemGroup>
+    <Compile Include="$(RepositoryRoot)/Api/Mods/HdrModApi.cs" />
+    <Compile Include="$(GeneratedPbHelper)" />
+  </ItemGroup>
+  <Target Name="RequireGeneratedPbHelper" BeforeTargets="CoreCompile" Condition="'$(GeneratedPbHelper)' == '' Or !Exists('$(GeneratedPbHelper)')">
+    <Error Text="Run Tools/HtmlChecks/Check.ps1 to generate the PB import wrapper from the canonical API source." />
+  </Target>
+</Project>

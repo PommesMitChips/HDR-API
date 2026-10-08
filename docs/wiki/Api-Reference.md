@@ -11,6 +11,8 @@ This page indexes public contracts and specifies the mod-facing envelopes. Drawi
 | Block capabilities | Short `capabilities`, typed `GetDisplayCapabilities` | `MyTuple<string,string,int>`; schema `HDR.DisplayCapabilities/1` | [DisplayCapabilities.cs](../../Mod/Data/Scripts/HoloMap/DisplayCapabilities.cs) |
 | PB block UI | `Me.GetProperty("HDR.UI")` | `Func<string,object[],object>`; `version` → `HDR.UI/1` | [UiCommands.cs](../../Mod/Data/Scripts/HoloMap/UiCommands.cs) |
 | General client-mod rendering | Local message `481770130` / request `481770131` | `Func<string,object[],object>`; `version` → `HDR.ModClient/1` | [HdrModApi.cs](../../Api/Mods/HdrModApi.cs), [ModClientApi.cs](../../Mod/Data/Scripts/HoloMap/ModClientApi.cs) |
+| Optional HTML/CSS frontend | Local message `481770150` / request `481770151` | `Func<string,object[],object>`; `version` → `HDR.Html/0.1` | [HdrHtmlApi.cs](../../Api/Mods/HdrHtmlApi.cs), [frontend reference](../../OptionalMods/HDRHtmlFrontend/Docs/Local-API.md) |
+| Optional PB HTML/CSS adapter | `Me.GetProperty("HDR.Html")` | `Func<string,object[],object>`; `version` → `HDR.HtmlPB/0.1` | [HdrHtmlIngameApi.cs](../../Api/Ingame/HdrHtmlIngameApi.cs), [PB HTML reference](../../OptionalMods/HDRHtmlFrontend/Docs/PB-API.md) |
 | Display source | Local `481770100` / registration `481770101` | Registration tuple carries protocol **1** or **2** | [DisplaySources.cs](../../Mod/Data/Scripts/HoloMap/DisplaySources.cs) |
 | Raster upload backend | Local `481770110` / registration `481770111` | Registration tuple carries protocol **1** | [RasterBackends.cs](../../Mod/Data/Scripts/HoloMap/RasterBackends.cs) |
 
@@ -39,6 +41,10 @@ The **0.9.9 / scene 19** interaction implementation adds server-owned PB values 
 
 `U("version")` remains `HDR.UI/1`. Its static `capabilities` string preserves `values=1`, `constraints=line,path,rotation` and `mouse=client-provider`, with additive `viewer=persistent-bundle;pointer=HDR.Pointer/1`. This advertises implemented semantics rather than current input ownership. `H("plugin-status", "interactive-pointer")` returns `MyTuple<bool,bool,string>` for known feature/local provider registration/explanation. It requires HDR Client Renderer 0.9.13 or later. Dedicated-server results are known=true, registered=false and viewer-dependent; registration does not prove an actual routing ACK or server viewer/value grant.
 
+HDR API 0.9.10 adds `U("poll-value-events", prefix)` to drain only records whose control or value ID starts with an owned prefix; omitted/empty prefix retains the original drain-all behavior. Prefixes use the same 1–24 lowercase letter/digit/underscore/hyphen grammar as UI IDs. Unmatched events and their wake state remain queued. `U("remove-value", id)` removes an unbound value and its events, returns false if missing, and rejects values still bound to controls. It preserves unrelated metadata; normal definition-revision changes can cancel existing gestures.
+
+The optional frontend's `HDR.HtmlPB/0.1` adapter is separate from both core drawing and the client-local HTML service. It parses/layouts bounded sources on the host when dirty and publishes ordinary retained HDR drawing/UI declarations. Its published revision is a server commit, not a viewer rendering acknowledgement. See [PB HTML/CSS](../../OptionalMods/HDRHtmlFrontend/Docs/PB-API.md) for the exact commands, lifecycle and event mapping.
+
 ## General client-mod protocol 1
 
 The service broadcasts its delegate on `481770130`. Send `Action<Func<string,object[],object>>` on `481770131` to receive it on demand. This is client-local; dedicated servers do not activate it. See [mod integration](Mod-Integration.md#connect-a-client-mod) for load-order-safe registration/disposal.
@@ -55,6 +61,12 @@ The service broadcasts its delegate on `481770130`. Send `Action<Func<string,obj
 
 Current capability tokens are `client-local`, `hud-vector-postpp`, `world-vector-depth`, `text`, `svg`, `registered-material-uv`, `cooperative-pointer`, `event-poll`. Do not treat these as raster-upload or native-capture support. Opening an existing owner ID revokes its predecessor generation and clears its retained contexts.
 
+### Text metrics and compiler admission
+
+HDR API 0.9.10 adds `measure-text` on the PB short endpoint, general mod service and current mod-owner endpoint. It returns `MyTuple<string,MyTuple<double,double,double>,MyTuple<double,double,double,double>,int,bool>`: profile, `(maximum line advance, cap height, line advance)`, `(minX,minY,maxX,maxY)`, metric generation and ink-present flag. The profile is `HDR.TextMetrics/1:Inter:cap-height`; bounds describe source outlines in Y-up coordinates with the first baseline at `-height/2`, before clipping or rasterization. Text is limited to 64 original UTF-16 code units, height is positive up to 1,000,000 and line-height is 1–4. CR/LF normalization, tabs and fallback glyphs match rendering; shaping, kerning, bidi and exact CSS em metrics are unavailable. This query builds no glyph mesh.
+
+`geometry-cost` intentionally compiles bounded text/SVG once to report exact retained cost. The subsequent artwork upsert compiles again. It is a preflight, not an atomic document transaction or a guarantee that all geometry fits the shared per-frame draw grant. `geometry-usage` counts hidden content too. `context-valid` reports ownership/lifetime, while `rendering-enabled` lets a consumer suspend its own input when local rendering is off. Explicit `item-order` must be reapplied after dirty artwork replacement.
+
 ### Consumer commands
 
 Arguments are ordered after the command name. `[x=default]` denotes an optional trailing argument. `paint` is a color string or normalized `Vector4` RGBA.
@@ -65,6 +77,11 @@ Arguments are ordered after the command name. `[x=default]` denotes an optional 
 | `create-world` | `order, MatrixD pose` | New `long` context handle; world-space pose |
 | `viewport` | None | Current `Vector2` viewport size; zero if camera absent |
 | `valid` | None | Boolean; **false** for stale/revoked owner endpoint without throwing |
+| `rendering-enabled` | None | Local `/hdr on/off` rendering switch, independent of context lifetime |
+| `context-valid` | `context` | Boolean; exact membership in the current owner's contexts |
+| `measure-text` | `text, [height=1, lineHeight=1.3]` | Mesh-free packaged Inter cap-height metrics; tuple below |
+| `geometry-cost` | `"text"` or `"svg", source, [height=1, segments=12]` | `MyTuple<int,int>`: compiled points, triangles + wire edges |
+| `geometry-usage` | None | `MyTuple<int,int>`: retained point/primitive counts across this owner |
 | `plugin-status` | Feature name (`string`) | Local registration tuple, not GPU/frame readiness |
 | `draw-limit` | `[primitives=4096]`, 1–8,192 | `true`; owner cap within fair shared budget |
 | `release` | None | `true`; revoke owner and all its handles |
@@ -78,6 +95,7 @@ Arguments are ordered after the command name. `[x=default]` denotes an optional 
 | `svg` | `context, id, string svg, MatrixD transform, [segments=12]` | `true`; bounded SVG subset |
 | `transform` | `context, id, MatrixD` | `true`; update existing item's transform |
 | `visible` | `context, id, bool` | `true`; update drawing visibility |
+| `item-order` | `context, id, int order` | `true`; explicit retained order without replacing geometry or controls |
 | `effect` | `context, id, type, ...values` | `true`; merge a retained effect, or replace the validated raw descriptor |
 | `effect-clear` | `context, id, [type]` | `true`; clear one effect or all effect settings |
 | `transition` | `context, id, in/out, [style="fade", seconds=.5]` | `true`; start a retained fade, wipe or dissolve |

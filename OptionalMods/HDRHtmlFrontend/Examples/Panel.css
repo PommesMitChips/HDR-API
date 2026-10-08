@@ -1,0 +1,5 @@
+main { width: 440px; height: 250px; padding: 12px; background-color: #123442; color: #00d0cd; font-size: 14px; line-height: 1.3; }
+h2 { font-size: 20px; margin-bottom: 8px; }
+p { margin-bottom: 8px; }
+input { width: 220px; height: 24px; }
+button { width: 100px; height: 28px; padding: 4px; background-color: #245a67; margin-top: 6px; }

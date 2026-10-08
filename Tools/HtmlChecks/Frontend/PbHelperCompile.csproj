@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Library</OutputType></PropertyGroup>
+  <Import Project="../GameReferences.props" />
+  <ItemGroup><Compile Include="$(GeneratedHtmlPbHelper)" Condition="'$(GeneratedHtmlPbHelper)' != ''" /></ItemGroup>
+  <Target Name="RequireGeneratedHtmlPbHelper" BeforeTargets="CoreCompile" Condition="'$(GeneratedHtmlPbHelper)' == '' Or !Exists('$(GeneratedHtmlPbHelper)')">
+    <Error Text="Run Tools/HtmlChecks/Check.ps1 to generate the import wrapper from the canonical HTML PB helper." />
+  </Target>
+</Project>

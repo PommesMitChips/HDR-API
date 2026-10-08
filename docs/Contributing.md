@@ -35,6 +35,16 @@ dotnet run --project Tools/Checks/Checks.csproj -c Release -- .
 
 Use `-GameBin` on `Build.ps1` or `-p:GameBin=...` on configured projects when the Steam library differs. `Directory.Build.props` supplies default game and Harmony paths; pass `-p:HarmonyPath=...` for a different loader library. Native runtime fixtures currently assume the standard installed game content path unless their runner accepts another location. The checks compile game source and generated PB/mod examples, run geometry/provider/API regressions and exercise the installed PB memory-safe rewrite. The runtime mod is compiled by the game; it does not require a player's .NET 10 SDK.
 
+## Optional HTML/CSS frontend
+
+The [HTML frontend](../OptionalMods/HDRHtmlFrontend/README.md) remains a separate source mod. Its build runs the maintained parser, layout, actual HDR renderer, host/lifetime and core-seam fixtures under `Tools/HtmlChecks`, then packages frontend source:
+
+```powershell
+.\OptionalMods\HDRHtmlFrontend\Build.ps1
+```
+
+Pass `-GameBin` for a custom game installation. Compilation and the actual ModApi whitelist gate are separate checks. The whitelist gate uses the installed game's registry and analyzer; it never relaxes the mod whitelist. Developer reflection used by offline fixtures does not ship in the mod. A successful offline gate does not certify live UI, LCD or GPU behavior. The build never installs the mod, adds it to a world or changes input/Pulsar preferences.
+
 ## Optional native renderer
 
 ```powershell

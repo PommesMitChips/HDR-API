@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
+  <Import Project="../GameReferences.props" />
+  <ItemGroup>
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlContracts.cs" />
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlBackendContracts.cs" />
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlPaintDiff.cs" />
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlNativeLcdPainter.cs" />
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HdrModApi.cs" />
+    <Compile Include="NativeLcdChecks.cs" />
+  </ItemGroup>
+</Project>
