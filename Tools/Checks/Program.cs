@@ -127,6 +127,12 @@ internal static class Program
             _checks+=ModClientInteractionTests.Run();
             _checks+=SdkBindingTests.Run();
             _checks+=UiValueStageTests.Run();
+            _checks+=NativeUiDragNetworkTests.Run();
+            _checks+=NativeUiDragInputTests.Run();
+            _checks+=UiDragLifecycleIntegrationTests.Run();
+            _checks+=PersistentUiDragTests.Run();
+            _checks+=UiDragHitTests.Run();
+            _checks+=UiDragTransportTests.Run();
             Compile(root);
             Console.WriteLine($"PASS: {_checks} geometry/curve/SVG/appearance/animation/network/asset/command assertions; mod + PB examples and portal API helper compile against installed game assemblies; PB memory-safe rewrite.");
         }
@@ -259,11 +265,11 @@ internal static class Program
         }
         File.WriteAllText(Path.Combine(root,"artifacts/ApiSizeAudit.json"),System.Text.Json.JsonSerializer.Serialize(sizes,new System.Text.Json.JsonSerializerOptions{WriteIndented=true}));
         var drawSizes=new List<object>();
-        foreach(string name in new[]{"PortalDemo","DrawDemo","PackedPelicanDraw","MultiConsoleAnimationDraw","LcdDemo","ProjectedScreenDemo","RasterSurfaceDemo","SphericalCameraDemo","DirectCameraSphereDemo","GeneralSurfaceDemo","HdrFeaturesDemo","UiDemo","HologramEffectsDemo","AppearanceDemo","ConsoleDemo","SvgDemo","SvgFramesDemo"})
+        foreach(string name in new[]{"PortalDemo","DrawDemo","PackedPelicanDraw","MultiConsoleAnimationDraw","LcdDemo","ProjectedScreenDemo","RasterSurfaceDemo","SphericalCameraDemo","DirectCameraSphereDemo","GeneralSurfaceDemo","HdrFeaturesDemo","UiDemo","InteractiveControlsDemo","HologramEffectsDemo","AppearanceDemo","ConsoleDemo","SvgDemo","SvgFramesDemo"})
         {
             string source=File.ReadAllText(Path.Combine(root,"Examples",name+".cs"));
             if(name=="SvgFramesDemo")source+=Environment.NewLine+File.ReadAllText(Path.Combine(root,"artifacts/pulse.frames.cs"));
-            bool direct=name=="PortalDemo"||name=="DrawDemo"||name=="PackedPelicanDraw"||name=="MultiConsoleAnimationDraw"||name=="LcdDemo"||name=="ProjectedScreenDemo"||name=="RasterSurfaceDemo"||name=="SphericalCameraDemo"||name=="DirectCameraSphereDemo"||name=="GeneralSurfaceDemo"||name=="HdrFeaturesDemo"||name=="UiDemo"||name=="HologramEffectsDemo";
+            bool direct=name=="PortalDemo"||name=="DrawDemo"||name=="PackedPelicanDraw"||name=="MultiConsoleAnimationDraw"||name=="LcdDemo"||name=="ProjectedScreenDemo"||name=="RasterSurfaceDemo"||name=="SphericalCameraDemo"||name=="DirectCameraSphereDemo"||name=="GeneralSurfaceDemo"||name=="HdrFeaturesDemo"||name=="UiDemo"||name=="InteractiveControlsDemo"||name=="HologramEffectsDemo";
             string drawBody=direct?source:DrawScriptBuilder.Generate(source,Header,options);
             string artifact=direct?name:name+".Draw";
             File.WriteAllText(Path.Combine(root,"artifacts",artifact+".pb.cs"),drawBody);

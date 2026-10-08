@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1420" viewBox="0 0 1440 1420" role="img" aria-labelledby="title desc">
+  <title id="title">HDR interactive artwork: implemented alpha numeric values and persistent viewer input</title>
+  <desc id="desc">Implementation boundary diagram for HDR mod and API version 0.9.9 ALPHA, scene protocol 19, and optional client renderer 0.9.13. The alpha builds are not installed; live engine GUI click-and-drag behavior remains unverified. A caller authors SVG or geometry, retains an immutable reference pose, binds a finite numeric range with an optional snap step, and chooses a pure line, polyline or rotation constraint. Authored rectangular hotzones do not prove picking on painted pixels. Programmatic source compare-and-set writes and pointer transactions converge on the same canonical value and revision. Each constraint delta composes with the immutable reference pose without accumulating transforms. The persistent viewer input lease and each per-value drag gesture are distinct. PB mouse interaction is scoped to on-foot, first-person world controls and requires native input through HDR.Pointer/1 plus client renderer 0.9.13. Native Use enters the registered world control bundle without a popup; the user can click and drag multiple controls. Pending cursor ownership permits no value gesture. A PB gesture requires the server grant, provider acknowledgement, and an Applied and PointerValid sample. Mouseup ends only the active value gesture while the cursor and viewer input focus remain. Escape or context loss closes the viewer and ends all gestures. The local native pointer provider is separate from the pure mathematical kernel. Cooperative client-mod pointer input requires no plugin and does not establish exclusive native input routing. Transaction validation and host source revision checks precede a canonical commit. Bounded events return to the originating caller, which updates its own variable. PB values are server-authoritative and expose no client pointer delegate; mod consumer values and callbacks are client-local. Fixed look-and-use actions remain separate from numeric value bindings. This describes implemented alpha behavior without claiming live GUI verification.</desc>
+  <defs>
+    <marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#7bcbbb"/></marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#8bbade"/></marker>
+    <marker id="arrow-gold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#e0be7b"/></marker>
+  </defs>
+  <style>
+    text{font-family:Segoe UI,Arial,sans-serif;fill:#edf5f7}
+    .heading{font-size:30px;font-weight:700;letter-spacing:-.3px}
+    .sub{font-size:18px;fill:#b8cbd3}
+    .section{font-size:15px;font-weight:700;letter-spacing:1.8px;fill:#a7c5cc}
+    .label{font-size:22px;font-weight:600}
+    .body{font-size:18px;fill:#d8e6ea}
+    .small{font-size:16px;fill:#b8cbd3}
+    .tiny{font-size:15px;fill:#b8cbd3}
+    .accent{fill:#99dccd}
+    .gold-text{fill:#eed09b}
+    .card{stroke-width:1.4}
+    .neutral{fill:#172a35;stroke:#425d6d}
+    .teal{fill:#18382f;stroke:#568f80}
+    .blue{fill:#172f43;stroke:#587e9c}
+    .gold{fill:#352f22;stroke:#97865d}
+    .rule{stroke:#324b59;stroke-width:1.2}
+    .flow{fill:none;stroke:#7bcbbb;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow-teal)}
+    .input-flow{fill:none;stroke:#8bbade;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow-blue)}
+    .return-flow{fill:none;stroke:#e0be7b;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow-gold)}
+    .icon{fill:none;stroke:#99dccd;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+  </style>
+
+  <!-- A dark self-contained backing keeps all labels legible on light or dark documentation pages. -->
+  <rect x="1" y="1" width="1438" height="1418" rx="20" fill="#0d1d27" stroke="#324b59"/>
+  <text x="40" y="53" class="heading">Interactive artwork, driven by one value</text>
+  <text x="40" y="87" class="sub">Implemented alpha · numeric values and persistent viewer input</text>
+  <rect x="1000" y="20" width="400" height="109" rx="10" class="card neutral"/>
+  <text x="1018" y="43" class="small">Mod / API: 0.9.9 ALPHA · scene 19</text>
+  <text x="1018" y="66" class="tiny">Numeric controls + mouse: implemented</text>
+  <text x="1018" y="89" class="tiny">Optional client renderer 0.9.13: built</text>
+  <text x="1018" y="112" class="tiny">Builds not installed · live GUI unverified</text>
+
+  <text x="40" y="135" class="section">1  DECLARE THE CONTROL</text>
+  <rect x="40" y="155" width="425" height="200" rx="14" class="card neutral"/>
+  <text x="62" y="191" class="label">Author artwork + hotzones</text>
+  <text x="62" y="229" class="body">SVG or geometry + stable object ID</text>
+  <text x="62" y="260" class="body">Retain the immutable reference pose</text>
+  <text x="62" y="284" class="small">Hotzones: rectangles; no painted-pixel proof</text>
+  <text x="62" y="308" class="small">Compose each delta against this baseline;</text>
+  <text x="62" y="332" class="small">do not accumulate transforms.</text>
+  <path d="M468 255H500" class="flow"/>
+
+  <rect x="505" y="155" width="425" height="200" rx="14" class="card teal"/>
+  <text x="527" y="191" class="label">Bind a numeric value</text>
+  <text x="527" y="229" class="body">Value ID + finite min / max + snap step</text>
+  <text x="527" y="260" class="body">Clamp / snap to the canonical range</text>
+  <text x="527" y="306" class="small">Step 0 is continuous; rejected input</text>
+  <text x="527" y="330" class="small">keeps the previously admitted state.</text>
+  <path d="M933 255H965" class="flow"/>
+
+  <rect x="970" y="155" width="430" height="200" rx="14" class="card teal"/>
+  <text x="992" y="191" class="label">Choose a pure constraint</text>
+  <text x="992" y="229" class="body">Line · polyline · rotation</text>
+  <text x="992" y="260" class="body">Project the ray and normalize the value</text>
+  <text x="992" y="330" class="small">No input, clocks, network or event ownership</text>
+  <path d="M995 294H1070M1096 302 1121 283 1148 303 1173 284" class="icon"/>
+  <circle cx="1230" cy="294" r="15" class="icon"/>
+  <path d="M1230 294 1245 281" class="icon"/>
+  <circle cx="1230" cy="294" r="3" fill="#99dccd"/>
+  <text x="1270" y="300" class="tiny">shared math</text>
+
+  <text x="40" y="407" class="section">2  TWO WRITE PATHS CONVERGE</text>
+  <rect x="40" y="437" width="300" height="192" rx="14" class="card teal"/>
+  <text x="62" y="473" class="label">Programmatic write</text>
+  <text x="62" y="511" class="body">PB / mod source CAS</text>
+  <text x="62" y="542" class="body">Value + expected revision</text>
+  <text x="62" y="588" class="small">Successful writes preempt</text>
+  <text x="62" y="612" class="small">an active value gesture.</text>
+  <path d="M343 533H745" class="flow"/>
+  <text x="392" y="504" class="small accent">Host compares the source revision</text>
+  <text x="392" y="564" class="tiny">Stale write: no canonical change</text>
+
+  <rect x="40" y="676" width="300" height="248" rx="14" class="card blue"/>
+  <text x="62" y="712" class="label">Viewer input lease</text>
+  <text x="62" y="750" class="small">Native Use enters registered</text>
+  <text x="62" y="774" class="small">world bundle; no popup</text>
+  <path d="M62 792H318" class="rule"/>
+  <text x="62" y="820" class="body">PB: native HDR.Pointer/1</text>
+  <text x="62" y="844" class="tiny">+ client 0.9.13; provider ≠ math</text>
+  <text x="62" y="873" class="small">Client mod: cooperative samples</text>
+  <text x="62" y="898" class="tiny">No plugin; no exclusive routing</text>
+  <path d="M343 797H385" class="input-flow"/>
+
+  <rect x="390" y="676" width="300" height="248" rx="14" class="card blue"/>
+  <text x="412" y="712" class="label">Per-value gesture</text>
+  <text x="412" y="750" class="small">Admitted input: click starts drag</text>
+  <text x="412" y="778" class="body">PB: grant + provider ack</text>
+  <text x="412" y="805" class="small">Applied + PointerValid sample</text>
+  <path d="M412 823H668" class="rule"/>
+  <text x="412" y="851" class="small">Validate caller / target / control,</text>
+  <text x="412" y="875" class="small">scope / lease / source revision</text>
+  <text x="412" y="908" class="tiny">Mouseup ends only this gesture</text>
+  <path d="M693 797H720V704H745" class="input-flow"/>
+
+  <rect x="750" y="515" width="285" height="246" rx="14" class="card teal"/>
+  <text x="772" y="557" class="label">Canonical value</text>
+  <text x="772" y="591" class="label accent">+ value revision</text>
+  <path d="M772 611H1013" class="rule"/>
+  <text x="772" y="644" class="body">One admitted numeric state</text>
+  <text x="772" y="673" class="small">Same range and snap rules</text>
+  <text x="772" y="707" class="small">Changed value advances revision</text>
+  <text x="772" y="736" class="tiny">Host source CAS guards commit</text>
+  <path d="M1038 611H1095" class="flow"/>
+
+  <rect x="1100" y="515" width="300" height="246" rx="14" class="card teal"/>
+  <text x="1122" y="557" class="label">Artwork pose</text>
+  <text x="1122" y="600" class="body">Constraint delta</text>
+  <text x="1122" y="630" class="body">× immutable reference pose</text>
+  <path d="M1122 650H1378" class="rule"/>
+  <text x="1122" y="683" class="small">Validate composed geometry</text>
+  <text x="1122" y="707" class="small">and the motion envelope</text>
+  <text x="1122" y="736" class="tiny">Viewer renders the retained artwork</text>
+
+  <path d="M893 764V817" class="return-flow"/>
+  <rect x="750" y="822" width="285" height="102" rx="14" class="card gold"/>
+  <text x="772" y="856" class="label">Bounded event / ack</text>
+  <text x="772" y="886" class="small">Value, revision and phase</text>
+  <text x="772" y="909" class="tiny">Return to the originating caller</text>
+  <path d="M1038 873H1095" class="return-flow"/>
+  <rect x="1100" y="822" width="300" height="102" rx="14" class="card gold"/>
+  <text x="1122" y="856" class="label">Caller updates variable</text>
+  <text x="1122" y="886" class="small">Poll event or local callback</text>
+  <text x="1122" y="909" class="tiny">Caller owns resulting gameplay logic</text>
+
+  <rect x="40" y="948" width="1360" height="118" rx="14" class="card blue"/>
+  <text x="62" y="984" class="label">PB mouse: on-foot, first-person · click / drag world controls</text>
+  <text x="1030" y="984" class="small">Pending cursor: no gesture</text>
+  <text x="62" y="1017" class="body">Mouseup ends only the active value gesture; cursor and viewer input focus remain.</text>
+  <text x="62" y="1047" class="body">Escape or context loss closes the viewer and ends all gestures.</text>
+
+  <text x="40" y="1104" class="section">3  KEEP EXECUTION BOUNDARIES EXPLICIT</text>
+  <rect x="40" y="1124" width="665" height="124" rx="14" class="card neutral"/>
+  <text x="62" y="1160" class="label">PB: server-authoritative numeric state</text>
+  <text x="62" y="1196" class="body">Server validates the live PB, authorized target and transaction.</text>
+  <text x="62" y="1226" class="small">PB mouse needs native input + client 0.9.13; no pointer delegate.</text>
+  <rect x="735" y="1124" width="665" height="124" rx="14" class="card neutral"/>
+  <text x="757" y="1160" class="label">Mod: client-local consumer state</text>
+  <text x="757" y="1196" class="body">Context-scoped values and callbacks run on the client.</text>
+  <text x="757" y="1226" class="small">Cooperative input needs no plugin and confers no server authority.</text>
+
+  <rect x="40" y="1270" width="1360" height="90" rx="14" class="card gold"/>
+  <text x="62" y="1307" class="label gold-text">Fixed actions are a separate path</text>
+  <text x="62" y="1339" class="body">Existing native look-and-use widgets invoke fixed actions; numeric bindings drive movable artwork.</text>
+  <text x="40" y="1393" class="small">ALPHA builds are not installed · live engine GUI click / drag remains unverified</text>
+</svg>

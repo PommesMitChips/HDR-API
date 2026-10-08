@@ -66,7 +66,7 @@ namespace HoloMap
                     var component = block.Components.Get<MyUseObjectsComponentBase>() as MyUseObjectsComponent;
                     var head = MyAPIGateway.Session.Player.Character.GetHeadMatrix(true, true, true, true);
                     Vector3D hit;
-                    if (component != null && TryUiWidgetHit(display, _uiHoveredWidget, head.Translation, head.Forward, out hit)
+                    if (component != null && TryUiCurrentWidgetHit(display, _uiHoveredWidget, head.Translation, head.Forward, out hit)
                         && UiUnoccluded(MyAPIGateway.Session.Player.Character.EntityId, block, head.Translation, hit))
                     {
                         // Only a validated visible hit gets native input geometry. Blank and clipped

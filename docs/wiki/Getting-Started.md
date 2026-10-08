@@ -14,6 +14,7 @@ HDR renders retained artwork on physical LCDs and in world space from Console/Pr
 | Direct camera panorama | [Camera sphere](Cameras-and-Portals.md#direct-camera-panorama) | Required on each viewer |
 | Paired portal or capture-shell bubble | [Native portals](Cameras-and-Portals.md#native-portals-and-capture-shells) | Required; supported native renderer runtime |
 | A client vector HUD/menu supplied by another mod | [Mod integration](Mod-Integration.md) | Not required; cooperative input is supplied by that mod |
+| Retained artwork bound to numeric sliders or rotors | [Interactive controls](Interactive-Controls.md) on a Console/Projector, or the admitted planar LCD subset | Required for native PB mouse capture; numeric math and cooperative mod input work without it |
 
 The [PB capability matrix](Programmable-Blocks.md#block-capability-matrix) explains which block can own each kind of output. An LCD named “HDR Display” does not become a world-space projector.
 
@@ -40,6 +41,14 @@ Name a panel **HDR LCD**, select **Content → HDR API**, then build and paste t
 Name a Console or Projector **HDR Display**. Paste the generated `GeneralSurfaceDemo.pb.cs`, whose source is [GeneralSurfaceDemo.cs](../../Examples/GeneralSurfaceDemo.cs), and run `ellipsoid` or `mesh`. It needs no camera feed. This is a useful first test of world-space placement, sidedness and surface mapping. Console anchors have a default table envelope; large surfaces outside it need that envelope disabled as described in [projection envelopes](Display-Surfaces.md#clipping-and-projection-envelopes).
 
 The short drawing example [DrawDemo.cs](../../Examples/DrawDemo.cs) instead targets **Holo Map** and demonstrates retained lines, text and mod-managed animation. [ConsoleDemo.cs](../../Examples/ConsoleDemo.cs) demonstrates a live construct miniature.
+
+## First interactive control display
+
+Name a Console/Projector **HDR Controls**, paste the built [InteractiveControlsDemo.cs](../../Examples/InteractiveControlsDemo.cs) example, and run `demo`. It declares throttle, trim and angle controls once, then explicitly synchronizes real PB variables through numeric queries/events and revision-checked source writes. A fixed wake argument tells the PB to poll; HDR does not reflect arbitrary fields or callbacks. The [interaction guide](Interactive-Controls.md) covers the exact declarations, event tuple and source commands.
+
+For native mouse operation, stand on foot in first-person gameplay and press **Use** on an authored hotzone. The bundle viewer keeps the artwork in the world without a popup. Actual mouse-down starts a gesture; mouse-up commits/releases only that value gesture and keeps the cursor/viewer open for another control. **Escape** or context loss closes it. Hotzones are author rectangles, not pixel-perfect artwork tests. LCD picking supports planar XY paths and local-Z rotation with admitted pose proof; curved/mesh surface picking is unavailable.
+
+Native PB mouse capture requires the optional HDR Client Renderer 0.9.13 or later pointer provider. Query `H("plugin-status", "interactive-pointer")` for `MyTuple<bool,bool,string>`: known feature, local registration, explanation. Registration does not prove actual routed input or an admitted viewer/gesture; a dedicated server reports viewer dependency with local registration false. The numeric core and a cooperating client mod's controls can run without it. Compilation and offline tests pass, while live click/drag acceptance remains unverified.
 
 ## Verify the actual backend
 

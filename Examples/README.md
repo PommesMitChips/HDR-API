@@ -11,6 +11,7 @@ PB source files stay in this directory because the build compiles and generates 
 | Exported SVG animation | [SvgFramesDemo.cs](SvgFramesDemo.cs) | Authoring input in [Authoring](Authoring/pulse.mjs) |
 | Appearance and layers | [AppearanceDemo.cs](AppearanceDemo.cs) | Colors, transparency and transforms |
 | Hologram effects | [HologramEffectsDemo.cs](HologramEffectsDemo.cs) | Plugin-free depth, flicker, refresh bars, particles, rays and transitions; target **HDR Effects** |
+| Interactive artwork controls | [InteractiveControlsDemo.cs](InteractiveControlsDemo.cs) | Line/polyline/rotation values; target **HDR Controls**; native PB mouse requires Client Renderer 0.9.13+ |
 | Block UI | [UiDemo.cs](UiDemo.cs) | Fixed authorized actions and look-and-use |
 | Floating screen | [ProjectedScreenDemo.cs](ProjectedScreenDemo.cs) | Projector/Console surface |
 | Raster/vector surface | [RasterSurfaceDemo.cs](RasterSurfaceDemo.cs) | Raster mode needs Client Renderer |
@@ -23,7 +24,10 @@ PB source files stay in this directory because the build compiles and generates 
 | Broader feature demonstration | [HdrFeaturesDemo.cs](HdrFeaturesDemo.cs) | Combined rendering features |
 | Client HUD/menu consumer mod | [Mods/HudMenuModExample.cs](Mods/HudMenuModExample.cs) | Copy [HdrModApi.cs](../Api/Mods/HdrModApi.cs) into the consumer mod |
 | Client mod effects | [Mods/HologramEffectsModExample.cs](Mods/HologramEffectsModExample.cs) | World effects and planar HUD particles/transitions |
+| Cooperative client-mod controls | [Mods/InteractiveControlsModExample.cs](Mods/InteractiveControlsModExample.cs) | Client-local variables and consumer-owned input; no client plugin |
 
 `Api/HoloMapApi.cs` is the compatibility typed PB helper. [Api/Ingame/HdrIngameApi.cs](../Api/Ingame/HdrIngameApi.cs) is the smaller current PB helper; [Api/Mods](../Api/Mods/HdrModApi.cs) contains the separate client-mod wrapper. The mod example is deliberately outside the flat PB source directory so it is compiled as mod code rather than pasted into a programmable block.
 
 See the [composition recipes](../docs/wiki/Composition-Recipes.md) and [API reference](../docs/wiki/Api-Reference.md).
+
+The [interactive controls guide](../docs/wiki/Interactive-Controls.md) describes ranges/snapping, explicit value bindings and source-write preemption. Native PB mouse input is ALPHA: Use enters the world bundle, mouse-up ends only the gesture, and Escape/context loss closes the viewer. The renderer build and offline checks do not establish installation or live input acceptance.

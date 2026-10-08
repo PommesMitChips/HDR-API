@@ -2,6 +2,8 @@
 
 HDR separates **who declares content**, **where it appears**, **who produces its data**, and **who owns rendering resources**. Product versions do not replace interface versions.
 
+[Interactive artwork controls](Interactive-Controls.md) are implemented for HDR API **0.9.9 / scene 19** boundary. Optional HDR Client Renderer **0.9.13** is required on the viewer for native mouse focus; live-input acceptance remains unverified. Numeric state, local binding callbacks, viewer authority and native input ownership have separate lifetimes.
+
 ![API execution boundaries](diagrams/architecture-boundaries.svg)
 
 ## Public entry points
@@ -42,17 +44,25 @@ Queries authenticate the live PB and target, construct relationship and access. 
 
 `HDR.Api` retains its typed delegate signatures and product `Version`. The new `ApiVersion` reports `HDR.Api/1`; helpers negotiate this stable contract independently of product patch versions. The [typed helper](../../Api/HoloMapApi.cs) remains available for compatibility; new scripts can use the short endpoint.
 
+PB `HDR.UI/1` numeric values belong to the authenticated caller/target on the server. `value`, `control`, `bind-value`, `draggable` and line/path/rotation `constraint` declarations retain the range, authored hot rectangle and pose binding. Source `set-value` can compare-and-set against `get-value`'s revision; a stale revision changes nothing, while an accepted source write preempts the value gesture. Fixed `value-notify` arguments wake the PB to consume structured `poll-value-events` and assign its own variables. Names are numeric IDs, never reflected fields or arbitrary remote callback/command arguments. See [PB commands and canonical revisions](Interactive-Controls.md#two-way-pb-values-and-revisions).
+
+The optional `HDR.Pointer/1` provider owns exclusive native input through HDR Client Renderer **0.9.13 or later**. With an on-foot first-person character, **Use** on registered artwork enters a persistent bundle viewer; the artwork stays in the world. Viewer admission locks no numeric value. Mouse-down starts its value gesture, mouse-up releases only that gesture, and **Escape/context loss** closes the viewer and cancels all its gestures. Server grants, provider input leases and numeric value leases are distinct. Registration/readiness alone cannot authorize editing: delivery requires a current server grant and a fresh **Applied + PointerValid** routed sample. Author hot rectangles may include padding or transparent holes; they do not prove pixel/triangle coverage. See [viewer input and retirement](Interactive-Controls.md#input-leases-multiplayer-and-retirement).
+
+`HDR.UI/1` remains the interface version. Its static capability string adds `viewer=persistent-bundle;pointer=HDR.Pointer/1` while preserving `values=1`, `constraints=line,path,rotation` and `mouse=client-provider`. These tokens describe the implemented contract; they do not certify that this viewer owns input now.
+
 ## Mods: general local rendering
 
 Mods connect through [HdrModApi](../../Api/Mods/HdrModApi.cs), use a unique consumer ID and create local HUD/world contexts. The bound endpoint owns all context handles. Replacement revokes the predecessor; stale handles cannot clear a successor. Dispose the helper during consumer unload.
 
 HUD contexts use pixel coordinates and public `PostPP` billboard rendering just beyond the camera's near clip plane. **This path remains depth-tested**; it is not a promise of an always-on-top native GUI. World contexts use arbitrary validated affine poses and normal world depth. Vectors, text, SVG and consumer-owned registered texture materials work without the optional client renderer.
 
-Menus use caller-supplied pointer coordinates and bounded event polling. HDR does not capture the OS cursor, pause player controls or execute remote callbacks. Consumers own input cooperation and their gameplay actions. Calls must run on the client main thread outside HDR drawing; this is a caller precondition, not a cross-thread marshalling service.
+Menus and numeric controls use caller-supplied pointer coordinates/rays and bounded event polling. The cooperative mod endpoint does not automatically capture the OS cursor, pause player controls or execute remote callbacks. Consumers own input cooperation and their gameplay actions. Calls must run on the **client simulation thread outside HDR drawing**; this is a caller precondition, not a cross-thread marshalling service.
+
+`HdrModApi` offers client-local `Value`, `Control`, `BindControlValue`, `ConstraintLine`/`ConstraintPath`/`ConstraintRotation`, `GetValue`, `SetValue` and `PollValueEvents`. `BindValue` retains local getter/setter callbacks; only an explicit `UpdateBindings` pump invokes them. Clear/destroy, value removal, unbind/disposal, release and reconnect retire registrations, and callback errors detach the adapter. Neither variables nor callbacks enter PB/network payloads. A consumer that needs shared gameplay state owns server validation and replication. `Pointer`/`PointerRay` remain plugin-free; cancel them immediately when owned input is lost. See [the complete interactive mod example](../../Examples/Mods/InteractiveControlsModExample.cs).
 
 The mod and block categories share the viewer's `/hdr work` cap. When nearby powered block content or focused block UI demands work, mod consumers receive at most half of the cap; otherwise they can use the full available cap. Only actual submissions are charged. Owner/context budgets further divide the mod grant. `/hdr off` disables both.
 
-See [mod integration](Mod-Integration.md) for command signatures, reconnect generations and the complete HUD/menu example.
+See [mod integration](Mod-Integration.md) for command signatures, reconnect generations and the complete HUD/menu and numeric-control examples.
 
 ## Optional plugins: explicit capability failure
 
@@ -62,8 +72,11 @@ See [mod integration](Mod-Integration.md) for command signatures, reconnect gene
 | `camera-panorama` | Direct camera image renderer |
 | `lcd-texture` | LCD texture relay bridge |
 | `native-portal` | Native capture-shell/portal renderer |
+| `interactive-pointer` | `HDR.Pointer/1` exclusive native input provider; HDR Client Renderer 0.9.13 or later |
 
 `plugin-status` returns `MyTuple<bool,bool,string>`: **known feature**, **component registered locally**, **detail**. Registration does not certify GPU readiness, a completed image or every viewer's setup.
+
+`H("plugin-status", "interactive-pointer")` uses that same additive query shape: known/local registration/explanation. On a dedicated server it returns known=true, registered=false and explains the viewer dependency. Local registration is separate from an actual routed **Applied + PointerValid** sample and the server's semantic interaction grant. Cooperative mod input does not require this optional native provider.
 
 Missing components leave their native paths inactive and produce a bounded local message:
 
@@ -82,7 +95,7 @@ The PB helper offers nonthrowing `TryCall`, `TryCapabilities` and `TryPluginStat
 - HDR stores bounded display content and prepares its rendering. Scanning, reconstruction, spatial caches and sensor permission policies belong to source mods such as CamScan.
 - Camera image capture is an optional renderer feature, not a server-side ray-scanning system.
 - Producer validity, user access, power, source generation and resource epochs are checked independently.
-- Provider delegates, local menu callbacks and native resource objects do not enter PB payloads or scene replication.
+- Provider delegates, local getter/setter/menu callbacks and native resource objects do not enter PB payloads or scene replication.
 - The server replicates PB display declarations; general mod contexts are local unless the consumer implements its own synchronization.
 - Installed client mods are trusted code. Consumer IDs provide lifecycle ownership and collision avoidance, not authentication against another malicious installed mod.
 

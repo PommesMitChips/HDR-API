@@ -7,19 +7,19 @@ $taskArchive = [IO.Path]::GetFullPath((Join-Path $taskWorkspace ('_archives\HDR_
 if (-not $taskArchive.StartsWith($taskWorkspace + '\', [StringComparison]::OrdinalIgnoreCase) -or $taskArchive.StartsWith($taskRepo + '\', [StringComparison]::OrdinalIgnoreCase)) { throw 'Archive must remain in the workspace, outside the repository.' }
 $taskCandidates = [Collections.Generic.List[string]]::new()
 $taskRootOutput = Join-Path $taskRepo 'artifacts'
-$taskKeepRoot = @('client-install','install-backups','SvgSamples','portal-motion-20261007','mod-client-native-proof','api-cleanup')
+$taskKeepRoot = @('client-install','install-backups','SvgSamples','portal-motion-20261007','mod-client-native-proof','api-cleanup','interactions-stage','github-publication','github-wiki','github-wiki-checkout','local-tools')
 foreach ($taskEntry in Get-ChildItem -LiteralPath $taskRootOutput -Force) {
     if ($taskEntry.PSIsContainer -and $taskEntry.Name -notin $taskKeepRoot) { $taskCandidates.Add($taskEntry.FullName) }
-    if (-not $taskEntry.PSIsContainer -and $taskEntry.Extension -eq '.zip' -and $taskEntry.Name -notin @('HDR-API-0.9.7.zip','HDR-API-0.9.8.zip')) { $taskCandidates.Add($taskEntry.FullName) }
+    if (-not $taskEntry.PSIsContainer -and $taskEntry.Extension -eq '.zip' -and $taskEntry.Name -notin @('HDR-API-0.9.8.zip','HDR-API-0.9.9.zip')) { $taskCandidates.Add($taskEntry.FullName) }
 }
 $taskPluginOutput = Join-Path $taskRepo 'OptionalPlugins\HDRClientRenderer\artifacts'
 foreach ($taskEntry in Get-ChildItem -LiteralPath $taskPluginOutput -Force) {
     if ($taskEntry.PSIsContainer -and $taskEntry.Name -ne 'Interim') { $taskCandidates.Add($taskEntry.FullName) }
-    if (-not $taskEntry.PSIsContainer -and $taskEntry.Extension -eq '.zip' -and $taskEntry.Name -notmatch '^HDR-Client-Renderer-0\.9\.(11|12)-(Interim|Legacy)\.zip$') { $taskCandidates.Add($taskEntry.FullName) }
+    if (-not $taskEntry.PSIsContainer -and $taskEntry.Extension -eq '.zip' -and $taskEntry.Name -notmatch '^HDR-Client-Renderer-0\.9\.(12|13)-(Interim|Legacy)\.zip$') { $taskCandidates.Add($taskEntry.FullName) }
 }
 $taskInstallOutput = Join-Path $taskRootOutput 'client-install'
 foreach ($taskEntry in Get-ChildItem -LiteralPath $taskInstallOutput -Directory -Force) {
-    if ($taskEntry.Name -notin @('profile-recovery-20261007','gpu-recovery','projection-20261005','mcp-inspection-artifacts')) { $taskCandidates.Add($taskEntry.FullName) }
+    if ($taskEntry.Name -notin @('profile-recovery-20261007','gpu-recovery','projection-20261005','mcp-inspection-artifacts','native-input-baseline-0912')) { $taskCandidates.Add($taskEntry.FullName) }
 }
 $taskTracked = @(& git -c "safe.directory=$taskRepo" -C $taskRepo ls-files)
 if ($LASTEXITCODE -ne 0) { throw 'Cannot verify tracked source.' }

@@ -59,7 +59,7 @@ namespace HoloMap
             if(string.IsNullOrWhiteSpace(command)||command.Length>64)throw new ArgumentException("UI command requires 1–64 characters.");
             string op=command.ToLowerInvariant();var a=new DrawArgs(values);
             if(op=="version"){a.End();return "HDR.UI/1";}
-            if(op=="capabilities"){a.End();return "native-use;pb;toggle;menu;focus=look-and-use;values=1;constraints=line,path,rotation;mouse=client-provider";}
+            if(op=="capabilities"){a.End();return "native-use;pb;toggle;menu;focus=look-and-use;values=1;constraints=line,path,rotation;mouse=client-provider;viewer=persistent-bundle;pointer=HDR.Pointer/1";}
             if(op=="target")return DrawCommand(context,command,values);
             if(context.Target==null)throw new ArgumentException("Select a UI target first.");
             var target=op=="get-value"?AuthorizeAccess(context.Caller,context.Target):Authorize(context.Caller,context.Target);object valueResult;if(TryUiValueCommand(context,op,a,out valueResult))return valueResult;long caller=context.Caller.EntityId;var old=GetUiDisplay(caller,target.EntityId);var next=old==null?new UiDisplay{CallerId=caller,TargetId=target.EntityId}:UiRules.Copy(old);

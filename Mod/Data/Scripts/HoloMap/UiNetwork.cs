@@ -16,6 +16,7 @@ namespace HoloMap
         [ProtoMember(4)] public long Revision;
         [ProtoMember(5)] public long Sequence;
         [ProtoMember(6)] public int Action;
+        [ProtoMember(7)] public long ViewerId;
     }
     [ProtoContract]
     public sealed class UiAck
@@ -29,6 +30,7 @@ namespace HoloMap
         [ProtoMember(7)] public string ActionKind;
         [ProtoMember(8)] public string Argument;
         [ProtoMember(9)] public long SourceTileId;
+        [ProtoMember(10)] public long ViewerId;
     }
     public sealed partial class HoloMapSession
     {
@@ -57,6 +59,7 @@ namespace HoloMap
         {
             try{if(MyAPIGateway.Multiplayer!=null)MyAPIGateway.Multiplayer.UnregisterSecureMessageHandler(UiNetworkChannel, ReceiveUiMessage);}
             catch(Exception error){if(VRage.Utils.MyLog.Default!=null)VRage.Utils.MyLog.Default.WriteLineAndConsole("HDR UI network cleanup: "+error.Message);}
+            ClearUiDragNetwork(); UnregisterUiPointer();
             _uiPeers.Clear(); _uiRequests.Clear(); _uiPending = null;
         }
 
@@ -69,7 +72,7 @@ namespace HoloMap
         {
             if (display == null || widget == null || _uiPending != null || _ticks - _uiLastSendTick < 12) return;
             var press = new UiPress { CallerId = display.CallerId, TargetId = display.TargetId,
-                WidgetId = widget.Id, Revision = display.Revision, Sequence = ++_uiSequence, Action = action };
+                WidgetId = widget.Id, Revision = display.Revision, Sequence = NextUiClientSequence(), Action = action, ViewerId=action==4?_uiViewerId:0 };
             _uiPending = press; _uiPendingTick = _ticks; _uiLastSendTick = _ticks;
             if (MyAPIGateway.Multiplayer.IsServer)
             {
@@ -83,7 +86,7 @@ namespace HoloMap
         {
             _uiPending = null;
             if(MyAPIGateway.Multiplayer==null||MyAPIGateway.Utilities==null||MyAPIGateway.Session==null)return;
-            var close = new UiPress { Action = 1, Sequence = ++_uiSequence, WidgetId = "" };
+            var close = new UiPress { Action = 1, Sequence = NextUiClientSequence(), WidgetId = "" };
             if (MyAPIGateway.Multiplayer.IsServer)
             {
                 var player = MyAPIGateway.Session.LocalHumanPlayer;
@@ -111,6 +114,7 @@ namespace HoloMap
         void ReceiveUiMessage(ushort channel, byte[] bytes, ulong sender, bool fromServer)
         {
             if (channel != UiNetworkChannel || bytes == null || bytes.Length == 0 || bytes.Length > UiPacketBytes) return;
+            if (UiDragWire.IsDrag(bytes)) { ReceiveUiDragMessage(bytes,sender,fromServer); return; }
             try
             {
                 if (MyAPIGateway.Multiplayer.IsServer)
@@ -128,23 +132,24 @@ namespace HoloMap
             catch (Exception) { /* Malformed packets are bounded and ignored without per-packet log spam. */ }
         }
         static bool ValidUiPress(UiPress p)
-        { return p != null && p.Sequence > 0 && (p.Action == 1 && p.CallerId == 0 && p.TargetId == 0 && p.Revision == 0 && p.WidgetId == ""
-            || (p.Action == 0 || p.Action == 2) && p.CallerId != 0 && p.TargetId != 0 && p.Revision > 0 && !string.IsNullOrWhiteSpace(p.WidgetId) && p.WidgetId.Length <= 24); }
+        { return p != null && p.Sequence > 0 && (p.Action==4?p.ViewerId>0:p.ViewerId==0) && (p.Action == 1 && p.CallerId == 0 && p.TargetId == 0 && p.Revision == 0 && p.WidgetId == ""
+            || (p.Action == 0 || p.Action == 2 || p.Action == 3 || p.Action == 4) && p.CallerId != 0 && p.TargetId != 0 && p.Revision > 0 && !string.IsNullOrWhiteSpace(p.WidgetId) && p.WidgetId.Length <= 24); }
 
         void ReceiveUiAck(UiAck ack)
         {
             var pending = _uiPending;
             if (pending == null || ack == null || ack.Sequence != pending.Sequence || ack.CallerId != pending.CallerId
-                || ack.TargetId != pending.TargetId || ack.WidgetId != pending.WidgetId || ack.Revision != pending.Revision) return;
+                || ack.TargetId != pending.TargetId || ack.WidgetId != pending.WidgetId || ack.Revision != pending.Revision || ack.ViewerId!=pending.ViewerId) return;
             _uiPending = null;
             if (!ack.Accepted) { if (pending.Action == 2) ClearUiClient(); return; }
             if (!UiActionAllowed(ack.ActionKind) || ack.Argument == null || ack.Argument.Length > 256) return;
             ApplyUiAcknowledgement(ack);
         }
-        static bool UiActionAllowed(string kind) { return kind == "pb" || kind == "menu" || kind == "focus" || kind == "toggle"; }
+        static bool UiActionAllowed(string kind) { return kind == "pb" || kind == "menu" || kind == "focus" || kind == "toggle" || kind == "control"; }
 
         void TickUiNetwork()
         {
+            TickUiDragNetwork();
             if (_uiPending != null && _ticks - _uiPendingTick > 180)
             { bool focus = _uiPending.Action == 2; _uiPending = null; if (focus) ClearUiClient(); }
             if (!MyAPIGateway.Multiplayer.IsServer) return;
@@ -178,7 +183,7 @@ namespace HoloMap
 
         UiAck ProcessUiPress(ulong sender, UiPress press)
         {
-            var ack = new UiAck { CallerId = press.CallerId, TargetId = press.TargetId, WidgetId = press.WidgetId, Revision = press.Revision, Sequence = press.Sequence };
+            var ack = new UiAck { CallerId = press.CallerId, TargetId = press.TargetId, WidgetId = press.WidgetId, Revision = press.Revision, Sequence = press.Sequence, ViewerId=press.ViewerId };
             try
             {
                 if (!ValidUiPress(press)) return ack;
@@ -186,7 +191,7 @@ namespace HoloMap
                 if (!_uiPeers.TryGetValue(sender, out peer) || press.Sequence <= peer.Sequence) return ack;
                 // Consume a sequence even on rejection; retries cannot later become valid accidentally.
                 peer.Sequence = press.Sequence;
-                if (press.Action == 1) { peer.OpenBundle = null; return ack; }
+                if (press.Action == 1) { peer.OpenBundle = null; CloseUiDragViewer(sender); if(_uiDrags!=null)_uiDrags.CancelPeer(sender); return ack; }
                 var players = new List<IMyPlayer>(); MyAPIGateway.Players.GetPlayers(players, p => p.SteamUserId == sender);
                 if (players.Count != 1) return ack;
                 var player = players[0]; var character = player.Character;
@@ -203,22 +208,27 @@ namespace HoloMap
                 bool opened = widget != null && peer.OpenCaller == press.CallerId && peer.OpenTarget == press.TargetId
                     && peer.OpenRevision == press.Revision && peer.OpenBundle == widget.Bundle
                     && peer.OpenCharacter == character.EntityId && _ticks <= peer.OpenExpires;
+                if(press.Action==4){Vector3D viewerHit;long viewerTile;if(!UiDragViewerClick(sender,press.ViewerId,display,widget,player,out viewerHit,out viewerTile))return ack;opened=true;}
                 if (display == null || display.Revision != press.Revision || widget == null || !HasVisibleUiWidget(display, widget, opened)
                     || !UiActionAllowed(widget.ActionKind) || widget.Argument == null || widget.Argument.Length > 256) return ack;
+                if((press.Action==3||press.Action==4)&&widget.ActionKind!="control")return ack;
                 var head = character.GetHeadMatrix(true, true, true, true); Vector3D hit; long tileId;
-                if (press.Action == 2)
+                if(press.Action==4){if(!UiDragViewerClick(sender,press.ViewerId,display,widget,player,out hit,out tileId))return ack;}
+                else if (press.Action == 2)
                 {
                     if (!opened || !peer.IsFocus || !UiFocusGrantContext(peer, player, display)) return ack;
                     tileId = peer.OpenTile;
                     var focusTile = MyAPIGateway.Entities.GetEntityById(tileId) as IMyTerminalBlock;
                     hit = Vector3D.Transform(peer.FocusLocal, focusTile.WorldMatrix);
                 }
+                else if (widget.Control!=null) { if(!TryUiControlHit(display,widget,head.Translation,head.Forward,out hit,out tileId,opened))return ack; }
                 else if (!TryUiWidgetHit(display, widget, head.Translation, head.Forward, out hit, out tileId)) return ack;
                 var tile = MyAPIGateway.Entities.GetEntityById(tileId) as IMyTerminalBlock;
                 if (tile == null || tile.Closed) return ack;
                 Authorize(caller, tile);
                 if (!tile.HasPlayerAccess(player.IdentityId) || Vector3D.DistanceSquared(character.GetPosition(), tile.GetPosition()) > 25
                     || Vector3D.DistanceSquared(head.Translation, hit) > 36 || !UiUnoccluded(character.EntityId, tile, head.Translation, hit)) return ack;
+                if(widget.ActionKind=="control"&&!UiClickControl(display.CallerId,display.TargetId,widget.Id,player.IdentityId,opened))return ack;
                 // Fixed PB-registered arguments only. A client cannot invoke any arbitrary command.
                 if (widget.ActionKind == "pb" && !caller.TryRun(widget.Argument)) return ack;
                 if (widget.ActionKind == "toggle")

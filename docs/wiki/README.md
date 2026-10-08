@@ -1,6 +1,8 @@
 # HDR API wiki
 
-HDR API **0.9.8**, scene protocol **18**, optional Client Renderer **0.9.12**.
+HDR API **0.9.9**, scene protocol **19**, optional Client Renderer **0.9.13**.
+
+> **ALPHA:** Native rendering and input remain experimental. Offline compilation and checks do not establish live GPU, GUI/input or multiplayer acceptance.
 
 Start with the API boundary for your caller. Programmable blocks declare shared displays on blocks; mods can own local HUD/world contexts; source providers supply content; renderer backends own GPU preparation.
 
@@ -15,6 +17,7 @@ Start with the API boundary for your caller. Programmable blocks declare shared 
 | [Programmable blocks](Programmable-Blocks.md) | LCD/Projector/Console selection, queries and lifecycle |
 | [Drawing](Drawing.md) | Geometry, text, SVG, images, layers, animation and block UI |
 | [Hologram effects](Special-Effects.md) | Flicker, refresh bars, depth layers, particles, projector rays and transitions |
+| [Interactive controls](Interactive-Controls.md) | Numeric values, line/polyline/rotation constraints, two-way bindings and the persistent bundle viewer |
 | [Display surfaces](Display-Surfaces.md) | LCD backends, floating/curved/mesh surfaces and raster UI |
 | [Cameras and portals](Cameras-and-Portals.md) | Direct camera images, panorama composition and capture shells |
 | [Mod integration](Mod-Integration.md) | HUD/menu consumers, source providers and renderer backends |
@@ -28,10 +31,12 @@ Start with the API boundary for your caller. Programmable blocks declare shared 
 - **LCD:** [LcdDemo.cs](../../Examples/LcdDemo.cs).
 - **SVG and animation:** [SvgDemo.cs](../../Examples/SvgDemo.cs), [SvgFramesDemo.cs](../../Examples/SvgFramesDemo.cs).
 - **Hologram effects:** [HologramEffectsDemo.cs](../../Examples/HologramEffectsDemo.cs), generated as `artifacts/HologramEffectsDemo.pb.cs`.
+- **Interactive artwork:** [InteractiveControlsDemo.cs](../../Examples/InteractiveControlsDemo.cs), generated as `artifacts/InteractiveControlsDemo.pb.cs`; native PB mouse requires Client Renderer 0.9.13+.
 - **General surfaces:** [GeneralSurfaceDemo.cs](../../Examples/GeneralSurfaceDemo.cs).
 - **Direct camera sphere:** [DirectCameraSphereDemo.cs](../../Examples/DirectCameraSphereDemo.cs).
 - **Native portal:** [PortalDemo.cs](../../Examples/PortalDemo.cs).
 - **HUD/menu mod:** [HudMenuModExample.cs](../../Examples/Mods/HudMenuModExample.cs), with [HdrModApi.cs](../../Api/Mods/HdrModApi.cs).
+- **Cooperative mod controls:** [InteractiveControlsModExample.cs](../../Examples/Mods/InteractiveControlsModExample.cs); local getter/setter bindings and consumer-owned input need no client plugin.
 
 See the [categorized examples](../../Examples/README.md) and [contributor/build guide](../Contributing.md). Historical defaults and repairs are kept in the [release history](../../CHANGELOG.md); they are not the current API reference.
 

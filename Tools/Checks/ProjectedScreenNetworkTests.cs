@@ -109,7 +109,7 @@ internal static class ProjectedScreenNetworkTests
             s.Scenes.Clear();for(int anchor=0;anchor<8;anchor++){var scene=ClientReplicationTests.Scene(20+anchor);scene.Items.Clear();scene.Screens=new List<HoloProjectedScreenData>();for(int i=0;i<2;i++){var screen=Screen("s"+i);screen.SourcePoints=new double[2048*3];screen.SourceTriangles=new int[4094*3];screen.SourceColors=Enumerable.Range(0,4094*4).Select(n=>n%4==3?1f:0f).ToArray();scene.Screens.Add(screen);}s.Scenes.Add(scene);}
         },"global projected declaration replication budget");
         int protocol=(int)typeof(HoloMapSession).GetField("NetworkProtocol",BindingFlags.NonPublic|BindingFlags.Static).GetRawConstantValue();
-        Check(protocol==18,"portal and effect declarations use explicit protocol");
+        Check(protocol==19,"portal, effect and numeric interaction declarations use explicit protocol");
         return _checks;
     }
 }

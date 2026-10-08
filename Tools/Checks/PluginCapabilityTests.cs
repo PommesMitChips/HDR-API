@@ -60,6 +60,24 @@ internal static class PluginCapabilityTests
   Check(messages.Count==before+1,"new disconnection emits one notice after reconnect");
   Call(session,"DisplaySourceService","unregister",new object[]{"native-portal",endpoint});
   Call(session,"NotifyPluginUnavailable","native-portal");Check(messages.Count==before+2,"portal reconnect resets only its feature notice");
+  Call(session,"ResetPluginNotices");before=messages.Count;
+  var absentPointer=Status("interactive-pointer");
+  Check(absentPointer.Item1&&!absentPointer.Item2&&absentPointer.Item3.Contains("0.9.13"),"native pointer has a safe version-specific missing-plugin explanation");
+  Check(Field(session,"_uiPointer")==null,"pointer capability query does not initialize or acquire input");
+  for(int i=0;i<100;i++)Check((bool)Call(session,"NotifyPluginUnavailable","interactive-pointer"),"missing pointer use is nonthrowing");
+  Check(messages.Count==before+1,"pointer absence has its own bounded notice group");
+  dedicated=true;before=messages.Count;
+  Check(Status("interactive-pointer").Item1&&!Status("interactive-pointer").Item2&&Status("interactive-pointer").Item3.StartsWith("Viewer-dependent capability:"),"dedicated server accepts viewer-neutral pointer capability");
+  Call(session,"NotifyPluginUnavailable","interactive-pointer");Check(messages.Count==before,"dedicated pointer capability cannot emit client warnings");
+  dedicated=false;var pointerBridge=new PointerInputBridge();ClientReplicationTests.SetField(session,"_uiPointer",pointerBridge);
+  int pointerCalls=0;Func<string,object[],object> pointerEndpoint=(op,args)=>{pointerCalls++;return null;};
+  Call(session,"ReceiveUiPointerProvider",new MyTuple<string,int,Func<string,object[],object>>(PointerInputBridge.Version,1,pointerEndpoint));
+  var connectedPointer=Status("interactive-pointer");
+  Check(connectedPointer.Item1&&connectedPointer.Item2&&connectedPointer.Item3.Contains("confirmed input routing"),"local pointer registration does not claim routed-input readiness");
+  Check(pointerCalls==0,"pointer discovery and capability queries never acquire or sample native input");
+  Call(session,"ReceiveUiPointerProvider",new MyTuple<string,int,Func<string,object[],object>>(PointerInputBridge.Version,0,pointerEndpoint));
+  before=messages.Count;Call(session,"NotifyPluginUnavailable","interactive-pointer");
+  Check(!Status("interactive-pointer").Item2&&messages.Count==before+1,"provider reconnect resets pointer notice for a later withdrawal");
   return checks;
  }
 }

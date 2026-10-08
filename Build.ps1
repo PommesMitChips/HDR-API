@@ -23,7 +23,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'LCD screen calibration does not match installed models.' }
     & dotnet run --project (Join-Path $taskRoot 'Tools\Checks\Checks.csproj') "-p:GameBin=$GameBin" -- $taskRoot
     if ($LASTEXITCODE -ne 0) { throw 'HDR API checks failed.' }
-    Compress-Archive -Path (Join-Path $taskRoot 'Mod\*') -DestinationPath (Join-Path $taskRoot 'artifacts\HDR-API-0.9.8.zip') -Force
+    Compress-Archive -Path (Join-Path $taskRoot 'Mod\*') -DestinationPath (Join-Path $taskRoot 'artifacts\HDR-API-0.9.9.zip') -Force
     Write-Host "Paste-ready PB demo: $(Join-Path $taskRoot 'artifacts\ConsoleDemo.pb.cs')"
     Write-Host "Paste-ready SVG/image demo: $(Join-Path $taskRoot 'artifacts\SvgDemo.pb.cs')"
     Write-Host "Paste-ready exported animation demo: $(Join-Path $taskRoot 'artifacts\SvgFramesDemo.pb.cs')"
@@ -45,3 +45,4 @@ Write-Host "Spherical LCD-video relay demo: $(Join-Path $taskRoot 'artifacts\Sph
 Write-Host "HDR feature demo: $(Join-Path $taskRoot 'artifacts\HdrFeaturesDemo.pb.cs')"
 Write-Host "Native F UI demo: $(Join-Path $taskRoot 'artifacts\UiDemo.pb.cs')"
 Write-Host "Plugin-free hologram effects demo: $(Join-Path $taskRoot 'artifacts\HologramEffectsDemo.pb.cs')"
+Write-Host "Interactive slider and rotation demo: $(Join-Path $taskRoot 'artifacts\InteractiveControlsDemo.pb.cs')"

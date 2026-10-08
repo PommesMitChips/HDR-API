@@ -4,6 +4,8 @@ HDR offers three different mod boundaries: **consume rendering**, **supply displ
 
 Retained HUD/world items can use [hologram effects](Special-Effects.md), including flicker, refresh bars, procedural particles and reveal transitions. World contexts also support layered depth and projection rays. The effects use the consumer's existing local context and do not require a renderer plugin.
 
+[Interactive artwork controls](Interactive-Controls.md) add numeric values and constrained retained poses for PBs and client mods in HDR API **0.9.9 / scene 19**. Optional HDR Client Renderer **0.9.13** is required on the viewer for native mouse focus; live-input behavior remains unverified. Cooperative mod input uses the consumer's existing input route and needs no renderer plugin.
+
 ![API ownership and execution boundaries](diagrams/architecture-boundaries.svg)
 
 ## Choose the boundary
@@ -21,8 +23,8 @@ These channels use **local `SendModMessage`**, not multiplayer transport. Delega
 
 | Work | Viewing client | Dedicated server | Shared across players |
 |---|---|---|---|
-| PB drawing declarations and canonical block UI actions | Draws authorized declarations | Validates/replicates declarations and actions | Yes, through HDR scene protocol |
-| `HDR.ModClient/1` HUD/world contexts | Retains and draws this mod's local contexts | Service absent; skip activation | No automatic replication |
+| PB drawing declarations and canonical numeric state | Draws authorized declarations and canonical poses | Validates declarations and actions; replicates canonical values/poses | Declarations, values and poses through HDR scene protocol |
+| `HDR.ModClient/1` HUD/world contexts and numeric values | Retains and draws this mod's local contexts | Service absent; skip activation | No automatic replication; callbacks remain local |
 | Provider frame and source evidence | Prepared/validated locally | No local GPU image capture required | Only provider/source identifiers in HDR declarations |
 | Direct camera/native portal rendering | Optional client renderer captures/composes | Plugin not required for capture | Declaration shared; pixels remain local |
 | General menu hit events | Cooperating consumer supplies pointer and polls | No client pointer or local menu | Consumer mod owns any authorized network action |
@@ -156,9 +158,25 @@ Consumer images use their own registered transparent materials. Names beginning 
 
 ### Interaction semantics
 
-`bounds` registers `(x,y,width,height)` hit regions independently from artwork. The last declared matching region wins. `pointer` generates `enter`, `leave` and rising-edge `click` events; `poll-events` drains the queue. The bounded queue discards the oldest event on overflow. There is no keyboard focus, text editing, mouse capture or automatic multiplayer action in this protocol. A consumer can combine it with its own input handling or an optional input framework.
+`bounds` registers `(x,y,width,height)` hit regions independently from artwork. The last declared matching region wins. `pointer` generates `enter`, `leave` and rising-edge `click` events; `poll-events` retains its two-string tuple shape and drains the queue. Numeric gestures also use `down`, `move`, `up` and `cancel`. The bounded queue discards the oldest event on overflow. There is no keyboard focus, text editing, automatic mouse capture or automatic multiplayer action in this protocol. A consumer can combine it with its own input handling or an optional input framework.
 
 Bounds use context coordinates and are not attached automatically to transformed items. When moving a menu, update its artwork and bounds together. Hiding/removing a drawing item alone does not delete its separate hit region; use `remove-bounds` or hide/clear the context.
+
+### Numeric controls and explicit local bindings
+
+The [complete interactive mod example](../../Examples/Mods/InteractiveControlsModExample.cs) declares a line slider, polyline handle and rotor once, then updates retained values. `HdrModApi.Value` defines the range/step; `Control` attaches a local **left/top X/Y, width/height** rectangle to existing artwork; `BindControlValue` associates the control with a numeric value. Use `ConstraintLine`, `ConstraintPath` or `ConstraintRotation` and `Draggable` to admit its motion. Rotation endpoints are radians. These author rectangles follow the artwork pose; they are not pixel/triangle coverage or unrelated-world occlusion proofs.
+
+`GetValue` returns `MyTuple<double,long>` (canonical value, revision). `SetValue` returns `MyTuple<bool,double,long>` (accepted, current value, revision); a nonnegative expected revision requests compare-and-set. A stale revision preserves the value and active gesture. An accepted source write preempts the gesture, including a write of the same canonical number. `PollValueEvents` drains `MyTuple<string,string,string,MyTuple<double,long,long>>[]`: kind, control ID, value ID, then canonical value/revision/player ID. Local kinds are `begin`, `change`, `set`, `end`, `cancel`, and player ID is zero. Progress may coalesce, so query canonical state when recovering from bounded delivery.
+
+`BindValue(context,id,Func<double>,Action<double>)` returns an `IDisposable` local adapter; registering it invokes no callback. Call `UpdateBindings` explicitly on the **client simulation thread outside Draw**. Its first pump treats the getter as source authority; later source changes use a fresh-revision write, while a newer HDR revision reaches the setter. Clamp/snap corrections return through the setter. Callback failure detaches that adapter and sets `LastBindingError`. Unbind/dispose, value removal, context clear/destroy, endpoint release/replacement and reconnect retire callbacks; rebuild declarations and registrations for the new `ConnectionGeneration`. HDR does not reflect variable names or send these delegates to PBs or other clients.
+
+Supply owned viewport pixels through `Pointer`, or a world-space ray through `PointerRay` for world contexts. Call `CancelPointer` immediately when your route loses focus or ownership. Captured drags may continue beyond the initial rectangle; cancellation/source preemption requires button release before another held-button drag. Your consumer owns input suppression, gameplay authorization and any network replication. See [the binding and cooperative-input guide](Interactive-Controls.md#client-mod-bindings-and-cooperative-input).
+
+### PB values and the optional native viewer
+
+PB `HDR.UI/1` controls instead use server-owned caller/target values, explicit source compare-and-set, fixed `value-notify` wake arguments and structured `poll-value-events`; polling code assigns actual PB variables. Neither a value ID nor a player edit names a reflected field or supplies an arbitrary remote callback/command argument.
+
+The optional `HDR.Pointer/1` provider supplies exclusive native input for PB artwork through HDR Client Renderer **0.9.13 or later**. While on foot in first person, native **Use** on an authored hot rectangle enters a persistent bundle viewer with the artwork remaining in the world. Viewer admission locks no value; mouse-down starts a value lease, mouse-up ends only that gesture, and **Escape/context loss** closes the viewer and cancels its gestures. Provider registration/readiness is separate from the actual server grant and a fresh **Applied + PointerValid** routed sample. The provider build and frozen transport checks do not establish live routing acceptance. See [viewer lifetimes and multiplayer](Interactive-Controls.md#input-leases-multiplayer-and-retirement).
 
 ## Supply an external display source
 
@@ -240,16 +258,17 @@ Keep GPU allocation, render-thread dispatch, frame publication and resource clea
 
 ## Dependency choices
 
-Query `plugin-status` on the service or consumer endpoint with `raster-ui`, `camera-panorama`, `lcd-texture`, or `native-portal`. It returns `MyTuple<bool,bool,string>`: **known feature**, **component registered on this client**, **reason**. Registration is not successful GPU initialization, native capability support, completed capture, or frame readiness. Unknown names return `(false,false,reason)`.
+Query `plugin-status` on the service or consumer endpoint with `raster-ui`, `camera-panorama`, `lcd-texture`, `native-portal`, or `interactive-pointer`. It returns `MyTuple<bool,bool,string>`: **known feature**, **component registered on this client**, **reason**. Registration is not successful GPU initialization, completed capture, frame readiness or confirmed native input routing. `interactive-pointer` describes the optional `HDR.Pointer/1` provider; cooperative mod pointer calls need no such provider. A PB can query `H("plugin-status", "interactive-pointer")`, but that result describes its host/server execution context. Dedicated servers report known=true, registered=false with a viewer-dependent explanation. Unknown names return `(false,false,reason)`.
 
-When a client tries to draw a missing plugin feature, HDR reports `Requires plugin: HDR Client Renderer (feature)`. Notices are bounded to three categories: raster UI, camera images (direct and LCD relay share one category), and native portals. Each category is reported once until a matching component registers/reconnects or the session resets. Server declarations remain accepted and dedicated-server diagnostics explain that availability is viewer-dependent; the server cannot claim that a remote viewer has no plugin. See [PluginCapabilities.cs](../../Mod/Data/Scripts/HoloMap/PluginCapabilities.cs).
+When a client attempts a missing plugin feature, HDR reports `Requires plugin: HDR Client Renderer (feature)`; the interactive-pointer explanation additionally requires version 0.9.13 or later. Notices are bounded to raster UI, camera images (direct and LCD relay share one category), native portals and interactive pointer. Each category is reported once until a matching component registers/reconnects or the session resets. Server declarations remain accepted and dedicated-server diagnostics explain that availability is viewer-dependent; the server cannot claim that a remote viewer has no plugin. See [PluginCapabilities.cs](../../Mod/Data/Scripts/HoloMap/PluginCapabilities.cs).
 
 | Feature | HDR Workshop mod | HDR Client Renderer plugin | Other integration |
 |---|---|---|---|
 | PB vectors, SVG, physical LCD sprite output | Required | Not required | None |
 | General mod HUD/world vectors and registered materials | Required | Not required | Consumer packages its own registered materials |
 | Native block look-and-use PB buttons | Required | Not required | Server validation built into HDR |
-| Cooperative mod menu | Required | Not required | Consumer input/action handling |
+| Cooperative mod menu and numeric controls | Required | Not required | Consumer input/action handling and explicit binding pump |
+| Persistent PB mouse viewer | Required | Optional `HDR.Pointer/1` provider required for exclusive native input | 0.9.13 or later; live routing unverified |
 | Raster UI or provider RGBA upload | Required | Required unless another compatible raster backend supplies it | Upload lease protocol |
 | Direct camera panorama or native portals | Required | Required per viewing client | Engine/runtime support must be available |
 | Existing LCD camera relay | Required | Required for the relay projection path | CameraLCD supplies the physical LCD image |

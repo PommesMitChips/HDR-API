@@ -11,10 +11,10 @@ HDR API is a display and hologram rendering library for **Space Engineers**. Pro
 - Display floating panels and wrap content onto cylinders, spheres, ellipsoids or custom meshes.
 - Animate holograms with flicker, moving scan bars, depth layers, particles, projection rays and transitions.
 - Show a live grid preview and combine artwork with data from other mods.
-- Create buttons and menus; numeric sliders, constrained handles and rotation controls are being integrated.
+- Create buttons, menus and [numeric sliders, constrained handles and rotation controls](docs/wiki/Interactive-Controls.md), with two-way script/mod values and retained artwork poses.
 - With the optional **HDR Client Renderer**, display camera feeds, raster interfaces and visual portals.
 
-Ordinary vector displays and hologram effects work **without a client plugin**. Features that need one remain inactive and explain the requirement when it is missing. Camera scanning and reconstruction belong to separate data-provider mods.
+Ordinary vector displays, hologram effects, numeric source writes and cooperative mod controls work **without a client plugin**. Native PB mouse controls require **HDR Client Renderer 0.9.13+**; an absent provider leaves them inactive with a printable `Requires plugin` reason. Camera scanning and reconstruction belong to separate data-provider mods.
 
 ## Simple setup
 
@@ -30,7 +30,7 @@ For the effects demonstration, name a Console or Projector **HDR Effects** and u
 
 ### Optional client renderer
 
-Camera feeds, raster displays and portals use the optional client renderer. Each viewer who uses these features installs it through a compatible client plugin loader such as Pulsar. A dedicated server does not need the client plugin. Native mouse dragging is still being integrated; the current client renderer source includes its experimental input provider.
+Camera feeds, raster displays, portals and native PB mouse controls use the optional client renderer. Each viewer who uses these features installs it through a compatible client plugin loader such as Pulsar. A dedicated server does not need the client plugin. On foot in first-person view, **Use** enters an authored control bundle; mouse-up ends a value gesture while the viewer remains open, and **Escape** closes it. Install HDR Client Renderer 0.9.13 or later for native PB mouse controls. Live input acceptance remains unverified.
 
 See the [client renderer setup guide](OptionalPlugins/HDRClientRenderer/README.md). Close the game before replacing plugin DLLs, then restart it through the loader.
 
@@ -41,6 +41,7 @@ See the [client renderer setup guide](OptionalPlugins/HDRClientRenderer/README.m
 - [Documentation sources](docs/wiki/README.md)
 - [Programmable-block API](docs/wiki/Programmable-Blocks.md)
 - [Hologram effects](docs/wiki/Special-Effects.md)
+- [Interactive artwork controls](docs/wiki/Interactive-Controls.md)
 - [HUDs, menus and integration with other mods](docs/wiki/Mod-Integration.md)
 - [API boundaries](docs/wiki/API-Boundaries.md) and [security](Security.md)
 - [Release history](CHANGELOG.md)

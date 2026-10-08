@@ -121,7 +121,7 @@ namespace HoloMap
     public sealed partial class HoloMapSession
     {
         const ushort NetworkChannel = 49783;
-        const int NetworkProtocol = 18;
+        const int NetworkProtocol = 19;
         const int ChunkBytes = 2800, MaxSnapshotBytes = 2 * 1024 * 1024;
         long _revision, _receivedRevision;
         HoloSnapshot _sentSnapshot, _networkSnapshot;

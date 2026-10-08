@@ -108,7 +108,7 @@ namespace HoloMap
             _uiFocusCursor.X=MathHelper.Clamp(_uiFocusCursor.X,0,1);_uiFocusCursor.Y=MathHelper.Clamp(_uiFocusCursor.Y,0,1);
             Vector2D center;double units,aspect;if(!UiFocusMetrics(out center,out units,out aspect))return;
             var point=UiFocusLayout.Point(_uiFocusCursor,center,units,aspect);UiWidget hit=null;
-            for(int i=current.Widgets.Count-1;i>=0;i--){var w=current.Widgets[i];if(w.Bundle==_uiFocusBundle&&UiWidgetLocallyVisible(current,w)&&UiRules.Contains(w,point.X,point.Y)){hit=w;break;}}
+            for(int i=current.Widgets.Count-1;i>=0;i--){var w=current.Widgets[i];if(w.Bundle==_uiFocusBundle&&UiWidgetLocallyVisible(current,w)&&UiFocusControlContains(current,w,point.X,point.Y)){hit=w;break;}}
             _uiFocusHover=hit;
             bool pressed=UiInputPrimaryPressed;
             if(hit!=null&&pressed)SendUiFocusPress(current,hit);
@@ -190,10 +190,12 @@ namespace HoloMap
                 var w=_uiFocusHover;
                 var corners=new[]{new Vector3D(w.X-w.Width*.5,w.Y-w.Height*.5,0),new Vector3D(w.X+w.Width*.5,w.Y-w.Height*.5,0),
                     new Vector3D(w.X+w.Width*.5,w.Y+w.Height*.5,0),new Vector3D(w.X-w.Width*.5,w.Y+w.Height*.5,0)};
+                var hoverPlacement=placement;
+                if(w.Control!=null){Item item;if(!scene.Items.TryGetValue(Key(_uiFocusDisplay.CallerId,w.Control.Artwork),out item))return;hoverPlacement=item.Transform*placement;}
                 for(int i=0;i<4;i++)
                 {
-                    var a=Vector3D.Transform(corners[i],placement)+cameraWorld.Backward*.002;
-                    var b=Vector3D.Transform(corners[(i+1)%4],placement)+cameraWorld.Backward*.002;
+                    var a=Vector3D.Transform(corners[i],hoverPlacement)+cameraWorld.Backward*.002;
+                    var b=Vector3D.Transform(corners[(i+1)%4],hoverPlacement)+cameraWorld.Backward*.002;
                     if(volume.ClipLine(ref a,ref b))DrawUiFocusLine(a,b,new Vector4(1,.8f,.15f,1),.001f,ref budget);
                 }
             }

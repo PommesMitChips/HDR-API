@@ -23,6 +23,7 @@ GUIDES = [
     ("API-Boundaries", "API boundaries"),
     ("Programmable-Blocks", "Programmable blocks"),
     ("Drawing", "Drawing and animation"),
+    ("Interactive-Controls", "Interactive controls"),
     ("Special-Effects", "Hologram effects"),
     ("Display-Surfaces", "Display surfaces"),
     ("Cameras-and-Portals", "Cameras and visual portals"),
@@ -72,9 +73,9 @@ def main() -> int:
                         default=default_root())
     parser.add_argument("--output", type=Path,
                         help="Wiki checkout contents only; defaults to artifacts/github-wiki/generated.")
-    parser.add_argument("--release", default="0.9.8")
-    parser.add_argument("--scene-protocol", default="18")
-    parser.add_argument("--client-renderer", default="0.9.12")
+    parser.add_argument("--release", help="Defaults to the maintained wiki index release.")
+    parser.add_argument("--scene-protocol", help="Defaults to the maintained wiki index scene protocol.")
+    parser.add_argument("--client-renderer", help="Defaults to the maintained wiki index optional renderer.")
     parser.add_argument("--validate-only", action="store_true")
     args = parser.parse_args()
     root = args.repository_root.resolve()
@@ -91,6 +92,10 @@ def main() -> int:
     declared_versions = re.search(
         r"HDR API \*\*([^*]+)\*\*, scene protocol \*\*([^*]+)\*\*, optional Client Renderer \*\*([^*]+)\*\*",
         published_index)
+    if declared_versions:
+        for name, value in zip(("release", "scene_protocol", "client_renderer"), declared_versions.groups()):
+            if getattr(args, name) is None:
+                setattr(args, name, value)
     if not declared_versions or declared_versions.groups() != (
             args.release, args.scene_protocol, args.client_renderer):
         errors.append("Release arguments must match the maintained docs/wiki/README.md version tuple.")
@@ -164,14 +169,22 @@ The documented release is **HDR API {args.release}**, scene protocol
 - Add flicker, moving refresh bars, depth layers, cosmetic particles, projection
   rays and fade/wipe/dissolve transitions.
 - Show a live grid preview and display content supplied by other mods.
-- Create bounded buttons and menus using native look-and-Use interaction.
+- Create buttons, menus, sliders and constrained path/rotation handles with
+  numeric values and script/mod value bindings.
 - With the optional client renderer, show camera panoramas, raster interfaces
   and visual portals/capture shells.
 
 Ordinary vectors and hologram effects work without a client plugin. Plugin-only
 features remain inactive and explain the requirement when the component is absent.
-Numeric drag controls and the native mouse-focus workflow are **in development**;
-see [development status]({WIKI}/Development-Status) before depending on them.
+Native block UI mouse interaction requires **HDR API 0.9.9 or later** and
+**HDR Client Renderer 0.9.13 or later** on each participating viewer. Look at a
+control and press **Use** to enter its UI, then click or drag controls on the
+original display. Releasing the mouse commits the current gesture while keeping
+the UI focused; **Escape** or context loss exits. Other mods can provide their own
+cooperative pointer input without the plugin. See
+[interactive controls]({WIKI}/Interactive-Controls) for setup, values and limits.
+The feature is experimental; [development status]({WIKI}/Development-Status)
+separates offline checks from live acceptance.
 
 ## Simple setup
 
@@ -186,6 +199,8 @@ see [development status]({WIKI}/Development-Status) before depending on them.
 
 For hologram effects, name a Console or Projector **HDR Effects** and use
 [HologramEffectsDemo.cs]({REPOSITORY}/blob/main/Examples/HologramEffectsDemo.cs).
+For interactive controls, follow the
+[interactive controls guide]({WIKI}/Interactive-Controls) and its complete examples.
 Each viewer using native features installs the optional client renderer. A
 dedicated server does not need that plugin. See [getting started]({WIKI}/Getting-Started)
 for builds, installation and backend checks.
@@ -209,22 +224,40 @@ promise of driver stability or final visual quality.
 ## Available in the documented release
 
 Retained drawing, SVG/text/geometry, LCD and world-space surfaces, effects,
-native look-and-Use buttons, consumer-owned mod HUD/world contexts, optional
-raster UI, direct camera panoramas and native visual portals are documented
+native look-and-Use buttons, numeric interactive controls, consumer-owned mod
+HUD/world contexts, optional raster UI, direct camera panoramas and native visual
+portals are documented
 in their [feature guides]({WIKI}/Documentation-Index). Each guide states bounds,
 ownership, dependencies and validation limits.
 
-## In development: numeric interactive controls
+## Supported, experimental: numeric interactive controls
 
-The next interaction work introduces numeric values, sliders, constrained
-path/rotation handles, event polling and local mod value bindings. A native
-pointer provider is intended to support entering a block UI with **Use**, then
-clicking or dragging its controls until **Escape** or context loss.
+The interaction API includes bounded numeric values, sliders, constrained
+line/polyline paths and rotation handles, event polling, revision-checked writes
+and local mod value bindings. Programmable-block controls use server-validated
+declarations and canonical values. Mod consumers retain local contexts and supply
+their own cooperative input.
 
-These features are being integrated and tested. They are **not part of the
-documented release**, and the wiki does not yet present them as a stable public
-contract. Existing buttons continue to use the look-and-Use behavior described
-in [Drawing]({WIKI}/Drawing#live-construct-and-interface-actions).
+For native block mouse interaction, use HDR API **0.9.9+** with optional
+HDR Client Renderer **0.9.13+**. Press **Use** on an authored control to focus its
+bundle, then click or drag controls on the original display. Mouse-up ends the
+current gesture and releases its value lock; it keeps the viewer session open.
+**Escape** or context loss releases the viewer session and input ownership.
+Missing native pointer support remains inactive and explains the plugin
+requirement. Cooperative mod pointer handling does not require that plugin.
+
+Offline checks cover interaction math, declaration/value admission, ownership,
+revision and gesture lifetimes, transport, and the pointer-provider state machine.
+These checks do not certify actual in-game GUI behavior or real multiplayer
+delivery. See [interactive controls]({WIKI}/Interactive-Controls) for the exact
+commands, examples and supported display/input scopes.
+
+## Live acceptance still pending
+
+Native mouse acquisition/release, cursor placement on moving artwork, multiplayer
+gestures and final GPU visuals/performance need live-game acceptance. ALPHA APIs
+can change. Supported controls should not be read as a promise of browser-style
+text editing, arbitrary global input access or general curved-surface picking.
 
 ## Rendering and multiplayer limits
 
@@ -246,6 +279,7 @@ and [API boundaries]({WIKI}/API-Boundaries) when integrating a feature.
 **Build displays**
 
 - [Drawing and animation]({WIKI}/Drawing)
+- [Interactive controls]({WIKI}/Interactive-Controls)
 - [Hologram effects]({WIKI}/Special-Effects)
 - [Display surfaces]({WIKI}/Display-Surfaces)
 - [Cameras and visual portals]({WIKI}/Cameras-and-Portals)

@@ -28,17 +28,18 @@ namespace HoloMap
                 && MyAPIGateway.Session.Player.Controller.ControlledEntity != null
                 && ReferenceEquals(MyAPIGateway.Session.Player.Controller.ControlledEntity.Entity, character)
                 && MyAPIGateway.Session.CameraController != null && MyAPIGateway.Session.CameraController.IsInFirstPersonView
-                && !MyAPIGateway.Gui.ChatEntryVisible && !MyAPIGateway.Gui.IsCursorVisible
+                && !MyAPIGateway.Gui.ChatEntryVisible && (!MyAPIGateway.Gui.IsCursorVisible || UiDragOwnsNativeCursor)
                 && MyAPIGateway.Gui.GetCurrentScreen == MyTerminalPageEnum.None;
         }
 
         void ClearUiClient()
         {
-            try{if (_uiLocalMenus.Count != 0 || _uiPending != null) SendUiClose();}catch{}
+            try{if (_uiLocalMenus.Count != 0 || _uiPending != null || UiViewerRequested) SendUiClose();}catch{}
             ClearUiClientLocal();
         }
         void ClearUiClientLocal()
         {
+            CancelUiDragLocal();
             _uiLocalMenus.Clear(); _uiHoveredDisplay = null; _uiHoveredWidget = null; _uiControlledCharacter = 0;
             ClearUiFocus();
             try{if (_uiPrompt != null) _uiPrompt.Hide();}catch{}
@@ -71,6 +72,7 @@ namespace HoloMap
             if (_uiControlledCharacter != 0 && _uiControlledCharacter != character.EntityId) ClearUiClient();
             _uiControlledCharacter = character.EntityId;
             if (MyAPIGateway.Input.IsNewKeyPressed(MyKeys.Escape)) { ClearUiClient(); return; }
+            if(TickUiDragClient()){_uiHoveredDisplay=null;_uiHoveredWidget=null;if(_uiPrompt!=null)_uiPrompt.Hide();return;}
             if(UiFocusRequested)
             {
                 _uiHoveredDisplay=null;_uiHoveredWidget=null;
@@ -96,7 +98,7 @@ namespace HoloMap
                 for (int i = display.Widgets.Count - 1; i >= 0; i--)
                 {
                     var widget = display.Widgets[i]; Vector3D hit; long hitTile;
-                    if (!UiWidgetLocallyVisible(display, widget) || !TryUiWidgetHit(display, widget, head.Translation, head.Forward, out hit, out hitTile)) continue;
+                    if (!UiWidgetLocallyVisible(display, widget) || !TryUiCurrentWidgetHit(display,widget,head.Translation,head.Forward,out hit,out hitTile))continue;
                     var physical = MyAPIGateway.Entities.GetEntityById(hitTile) as IMyTerminalBlock;
                     if (physical == null || !physical.HasPlayerAccess(MyAPIGateway.Session.Player.IdentityId)) continue;
                     double distance = Vector3D.DistanceSquared(head.Translation, hit);
@@ -138,13 +140,14 @@ namespace HoloMap
                 // A menu update can land between hover and native use dispatch. Consume a current
                 // button hit, but do not run the changed action or fall through to the LCD editor.
                 foreach(var widget in registered.Widgets)
-                    if(UiWidgetLocallyVisible(registered,widget)&&TryUiWidgetHit(registered,widget,head.Translation,head.Forward,out hit,out hitTile)
+                    if(UiWidgetLocallyVisible(registered,widget)&&TryUiCurrentWidgetHit(registered,widget,head.Translation,head.Forward,out hit,out hitTile)
                         &&hitTile==targetId&&UiUnoccluded(character.EntityId,anchor,head.Translation,hit))return true;
                 return false;
             }
             if(!UiWidgetLocallyVisible(registered,_uiHoveredWidget)
-                || !TryUiWidgetHit(registered, _uiHoveredWidget, head.Translation, head.Forward, out hit, out hitTile) || hitTile != targetId
+                || !TryUiCurrentWidgetHit(registered, _uiHoveredWidget, head.Translation, head.Forward, out hit, out hitTile) || hitTile != targetId
                 || !UiUnoccluded(character.EntityId, anchor, head.Translation, hit)) return false;
+            if(_uiHoveredWidget.Control!=null)return TryBeginUiControlUse(registered,_uiHoveredWidget,targetId);
             SendUiPress(_uiHoveredDisplay, _uiHoveredWidget);
             return true;
         }
@@ -181,7 +184,8 @@ namespace HoloMap
             var anchor = MyAPIGateway.Entities.GetEntityById(scene.ConsoleId) as IMyTerminalBlock;
             if (anchor == null || anchor is IMyTextPanel || anchor.Render == null) return;
             Vector3D center, right, up;
-            if (!TryUiWidgetQuad(_uiHoveredDisplay, _uiHoveredWidget, scene, out center, out right, out up)) return;
+            if(_uiHoveredWidget.Control!=null){if(!TryUiControlQuad(_uiHoveredDisplay,_uiHoveredWidget,scene,out center,out right,out up))return;}
+            else if (!TryUiWidgetQuad(_uiHoveredDisplay, _uiHoveredWidget, scene, out center, out right, out up)) return;
             var corners = new[] { center - right - up, center + right - up, center + right + up, center - right + up };
             var inverse = MatrixD.Invert(anchor.WorldMatrix); uint renderId = anchor.Render.GetRenderObjectID();
             var volume = GetDisplayVolume(scene, anchor);
@@ -202,6 +206,7 @@ namespace HoloMap
             var w = _uiHoveredWidget; var view = LocalView(scene);
             var corners = new[] { new Vector3D(w.X-w.Width*.5,w.Y-w.Height*.5,0),new Vector3D(w.X+w.Width*.5,w.Y-w.Height*.5,0),
                 new Vector3D(w.X+w.Width*.5,w.Y+w.Height*.5,0),new Vector3D(w.X-w.Width*.5,w.Y+w.Height*.5,0) };
+            if(w.Control!=null){Item item;if(!scene.Items.TryGetValue(Key(_uiHoveredDisplay.CallerId,w.Control.Artwork),out item))return;view=item.Transform*view;}
             var points = new Vector2[4];
             for(int i=0;i<4;i++)points[i]=origin+LcdProjection.Point(Vector3D.Transform(corners[i],view),tile.LcdWidth,tile.LcdHeight,size,tile.LcdColumns,tile.LcdRows,tile.LcdColumn,tile.LcdRow);
             for(int i=0;i<4;i++)LcdLine(frame,points[i],points[(i+1)%4],2,VRageMath.Color.Gold,origin,size,ref budget);

@@ -33,6 +33,15 @@ namespace HoloMap
                 {MyAPIGateway.Utilities.ShowMessage("HDR API","Use /hdr lcd-rate 1–60. This cap is viewer-local.");return;}
                 ClientLcdRefreshCap=rate;InvalidateLcdSamples();MyAPIGateway.Utilities.ShowMessage("HDR API","Local LCD sampling cap: "+rate+" Hz. Native LCDs retain their engine refresh limit.");return;
             }
+            if(command.StartsWith("/hdr drag-rate ",StringComparison.Ordinal))
+            {
+                sendToOthers=false;double rate;
+                if(!double.TryParse(command.Substring(15),System.Globalization.NumberStyles.Float,System.Globalization.CultureInfo.InvariantCulture,out rate)
+                    ||!Geometry.Finite(rate)||rate<1||rate>30)
+                {MyAPIGateway.Utilities.ShowMessage("HDR API","Use /hdr drag-rate 1–30.");return;}
+                SetUiDragRate(rate);
+                MyAPIGateway.Utilities.ShowMessage("HDR API","UI drag update cap: "+(60d/_uiDragInterval).ToString("0.##",System.Globalization.CultureInfo.InvariantCulture)+" Hz. Remote server limits remain authoritative.");return;
+            }
             if (command != "/hdr off" && command != "/hdr on" && command != "/hdr status") return;
             sendToOthers = false;
             if (command == "/hdr off")
@@ -43,6 +52,8 @@ namespace HoloMap
 
                 ClearUiUseObjects();
                 ClearUiClient();
+                if(_uiDragLocal!=null)_uiDragLocal.Clear();
+                lock(_uiDragAckGate){_uiDragAcks.Clear();_uiDragTerminalAcks.Clear();}
                 ClearClientGeometry();
                 ClearLocalLcdFrames();
                 CloseConstructPreviews();
@@ -51,6 +62,7 @@ namespace HoloMap
             MyAPIGateway.Utilities.ShowMessage("HDR API", "Local hologram rendering " + (ClientRenderingEnabled ? "enabled." : "disabled."));
             if(command=="/hdr status")
             {
+                MyAPIGateway.Utilities.ShowMessage("HDR API","UI drag update cap: "+(60d/_uiDragInterval).ToString("0.##",System.Globalization.CultureInfo.InvariantCulture)+" Hz; pointer provider "+(_uiPointer!=null&&_uiPointer.Ready?"registered":"unavailable")+"; viewer "+(_uiViewerGranted?"focused":"inactive")+". Registration is separate from routed input ownership.");
                 int reduced=0;foreach(var cache in _projectedCaches.Values)if(cache.SourceReduced)reduced++;if(reduced>0)MyAPIGateway.Utilities.ShowMessage("HDR API",reduced+" external view(s) using reduced color/detail to fit display work and geometry limits.");MyAPIGateway.Utilities.ShowMessage("HDR API","Viewer draw-work cap: "+ClientDrawWorkCap+" per frame.");
                 int screens=0,views=0,sprites=0,screenErrors=0;foreach(var scene in _scenes.Values)screens+=scene.Screens.Count;foreach(var cache in _projectedCaches.Values){if(cache.View!=null)views++;if(cache.Sprites!=null)sprites++;if(cache.Error!=null)screenErrors++;}if(screens>0)MyAPIGateway.Utilities.ShowMessage("HDR API","Projected screens: "+screens+" configured, "+views+" prepared perspective views, "+sprites+" prepared sprite frames, "+screenErrors+" preparation/render errors.");
                 int raster=0,textures=0;string rasterError=null;foreach(var cache in _projectedCaches.Values){if(cache.UiRaster!=null)raster++;if(cache.SourceTexture)textures++;if(rasterError==null)rasterError=cache.UiRasterError;}if(screens>0)MyAPIGateway.Utilities.ShowMessage("HDR API","Raster backend "+(_rasterBackend==null?"unavailable":"connected")+", "+raster+" UI textures, "+textures+" source textures."+(rasterError==null?"":" "+rasterError.Substring(0,Math.Min(rasterError.Length,160))));

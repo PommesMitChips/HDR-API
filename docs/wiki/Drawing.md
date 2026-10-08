@@ -117,7 +117,7 @@ For authoring, [ExportSvgFrames.mjs](../../Tools/ExportSvgFrames.mjs) runs offli
 
 `H("live", [radius=.55, offset=Zero])` tracks the PB's mechanical construct. Console/Projector anchors render native model previews; the LCD path is a simplified flattened block-bounds view. `trackconstruct` additionally accepts an enable flag. `track-world(metresPerUnit, rootLocalOrigin)` chooses a real-distance scale. Connector-docked ships are not part of mechanical tracking.
 
-Use `HDR.UI` to define fixed, authorized interactive actions rather than polling input in the PB. It supports native **look and Use** controls on physical LCDs and anchor UI planes. Menus are bounded bundles; `pb` actions run the registering PB with a fixed server-held argument, `toggle` toggles a layer, and `menu`/`focus` open a viewer-local bundle. `focus` currently falls back to look-and-use navigation; mouse capture is not enabled.
+Use `HDR.UI` to define fixed, authorized actions and numeric artwork controls. Fixed buttons support native **look and Use** on physical LCDs and anchor UI planes. Menus are bounded bundles; `pb` actions run the registering PB with a fixed server-held argument, `toggle` toggles a layer, and `menu`/`focus` grant viewer-local bundle visibility. Numeric controls add the persistent world viewer described below.
 
 ```csharp
 Func<string, object[], object> _ui;
@@ -143,7 +143,7 @@ U("button", "status", "main", 0, 0, 1.2, .2,
 | UI command | Arguments / result |
 |---|---|
 | `version` | No arguments; `HDR.UI/1` |
-| `capabilities` | No arguments; `native-use;pb;toggle;menu;focus=look-and-use;mouse=false` |
+| `capabilities` | No arguments; includes `values=1`, `constraints=line,path,rotation`, `mouse=client-provider`, `viewer=persistent-bundle` and `pointer=HDR.Pointer/1`; not proof of local capture readiness |
 | `target` | Name/block reference; shares drawing target context |
 | `bundle` / `menu` | Bundle ID, `[initialVisible=true]` |
 | `button` | Widget ID, bundle ID, centre X/Y, width, height, caption, action kind, `[argument=""]` |
@@ -159,6 +159,14 @@ Boxes use drawing XY coordinates with Z zero and the scene view applied. IDs use
 
 The client sends registered IDs/revision/sequence, not arbitrary PB arguments. The server checks character, on-foot control, access, construct relationship, range, actual head-ray hit and physical occlusion before an action. Definitions and canonical arguments are public replicated data.
 
-See [UiDemo.cs](../../Examples/UiDemo.cs) for a complete runnable example and [UI.md](../../UI.md) for existing input-backend investigation. Projected curved-screen hit mapping helpers exist, but interactive widgets are not attached to those surfaces. A HUD/menu mod needs the separate [mod boundary](Mod-Integration.md); a PB does not gain a global HUD from these block controls.
+See [UiDemo.cs](../../Examples/UiDemo.cs) for fixed buttons and [UI.md](../../UI.md) for input-backend context. Projected curved-screen hit mapping helpers exist, but interactive widgets are not attached to those surfaces. A HUD/menu mod needs the separate [mod boundary](Mod-Integration.md); a PB does not gain a global HUD from these block controls.
+
+### Numeric artwork controls
+
+[Interactive controls](Interactive-Controls.md) bind one authored item to a finite, ranged and snapped value with a line, polyline or rotation constraint. The [PB demonstration](../../Examples/InteractiveControlsDemo.cs) moves retained artwork and explicitly synchronizes real script variables through queries, structured events and compare-and-set source writes. HDR does not discover variables by name or execute arbitrary callbacks from artwork.
+
+In on-foot, first-person gameplay, **Use** on an authored hotzone enters that bundle's persistent viewer. Artwork stays on the world display without a camera-facing popup. An actual mouse-down starts a value gesture; mouse-up commits that gesture and releases its value lock while the cursor and viewer remain open. **Escape** or context loss closes the viewer and cancels remaining gestures. Hit rectangles are authored in the item's local XY plane and follow its admitted pose; padding and transparent holes can be included, so this is not pixel-perfect picking.
+
+Console/Projector controls use their world display. Physical LCD picking admits XY paths and local-Z rotation with proof that the artwork pose remains planar. Curved/mesh display-surface picking is outside this scope. Native PB mouse capture requires the optional Client Renderer pointer provider; numeric math and a cooperating client mod's own input route work without it. Compilation and offline tests pass; live input acceptance remains unverified.
 
 The general `HDR.ModClient/1` mod renderer provides retained vector/text/SVG and registered-material imagery in owner-scoped HUD/world contexts without the native client plugin. HUD artwork uses near-plane `PostPP` billboards and remains depth-tested; it is not an unconditional always-on-top overlay. World artwork uses the standard world depth path. A cooperating mod supplies context-space pointer/press state and polls bounded hit events; HDR does not capture global game input or acquire mouse focus on its behalf. See [Mod-Integration.md](Mod-Integration.md) and [composition recipes](Composition-Recipes.md) for the complete endpoint and lifecycle.

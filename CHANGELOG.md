@@ -2,11 +2,15 @@
 
 These notes preserve release-time behavior and validation limits. Later releases supersede earlier defaults and limits. Current setup and commands are in [README.md](README.md) and the [client renderer guide](OptionalPlugins/HDRClientRenderer/README.md).
 
-## Unreleased — alpha development
+## HDR API 0.9.9 / Client Renderer 0.9.13 — alpha
 
-- Numeric values, constrained handles and script/mod value bindings are being integrated. The source includes the numeric runtime and an experimental Client Renderer 0.9.13 input provider; the complete programmable-block mouse interaction path is not released yet.
-- The maintained feature guides describe HDR API 0.9.8 / scene protocol 18 with Client Renderer 0.9.12. Building the development tree does not turn an unfinished feature into a supported release.
-- Public setup paths are configurable, and the repository and GitHub wiki include usage examples, API boundaries and SVG diagrams.
+- Retained numeric controls: stepped ranges, line/polyline movement and constrained rotation, with explicit PB event polling and mod getter/setter bindings.
+- Native block UI focus remains on the original hologram. Use enters a bundle; controls can be clicked or dragged; mouse-up ends the value gesture; Escape or context loss exits. Native focus requires Client Renderer 0.9.13 on the viewing client. Cooperative mod HUD/world input remains plugin-free.
+- Server-authoritative values use revision checks and per-value interaction leases. Coupled controls update atomically; source changes retire stale gestures. A fixed registered PB argument wakes the script, which reads structured value events.
+- Startup, disable, source/context loss and unload release owned input and queued work. An absent input provider reports `Requires plugin: HDR Client Renderer (interactive pointer; 0.9.13 or later).` without entering native input.
+- Scene protocol 19 carries the additive numeric-control definitions. Existing drawing, effects, camera/portal renderer paths and API protocol names remain intact.
+- Added PB and mod interaction demos, API documentation and SVG diagrams. Offline checks cover input ownership, timing races, bounds and serialization; live native GUI, GPU and multiplayer acceptance is still required.
+- Public setup paths are configurable. The repository and GitHub wiki are published with prominent ALPHA notices.
 
 ## HDR API 0.9.8 / Client Renderer 0.9.12
 

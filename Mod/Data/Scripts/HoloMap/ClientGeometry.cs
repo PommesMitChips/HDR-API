@@ -207,7 +207,7 @@ namespace HoloMap
             }
             if(cache.Mesh==null)return null;
             try{FitsDisplay(cache.Mesh.Geometry,item.Transform,scene);}catch(ArgumentException){return null;}
-            return RenderClone(item,cache.Mesh);
+            var rendered=RenderClone(item,cache.Mesh);ApplyUiDragPrediction(scene,rendered);return rendered;
         }
     }
 }

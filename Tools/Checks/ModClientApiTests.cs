@@ -100,7 +100,7 @@ internal static class ModClientApiTests
     }
     public static int Compile(string root,MetadataReference[] references,CSharpParseOptions options)
     {
-        var paths=new[]{"Api/Mods/HdrModApi.cs","Examples/Mods/HudMenuModExample.cs","Examples/Mods/HologramEffectsModExample.cs","Examples/Mods/WorldRotorModExample.cs"};
+        var paths=new[]{"Api/Mods/HdrModApi.cs","Examples/Mods/HudMenuModExample.cs","Examples/Mods/HologramEffectsModExample.cs","Examples/Mods/WorldRotorModExample.cs","Examples/Mods/InteractiveControlsModExample.cs"};
         var trees=paths.Select(path=>CSharpSyntaxTree.ParseText(File.ReadAllText(Path.Combine(root,path)),options,path)).ToArray();
         var compilation=CSharpCompilation.Create("HdrModConsumer",trees,references,new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
         var failures=compilation.GetDiagnostics().Where(d=>d.Severity==DiagnosticSeverity.Error).ToArray();

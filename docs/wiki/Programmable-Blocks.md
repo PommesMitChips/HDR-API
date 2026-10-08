@@ -16,6 +16,7 @@ The PB API describes block-bound displays. It does not expose the native rendere
 | Virtual plane/curved/mesh screens | No | Yes | Yes |
 | Direct camera panorama, provider images, native portal declarations | Through virtual-screen API: unavailable on physical LCD target | Yes | Yes |
 | Native look-and-use UI controls | Yes | Yes, on anchor UI plane | Yes, on anchor UI plane |
+| Numeric artwork controls | Planar XY paths/local-Z rotation with admitted pose proof | Yes, on world display | Yes, on world display |
 | Projected curved-screen widget input | Not applicable | Not implemented | Not implemented |
 | Truncated-pyramid table envelope | No | Yes | Requires Console/Holo Table subtype |
 | Range envelope | LCD has its own bounds | Yes | Yes |
@@ -50,7 +51,9 @@ Exact calibrated-vector eligibility requires locally available model/surface/rot
 
 ## Optional plugin status and recoverable results
 
-`H("plugin-status", feature)` is available before target selection and while a virtual screen is selected. Supported feature IDs are `raster-ui`, `camera-panorama`, `lcd-texture` and `native-portal`. The result is `MyTuple<bool,bool,string>`: known feature, locally registered component, explanation. A successful query is not the same as `Item2 == true`; registration is not proof of completed GPU capture or remote viewers' readiness.
+`H("plugin-status", feature)` is available before target selection and while a virtual screen is selected. Supported feature IDs are `raster-ui`, `camera-panorama`, `lcd-texture`, `native-portal` and `interactive-pointer`. The result is `MyTuple<bool,bool,string>`: known feature, locally registered component, explanation. A successful query is not the same as `Item2 == true`; registration is not proof of completed GPU capture, exclusive input routing or remote viewers' readiness.
+
+`H("plugin-status", "interactive-pointer")` checks the native PB mouse provider supplied by HDR Client Renderer 0.9.13 or later. Local registration does not establish an actual routed input sample or an admitted viewer/gesture. A dedicated server reports a known feature with local registration false and a viewer-dependency explanation; shared numeric declarations must remain available to clients with the provider.
 
 The modern helper has `TryCall(command, object[] args, out object result, out string reason)`, `TryCapabilities(target, out capabilities, out reason)` and `TryPluginStatus(feature, out status, out reason)`. Expected availability/validation failures return `false` with a printable reason. Its existing `Call` retains throwing validation semantics. Missing optional plugins do not prevent valid camera/portal/raster declarations on the server.
 
@@ -67,7 +70,22 @@ else if (!status.Item2)
 // Continue declaring the shared display; this query is diagnostic only.
 ```
 
-Without a viewing client's plugin, its feature stays inactive with a bounded message such as `Requires plugin: HDR Client Renderer (camera images).` A dedicated server instead reports `Viewer-dependent capability: ...`; never gate shared declarations on the server's local plugin status. Other viewers may have the required renderer. Raster UI, camera imagery (including LCD relay) and native portals have three bounded notification categories; reconnect/reset permits a new notice. Core vectors, native look-and-use UI and the general mod HUD renderer work without this plugin.
+Without a viewing client's plugin, its feature stays inactive with a bounded message such as `Requires plugin: HDR Client Renderer (camera images).` A dedicated server instead reports `Viewer-dependent capability: ...`; never gate shared declarations on the server's local plugin status. Other viewers may have the required renderer. Raster UI, camera imagery (including LCD relay) and native portals have three bounded notification categories; reconnect/reset permits a new notice. Core vectors, fixed native look-and-use actions, numeric math and the general mod HUD renderer work without this plugin. Native PB mouse capture additionally requires the optional pointer provider; a cooperating client mod supplies its own input route.
+
+## Numeric controls and script variables
+
+Use [interactive controls](Interactive-Controls.md) to bind an authored drawing item to a ranged, snapped number and a line, polyline or rotation constraint. [InteractiveControlsDemo.cs](../../Examples/InteractiveControlsDemo.cs) is a complete PB example with throttle, trim and angle variables. Declare retained artwork and controls once; assign actual script variables from `get-value` or `poll-value-events`, then use `set-value` with an expected revision for compare-and-set source changes. HDR does not reflect fields by name or invoke arbitrary PB callbacks.
+
+`value-notify` registers a fixed, deferred PB wake argument. The wake carries no value payload; poll the canonical values/events when it runs. Value events have this shape:
+
+```csharp
+VRage.MyTuple<string, string, string, VRage.MyTuple<double, long, long>>[]
+// kind, controlId, valueId, (canonicalValue, valueRevision, playerId)
+```
+
+Events may coalesce. A stale compare-and-set returns the current canonical value and revision without changing them; assign that returned value to the script variable and choose a deliberate retry policy. A source write that is admitted takes authority over an active gesture.
+
+In on-foot, first-person gameplay, **Use** on an authored control hotzone enters its persistent bundle viewer while the artwork stays on the world display. An actual mouse-down begins a value gesture. Mouse-up commits/releases that value gesture while the native cursor and viewer remain; **Escape** or context loss closes the viewer. Hit rectangles follow the item pose and include author-chosen padding, rather than proving pixel/triangle coverage. Physical LCD picking is limited to planar XY paths and local-Z rotation with admitted pose proof; curved/mesh display-surface picking is unavailable. Native PB mouse capture needs the optional pointer provider. Numeric declarations and script writes remain plugin-free. The implementation compiles and passes offline tests; installation and live input behavior still need acceptance.
 
 ## Discover and select
 
