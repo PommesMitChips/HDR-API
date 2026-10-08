@@ -2,6 +2,15 @@
 
 These notes preserve release-time behavior and validation limits. Later releases supersede earlier defaults and limits. Current setup and commands are in [README.md](README.md) and the [client renderer guide](OptionalPlugins/HDRClientRenderer/README.md).
 
+## JavaScript Runtime 0.1.0 / HTML Frontend 0.2.1 — alpha prototype
+
+- Adds a separate Workshop source mod using Jint 2.11.10 and its bundled parser, adapted to the installed Space Engineers C#6 ModApi compiler. The declared ES5.1 prototype includes functions/closures, objects/arrays, JSON and Math; CLR interop, dynamic eval/Function, Date, RegExp and modern ECMAScript are omitted explicitly.
+- Client mods can create realms or bind an owned HTML document through `HDR.JS/0.1`. Explicit C# grants scope text/data writes, source choices and cooperative input. Closures, named handlers and timers work without a renderer plugin; no browser or PB JavaScript execution is claimed.
+- Configurable execution allowances cover interpreter work, parsing, calls, native loops and conservative allocation accounting. Callback failures discard pending edits and preserve the last published display. Retired owners revoke callbacks, timers and script claims.
+- HTML mutations publish as one batch, restoring the prior frame on confirmed failure or retiring uncertain renderer/input state. Provider-specific checks allow mod-native sources while native features keep their optional plugin guards. Physical native LCD batches reject before writing.
+- Includes Jint's BSD 2-Clause license, original credits, V8 BSD notices, MPL 2.0 text and retained source notices inside the source mod package.
+- Core 0.9.11 / scene protocol 20 and Client Renderer 0.9.14 are unchanged. The package remains an alpha prototype; offline gates do not establish live game/GPU or multiplayer acceptance.
+
 ## HDR API 0.9.11 / HTML Frontend 0.2.0 / Client Renderer 0.9.14 — alpha
 
 - Generic ordered source slots combine provider images, retained geometry, SVG, text, sprites and raster artwork on planes, cylinders, spheres, ellipsoids and authored meshes. Each slot owns its placement, clip, UV crop, ordering and source lifetime.

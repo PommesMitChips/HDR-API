@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="1100" viewBox="0 0 1160 1100" role="img" aria-labelledby="js-title js-desc">
+  <title id="js-title">Mod-native JavaScript with owned HTML and optional rendering providers</title>
+  <desc id="js-desc">JavaScript Runtime 0.1.0 adapts Jint 2.11.10 to the ES5.1 prototype profile as Workshop mod source. A C# consumer explicitly supplies code, owns its local HTML endpoint and grants node and data IDs. The interpreter exposes no arbitrary CLR or game objects. One private claim binds a realm to an actual document. Events and timers submit one validated atomic mutation candidate; its committed frame supplies input coordinates. HTML Frontend 0.2.1 and HDR API 0.9.11 map retained artwork and provider slots onto HUD, plane, cylinder, sphere, ellipsoid or UV mesh. Registered mod-native providers require no renderer plugin; native camera, texture and pointer features use separately checked optional Client Renderer 0.9.14 capabilities. Missing native capability returns Requires plugin before attachment. Script errors retire callbacks while preserving the accepted display. Explicit cleanup removes only runtime-owned HUDs. CSS animations and broader browser features remain planned; the parser still rejects script markup.</desc>
+  <defs>
+    <marker id="js-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#35636b"/></marker>
+  </defs>
+  <style>
+    text{font-family:Segoe UI,Arial,sans-serif;fill:#20343f}
+    .heading{font-size:28px;font-weight:700}.sub{font-size:16px;fill:#435c68}
+    .label{font-size:20px;font-weight:600}.body{font-size:16px}.small{font-size:14px;fill:#435c68}
+    .card{stroke-width:1.5}.teal{fill:#e3f0ef;stroke:#568b8b}.gold{fill:#fbf0d9;stroke:#ad8b45;stroke-dasharray:6 4}.white{fill:#fff;stroke:#a2b5bf}
+    .flow{fill:none;stroke:#35636b;stroke-width:2.5;marker-end:url(#js-arrow)}
+  </style>
+  <rect width="1160" height="1100" rx="18" fill="#f4f7f9"/>
+  <text x="40" y="48" class="heading">JavaScript stays in the mod; rendering stays modular</text>
+  <text x="40" y="80" class="sub">ALPHA · JS 0.1.0 · HTML 0.2.1 · core 0.9.11 / scene 20 · client-local</text>
+  <g>
+    <rect x="40" y="112" width="320" height="190" rx="14" class="card white"/>
+    <text x="62" y="148" class="label">C# consumer owns the UI</text>
+    <text x="62" y="180" class="body">Explicit script + HTML endpoint</text>
+    <text x="62" y="207" class="body">Granted text/data IDs</text>
+    <text x="62" y="234" class="body">Declared source choices + probe</text>
+    <text x="62" y="274" class="small">HDR.JS/0.1 · ordinary delegate SDK</text>
+    <rect x="420" y="112" width="320" height="190" rx="14" class="card teal"/>
+    <text x="442" y="148" class="label">Source-built interpreter</text>
+    <text x="442" y="180" class="body">Jint 2.11.10 · ES5.1 prototype</text>
+    <text x="442" y="207" class="body">Functions / closures / Math / JSON</text>
+    <text x="442" y="234" class="body">Configurable execution accounting</text>
+    <text x="442" y="274" class="small">No external runtime or game bridge</text>
+    <rect x="800" y="112" width="320" height="190" rx="14" class="card teal"/>
+    <text x="822" y="148" class="label">Scoped HTML host</text>
+    <text x="822" y="180" class="body">Committed events + local timers</text>
+    <text x="822" y="207" class="body">Plain JS event objects</text>
+    <text x="822" y="234" class="body">One private document claim</text>
+    <text x="822" y="274" class="small">HDR.JS/Host1 · no browser DOM</text>
+  </g>
+  <path d="M360 207 H414" class="flow"/>
+  <path d="M740 207 H794" class="flow"/>
+  <path d="M960 302 V336 H580 V360" class="flow"/>
+  <g>
+    <rect x="40" y="362" width="1080" height="145" rx="14" class="card teal"/>
+    <text x="62" y="398" class="label">One detached candidate · validate → layout → publish → commit</text>
+    <text x="62" y="431" class="body">Coalesced text / data / source choices · exact provider source-check before attachment</text>
+    <text x="62" y="459" class="body">Failed callback drops staged writes; failed publication restores or retires visible output explicitly</text>
+    <text x="62" y="487" class="small">Claim release during publication cancels commit · native LCD JS admission rejects without a sequential fallback</text>
+  </g>
+  <path d="M580 507 V548" class="flow"/>
+  <g>
+    <rect x="40" y="550" width="1080" height="138" rx="14" class="card white"/>
+    <text x="62" y="586" class="label">HTML Frontend 0.2.1 → HDR retained canvas and shared surface mapper</text>
+    <text x="62" y="619" class="body">Vector / SVG / text + independently owned provider slots</text>
+    <text x="62" y="647" class="body">HUD · plane · cylinder · sphere · ellipsoid · authored UV mesh</text>
+    <text x="62" y="676" class="small">Cooperative input uses the accepted frame and the same inverse surface mapping</text>
+  </g>
+  <path d="M200 688 V728" class="flow"/>
+  <path d="M580 688 V728" class="flow"/>
+  <path d="M960 688 V728" class="flow"/>
+  <g>
+    <rect x="40" y="730" width="320" height="170" rx="14" class="card teal"/>
+    <text x="62" y="766" class="label">Mod renderer · default</text>
+    <text x="62" y="799" class="body">Retained geometry and artwork</text>
+    <text x="62" y="826" class="body">Layout / state / script logic</text>
+    <text x="62" y="874" class="small">No renderer plugin needed</text>
+    <rect x="420" y="730" width="320" height="170" rx="14" class="card teal"/>
+    <text x="442" y="766" class="label">Registered mod sources</text>
+    <text x="442" y="799" class="body">Negotiated provider capabilities</text>
+    <text x="442" y="826" class="body">Geometry / admitted assets</text>
+    <text x="442" y="874" class="small">No universal plugin requirement</text>
+    <rect x="800" y="730" width="320" height="170" rx="14" class="card gold"/>
+    <text x="822" y="766" class="label">Optional client plugin</text>
+    <text x="822" y="799" class="body">Native camera / texture / pointer</text>
+    <text x="822" y="826" class="body">Actual capability check first</text>
+    <text x="822" y="874" class="small">Absent → Requires plugin; no entry</text>
+  </g>
+  <g>
+    <rect x="40" y="936" width="1080" height="123" rx="14" class="card white"/>
+    <text x="62" y="972" class="label">Owned lifecycle · safe optional extensions · broader features planned</text>
+    <text x="62" y="1005" class="body">Script failure preserves the accepted display; explicit cleanup removes only runtime-owned HUDs</text>
+    <text x="62" y="1033" class="small">No script tags, browser DOM/network, Date, regex or eval · CSS timelines, Canvas and GPU effects are separate work</text>
+  </g>
+</svg>

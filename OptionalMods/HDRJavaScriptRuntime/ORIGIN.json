@@ -1,0 +1,102 @@
+{
+  "schema": "HDR.JavaScript/Provenance1",
+  "status": "alpha-source-prototype",
+  "upstream": {
+    "repository": "https://github.com/sebastienros/jint",
+    "tag": "2.11.10",
+    "commit": "340f0f4ffc2f2b389ebac0d9a4da318f248f20b6",
+    "archive": "https://codeload.github.com/sebastienros/jint/zip/340f0f4ffc2f2b389ebac0d9a4da318f248f20b6",
+    "archiveSha256": "38229A27DBB18905F73203EB60E707454209F54837CF4E0FCD3198242A9940B8",
+    "originalLibraryCSharpFiles": 157
+  },
+  "parser": {
+    "name": "Bundled C# port of Esprima",
+    "originalParserRevision": "Not recorded by the pinned Jint source",
+    "attributionSource": "LICENSES/Jint-CREDITS.txt",
+    "historicalLicenseSupplementCommit": "1114c32c4e0ffaf47864967a835fdc0a37909f14",
+    "historicalLicenseSupplementTag": "1.2.2",
+    "supplementDoesNotIdentifyParserRevision": true
+  },
+  "notices": [
+    {
+      "component": "Jint",
+      "sha256": "8626F0B8F39A9AE2BFD4ACA1DA667076A781E4AE07312BC2F880ACCCB57ABDF4",
+      "path": "LICENSES/Jint-BSD-2-Clause.txt",
+      "method": "Exact original file bytes",
+      "source": "https://github.com/sebastienros/jint/blob/340f0f4ffc2f2b389ebac0d9a4da318f248f20b6/LICENSE.txt",
+      "license": "BSD-2-Clause"
+    },
+    {
+      "component": "Jint upstream credits",
+      "sha256": "054F2E7C8B325B6E8461E1F0908139A0A56E610AEE05A2DB9228F87EE9A8B3E0",
+      "path": "LICENSES/Jint-CREDITS.txt",
+      "method": "Exact original file bytes",
+      "source": "https://github.com/sebastienros/jint/blob/340f0f4ffc2f2b389ebac0d9a4da318f248f20b6/CREDITS.txt",
+      "license": "Notice inventory"
+    },
+    {
+      "component": "V8/Mozilla-derived FastDtoa",
+      "sha256": "3418ED12299F9049FE5441A2807A4694BB69DEFE9AB640A05567CF3138341048",
+      "path": "LICENSES/V8-Dtoa-NOTICE.txt",
+      "method": "Exact first 29 lines of original source",
+      "source": "https://github.com/sebastienros/jint/blob/340f0f4ffc2f2b389ebac0d9a4da318f248f20b6/Jint/Native/Number/Dtoa/DoubleHelper.cs",
+      "license": "BSD-3-Clause"
+    },
+    {
+      "component": "FastDtoaBuilder",
+      "sha256": "3F3D9E0024B1921B067D6F7F88DEB4A60CBE7A78E76C64E3F1D7FC3B779B9D04",
+      "path": "LICENSES/MPL-2.0.txt",
+      "method": "Exact official plaintext download",
+      "source": "https://www.mozilla.org/media/MPL/2.0/index.txt",
+      "license": "MPL-2.0"
+    },
+    {
+      "component": "Esprima historical license supplement",
+      "sha256": "0E74697A68CEBDCD61502C30FE80AB7F9E341D995DCD452023654D57133534B1",
+      "path": "LICENSES/Esprima-BSD.txt",
+      "method": "Exact original file; not proof of bundled parser revision",
+      "source": "https://raw.githubusercontent.com/jquery/esprima/1114c32c4e0ffaf47864967a835fdc0a37909f14/LICENSE.BSD",
+      "license": "BSD-2-Clause"
+    },
+    {
+      "component": "Esprima historical attribution supplement",
+      "sha256": "9F5A4DA6ACE561BB7A3C38F16E8777DD51E84B95D893D4C72D7C57027C951563",
+      "path": "LICENSES/Esprima-COPYRIGHT-NOTICE.txt",
+      "method": "Exact first comment; not proof of bundled parser revision",
+      "source": "https://raw.githubusercontent.com/jquery/esprima/1114c32c4e0ffaf47864967a835fdc0a37909f14/esprima.js",
+      "license": "BSD-2-Clause"
+    }
+  ],
+  "port": {
+    "sourceRoot": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint",
+    "manifest": "ORIGIN/Jint-source-manifest.json",
+    "allRetainedSourceDistributed": true,
+    "dllOrNugetRuntimeBundled": false,
+    "languageProfile": "HDR.JavaScript/ES5.1-Prototype1",
+    "omittedFeatures": [
+      "Date/local time",
+      "Regular expressions and regex literals",
+      "Dynamic eval/Function construction",
+      "Arbitrary CLR interoperability",
+      "Debugger integration"
+    ],
+    "selectedOriginalFiles": 140,
+    "omittedOriginalFiles": 17,
+    "authoredVendorHelpers": 2,
+    "sourceManifestSha256": "EC01C2C26552E7F7112CA6595541D067B55869B7BDCF3569A2A9ADC01F967A90"
+  },
+  "acceptance": {
+    "actualGameCompiler": "Preliminary actual installed-game ModApi/C#6 pass; final current-source build receipts are separate",
+    "hostIntegration": "Offline fixtures cover owned atomic mutation, claims, events, timers and optional source guards; final receipts are separate",
+    "liveGame": "Unverified"
+  },
+  "packageRequiredPaths": [
+    "LICENSES/**",
+    "ORIGIN.md",
+    "ORIGIN.json",
+    "Data/Scripts/**",
+    "README.md",
+    "Docs/**",
+    "ORIGIN/**"
+  ]
+}

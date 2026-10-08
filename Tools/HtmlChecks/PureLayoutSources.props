@@ -6,6 +6,7 @@
     <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlCss.cs" />
     <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlLayoutCss.cs" />
     <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlPaintValidation.cs" />
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlPaintDiff.cs" />
     <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlLayout.cs" />
     <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlDocumentController.cs" />
   </ItemGroup>

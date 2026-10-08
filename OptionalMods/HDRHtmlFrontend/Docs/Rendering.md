@@ -1,6 +1,6 @@
 # HTML frontend rendering
 
-**ALPHA, frontend 0.2.0 / core 0.9.11 / scene 20.** Profile1 builds a bounded paint frame, then the selected painter presents it. The projected canvas maps onto a plane, cylinder, sphere, ellipsoid or authored UV mesh; source acquisition, layout, surface, input and effects retain their separate contracts. This frontend uses the existing HDR renderers; it does not embed a browser or add a HTML rasterizer. The authored viewport stays fixed when camera distance changes. See [Composition](../../../docs/wiki/Composition.md), [Profile](Profile.md), [Local API](Local-API.md) and [PB API](PB-API.md).
+**ALPHA, frontend 0.2.1 / core 0.9.11 / scene 20.** Profile1 builds a bounded paint frame, then the selected painter presents it. The projected canvas maps onto a plane, cylinder, sphere, ellipsoid or authored UV mesh; source acquisition, layout, surface, input and effects retain their separate contracts. This frontend uses the existing HDR renderers; it does not embed a browser or add a HTML rasterizer. The authored viewport stays fixed when camera distance changes. See [Composition](../../../docs/wiki/Composition.md), [Profile](Profile.md), [Local API](Local-API.md) and [PB API](PB-API.md).
 
 ## Implemented choices
 
@@ -53,6 +53,10 @@ Native sprite button/range events accept cooperative `pointer`/`pointer-cancel` 
 The [native PB demo](../Examples/HtmlPbSpritesDemo.cs) exercises direct `lcd`/`demo` and relayed `world` modes, with separate source/anchor names and explicit ownership. Its buttons/range can receive manual `press`/`release` tests, and `_level` receives polled canonical values without gameplay writes. Live native LCD replication, projected texture readiness, input-provider mapping and GPU behavior still require in-game verification.
 
 ## Local retention and failure behavior
+
+Frontend 0.2.1 adds one atomic retained `mutate` path for HUD/world/general surfaces. Text/data/source changes validate a detached candidate, perform one layout/publication and commit only on success; oversized/unsupported operations reject before partial application. A confirmed restoration preserves the prior desired/visible frame. An uncertain renderer restore retires output/input and reports it explicitly. Private matching script-claim release during publication also prevents candidate commit. Physical native-LCD mutation batches and JS binding reject before writes/claim because there is no reversible native frame transaction.
+
+The separately enabled [JavaScript Runtime](../../../docs/wiki/JavaScript-Prototype.md) reuses this path; it adds no browser rasterizer or change to these renderers. Its exact read-only `source-check` plus C# declared-provider probe permits negotiated mod-native sources without a universal plugin requirement. Native capture/texture capabilities retain their optional Client Renderer 0.9.14 check and actual readiness reasons. The HTML parser still rejects scripts and inline handlers, and the PB route receives no JS execution/replication API.
 
 The controller parses on source load/replacement and lays out on source, plain-text, data or viewport changes. Pending edits coalesce. Repeating a value or leaving a document unchanged does not cause a new layout every frame. Text measurement is cached during a layout build; the core also has a bounded independent metric cache over immutable packaged glyph data.
 

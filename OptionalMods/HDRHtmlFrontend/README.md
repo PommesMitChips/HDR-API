@@ -1,6 +1,6 @@
-# HDR HTML frontend 0.2.0
+# HDR HTML frontend 0.2.1
 
-**ALPHA — initial prototype.** This optional, mod-native HTML/CSS frontend implements **`HDR.HTML/Profile1`**, a strict UI subset which lowers source markup to HDR's existing retained vector, SVG and text primitives. It is separate from the renderer. It does not implement a complete HTML5 browser, JavaScript, a browser DOM, Canvas, WebGL, web-resource loading or arbitrary event handlers.
+**ALPHA — initial prototype.** This optional, mod-native HTML/CSS frontend implements **`HDR.HTML/Profile1`**, a strict UI subset which lowers source markup to HDR's existing retained vector, SVG and text primitives. It is separate from the renderer. It does not embed a complete HTML5 browser, JavaScript engine, browser DOM, Canvas, WebGL, web-resource loading or arbitrary markup event handlers. The separately enabled [JavaScript Runtime 0.1.0](../HDRJavaScriptRuntime/README.md) can explicitly bind retained local documents through the **0.2.1** batch/claim APIs; the parser still rejects `<script>` and inline `on*` attributes.
 
 Vector and grouped SVG backends draw through HDR's retained paths with **HDR API 0.9.11+ / scene 20** and need no client plugin for geometry. The **`HDR.Html` PB property** adds server-owned documents: `bind-screen` maps HTML onto an existing owned plane, cylinder, sphere, ellipsoid or authored mesh; `attach-source` puts a registered provider into an explicit HTML node. Core SVG controls use compatible **HDR Client Renderer 0.9.13+** for automatic persistent pointer input. Actual camera imagery needs that renderer on every viewer. Native sprites draw directly on a real owned LCD or relay its actual texture onto the same screen shapes, requiring the renderer **on every relay viewer**. Native sprite input stays cooperative. The PB route needs no new plugin/DLL update. Client-local native sources use the new negotiated service in **Client Renderer 0.9.14**; an off-screen HTML/browser rasterizer remains unimplemented.
 
@@ -8,13 +8,13 @@ Vector and grouped SVG backends draw through HDR's retained paths with **HDR API
 
 ## Try the prototype
 
-1. Manually install the core [`Mod`](../../Mod) and this `OptionalMods/HDRHtmlFrontend` source directory as separate local world mods, then explicitly add both to the world's mod list. The core must be **0.9.11+**; the frontend is **0.2.0**.
+1. Manually install the core [`Mod`](../../Mod) and this `OptionalMods/HDRHtmlFrontend` source directory as separate local world mods, then explicitly add both to the world's mod list. The core must be **0.9.11+**; the frontend is **0.2.1**.
 2. Enter `/hdrhtml hud vector` or `/hdrhtml world svg` in chat. Both `hud` and `world` accept `vector` or `svg`. The world demo stays at the plane placed three metres in front of the camera when created.
 3. Enter `/hdrhtml status` to inspect backend, desired/visible revision, layout count and any error. Enter `/hdrhtml clear` to release the demo owner.
 
 Registration on startup draws no demo. Installation does not auto-enable a world mod, change game preferences, rename or reconfigure blocks, or fetch web resources. The chat demo creates only its owned local drawing contexts; clearing it leaves other consumers' contexts intact.
 
-To build the game-loadable frontend ZIP from this repository, use [`Build.ps1`](Build.ps1) with the installed game's `Bin64` directory. It runs the [offline checks](../../Tools/HtmlChecks/README.md) and writes `artifacts/HDR-HTML-Frontend-0.2.0.zip`; it does not install the result.
+To build the game-loadable frontend ZIP from this repository, use [`Build.ps1`](Build.ps1) with the installed game's `Bin64` directory. It runs the [offline checks](../../Tools/HtmlChecks/README.md) and writes `artifacts/HDR-HTML-Frontend-0.2.1.zip`; it does not install the result.
 
 ## Use from a programmable block
 
@@ -43,6 +43,8 @@ Use `CreateSurface(html, css, width, height, worldPose, metresPerPixel, surfaceK
 For a HUD, keep `CreateHud` and call `SetSourceAnchor(document, actualBlock)` before `AttachSource`. HUD regions/input remain top-left Y-down pixels, with no curved HUD mapping. Existing `CreateWorld` uses the same anchored attachment route and shared plane mapper, preserving its top-left pose across resize and pixel input; `PointerRay` is also supported. `SetSourceAnchor` updates mapped documents too. Genuine physical `CreateNativeLcd` rejects external engine texture attachment with an explicit renderer reason.
 
 The consumer must supply pointer coordinates from an input/GUI session it already owns. The frontend does not acquire global mouse input or prevent the same click from reaching weapons and game controls. Cancel pointer input on focus loss. Button/range events are data for your mod to interpret; `data-action` never executes code.
+
+Frontend **0.2.1** adds local `mutate` batches for retained HUD/world/general-surface documents: validate one detached candidate, lay out/publish once, then commit text/data/source changes together. It adds a private per-document `script-claim`/`script-valid`/matching `script-release` lifecycle and exact read-only `source-check(document,provider,sourceId)`. These commands allow the separate JS runtime to bind actual owned documents without executing scripts inside the frontend. They are not PB commands. Physical native-LCD JS admission rejects before a claim because reversible atomic publication is unavailable. See [Local API](Docs/Local-API.md#atomic-mutations-and-document-script-claims) and the [JavaScript guide](../../docs/wiki/JavaScript-Prototype.md).
 
 For a native LCD, the consumer must explicitly own the supplied `IMyTextSurface` and set it to `ContentType.SCRIPT` with no selected text-surface script before creating a document. The frontend never claims or configures an arbitrary LCD. Its one-document-per-surface guard coordinates frontend users only; the consumer remains responsible for excluding other sprite writers.
 

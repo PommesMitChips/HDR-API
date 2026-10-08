@@ -11,6 +11,10 @@ PAGES = [ROOT / "README.md", ROOT / "Api/README.md", ROOT / "Examples/README.md"
 PAGES += sorted((ROOT / "docs/wiki").glob("*.md"))
 PAGES += [ROOT / "OptionalMods/HDRHtmlFrontend/README.md"]
 PAGES += sorted((ROOT / "OptionalMods/HDRHtmlFrontend/Docs").glob("*.md"))
+PAGES += [ROOT / "OptionalMods/HDRJavaScriptRuntime/README.md",
+          ROOT / "OptionalMods/HDRJavaScriptRuntime/ORIGIN.md",
+          ROOT / "OptionalMods/HDRJavaScriptRuntime/LICENSES/README.md"]
+PAGES += sorted((ROOT / "OptionalMods/HDRJavaScriptRuntime/Docs").glob("*.md"))
 errors = []
 links = 0
 

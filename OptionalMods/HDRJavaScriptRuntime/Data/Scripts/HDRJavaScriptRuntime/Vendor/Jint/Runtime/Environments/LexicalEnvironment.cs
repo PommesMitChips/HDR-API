@@ -1,0 +1,55 @@
+using Jint.Native;
+using Jint.Native.Object;
+using Jint.Runtime.References;
+
+namespace Jint.Runtime.Environments
+{
+    /// <summary>
+    /// Represents a Liexical Environment (a.k.a Scope)
+    /// http://www.ecma-international.org/ecma-262/5.1/#sec-10.2
+    /// http://www.ecma-international.org/ecma-262/5.1/#sec-10.2.2
+    /// </summary>
+    public sealed class LexicalEnvironment
+    {
+        private readonly EnvironmentRecord _record;
+        private readonly LexicalEnvironment _outer;
+
+        public LexicalEnvironment(EnvironmentRecord record, LexicalEnvironment outer)
+        {
+            _record = record;
+            _outer = outer;
+        }
+
+        public EnvironmentRecord Record
+        {
+            get { return _record; }
+        }
+
+        public LexicalEnvironment Outer
+        {
+            get { return _outer; }
+        }
+
+        public static Reference GetIdentifierReference(LexicalEnvironment lex, string name, bool strict)
+        {
+            for (var current=lex; current != null; current=current.Outer)
+            {
+                HdrExecutionGuard.Step();
+                if (current.Record.HasBinding(name)) return new Reference(current.Record,name,strict);
+            }
+            return new Reference(Undefined.Instance, name, strict);
+        }
+
+        public static LexicalEnvironment NewDeclarativeEnvironment(Engine engine, LexicalEnvironment outer = null)
+        {
+            return new LexicalEnvironment(new DeclarativeEnvironmentRecord(engine), outer);
+        }
+
+        public static LexicalEnvironment NewObjectEnvironment(Engine engine, ObjectInstance objectInstance, LexicalEnvironment outer, bool provideThis)
+        {
+            return new LexicalEnvironment(new ObjectEnvironmentRecord(engine, objectInstance, provideThis), outer);
+        }
+    }
+
+    
+}

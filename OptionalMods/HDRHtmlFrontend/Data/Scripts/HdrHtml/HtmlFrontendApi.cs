@@ -15,7 +15,7 @@ namespace Hdr.Html
             if(!active)throw new ArgumentException("HDR HTML frontend is stopped.");
             var a=new HtmlArguments(values);
             if(op=="version"){a.End();return Protocol;}
-            if(op=="capabilities"){a.End();return new[]{HtmlDocument.Profile,"client-local","hud-vector","world-plane-vector","mapped-world-surfaces","local-node-source-slots","cooperative-pointer-ray","grouped-svg","owned-native-lcd","cooperative-pointer","click-change-events","no-javascript","no-network-fetch","no-pb-html-terminal-property"};}
+            if(op=="capabilities"){a.End();return new[]{HtmlDocument.Profile,"client-local","hud-vector","world-plane-vector","mapped-world-surfaces","local-node-source-slots","atomic-retained-mutations","cooperative-pointer-ray","grouped-svg","owned-native-lcd","cooperative-pointer","click-change-events","no-javascript","no-network-fetch","no-pb-html-terminal-property"};}
             if(op!="open")throw new ArgumentException("Unknown HDR HTML service command: "+op);
             RequireIdle();string id=a.Text();a.End();ValidateOwner(id);
             HtmlFrontendOwner prior;
@@ -34,6 +34,10 @@ namespace Hdr.Html
         object Command(HtmlFrontendOwner owner,string op,object[] values)
         {
             if(op=="valid"){var valid=new HtmlArguments(values);valid.End();return Current(owner);}
+            if(op=="script-valid"||op=="script-release")
+            {var read=new HtmlArguments(values);long scriptHandle=read.Long();object token=read.Token();read.End();HtmlFrontendDocument document;return Current(owner)&&owner.Documents.TryGetValue(scriptHandle,out document)&&(op=="script-valid"?document.ScriptValid(token):document.ReleaseScript(token));}
+            if(op=="source-check")
+            {var read=new HtmlArguments(values);long sourceHandle=read.Long();string provider=read.Text(),source=read.Text();read.End();HtmlFrontendDocument document;return Current(owner)&&owner.Documents.TryGetValue(sourceHandle,out document)?document.SourceCheck(provider,source):new MyTuple<bool,string>(false,"Document does not belong to this current HTML owner.");}
             RequireIdle();busy=true;
             try{return ExecuteCommand(owner,op,values);}finally{busy=false;}
         }
@@ -41,6 +45,12 @@ namespace Hdr.Html
         {
             var a=new HtmlArguments(values);
             if(op=="valid"){a.End();return Current(owner);}
+            if(op=="script-claim"||op=="script-valid"||op=="script-release")
+            {
+                long scriptHandle=a.Long();object token=a.Token();a.End();HtmlFrontendDocument document;
+                if(!Current(owner)||!owner.Documents.TryGetValue(scriptHandle,out document))return false;
+                return op=="script-claim"?document.ClaimScript(token):op=="script-valid"?document.ScriptValid(token):document.ReleaseScript(token);
+            }
             if(!Current(owner))throw new ArgumentException("HDR HTML owner endpoint has been revoked.");
             if(op=="release"){a.End();owner.Dispose();RetireNativeLeases(owner);owners.Remove(owner.Id);return true;}
             if(op=="clear-owned"){a.End();foreach(var document in owner.Documents.Values)document.Dispose();owner.Documents.Clear();RetireNativeLeases(owner);return true;}
@@ -57,6 +67,7 @@ namespace Hdr.Html
             if(op=="source-status"){string node=a.Text();a.End();return doc.SourceStatus(node);}
             if(op=="attach-source"){string node=a.Text(),provider=a.Text(),source=a.Text();var settings=a.Has?a.Settings():null;a.End();return doc.AttachSource(node,provider,source,settings,tick);}
             if(op=="detach-source"){string node=a.Text();a.End();return doc.DetachSource(node,tick);}
+            if(op=="mutate"){var changes=a.Settings();a.End();return doc.Mutate(changes,tick);}
             if(op=="poll-events"){a.End();doc.SetInputEnabled(InputCurrent(owner,doc));return doc.PollEvents();}
             if(op=="pointer"){double x=a.Number(),y=a.Number();bool pressed=a.Flag();a.End();doc.SetInputEnabled(InputCurrent(owner,doc));doc.Pointer(x,y,pressed);return true;}
             if(op=="pointer-cancel"){a.End();doc.CancelPointer();return true;}
@@ -154,6 +165,7 @@ namespace Hdr.Html
             internal object[] Parameters(){var value=Next() as object[];if(value==null)throw new ArgumentException("Surface parameters require object[].");return value;}
             internal IMyTerminalBlock Block(){var value=Next() as IMyTerminalBlock;if(value==null)throw new ArgumentException("Source anchor requires an actual terminal block.");return value;}
             internal MyTuple<string,object[]>[] Settings(){var value=Next() as MyTuple<string,object[]>[];if(value==null)throw new ArgumentException("Settings require MyTuple<string,object[]>[].");return value;}
+            internal object Token(){object value=Next();if(value==null)throw new ArgumentException("Script claim requires a nonnull opaque local token.");return value;}
             internal IMyTextSurface Surface(){var value=Next() as IMyTextSurface;if(value==null)throw new ArgumentException("Native LCD requires an explicit IMyTextSurface.");return value;}
             internal void End(){if(Has)throw new ArgumentException("Unexpected HTML command argument.");}
         }

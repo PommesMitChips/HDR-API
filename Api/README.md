@@ -7,11 +7,14 @@
 | [PortalApi.cs](PortalApi.cs) | Programmable block | Numeric portal/capture-shell declaration helpers |
 | [Mods/HdrModApi.cs](Mods/HdrModApi.cs) | Client mod | Local `HDR.ModClient/1` consumers, HUD/world contexts and lifecycle |
 | [Mods/HdrHtmlApi.cs](Mods/HdrHtmlApi.cs) | Client mod | Optional `HDR.Html/0.1` HTML/CSS frontend, document lifetime and cooperative input |
+| [Mods/HdrJavaScriptApi.cs](Mods/HdrJavaScriptApi.cs) | Client mod | Optional `HDR.JS/0.1` source interpreter, scoped HTML events/timers, diagnostics and configurable execution allowances |
 | [Ingame/HdrHtmlIngameApi.cs](Ingame/HdrHtmlIngameApi.cs) | Programmable block | Optional `HDR.HtmlPB/0.1` on `HDR.Html`; bounded HTML/CSS documents on block displays |
 
 PB helpers are pasted inside `Program` using the standard PB imports; consumer mod helpers compile as mod source. They are not interchangeable endpoints. See [API boundaries](../docs/wiki/API-Boundaries.md) and the [complete reference](../docs/wiki/Api-Reference.md).
 
 The stable API contract is distinct from product version, scene replication protocol and native resource generations. External source/backend protocols are described in [mod integration](../docs/wiki/Mod-Integration.md).
+
+The [JavaScript prototype](../docs/wiki/JavaScript-Prototype.md) uses client-local ES5.1 realms. C# grants allowed document edits and source choices; JavaScript receives no raw game objects or CLR bridge. Keep the actual HTML endpoint and connection generation with each binding, and rebuild realm handles after reconnection. Ordinary vector HTML needs no renderer plugin; native provider operations retain their precise capability checks.
 
 The [composition API](../docs/wiki/Composition.md) combines content, layout, surfaces and input. PB HTML documents can bind to existing projected screens and attach sources to explicit container IDs. Client mods can map their retained artwork onto general surfaces or place source windows in HUDs; native sources use a real accessible anchor and the optional 0.9.14 local-consumer bridge.
 

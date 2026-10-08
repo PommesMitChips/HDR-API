@@ -1,6 +1,6 @@
 # HDR.HTML/Profile1
 
-**ALPHA, frontend 0.2.0.** Profile1 is a bounded mod-native HTML/CSS authoring format for local UI. Acceptance is defined by the parser and layout shipped in [`Data/Scripts/HdrHtml`](../Data/Scripts/HdrHtml), followed by the selected painter's admission. Browser-valid HTML/CSS can still be rejected. No JavaScript, browser DOM, Canvas, WebGL, network fetch, iframe or event-handler execution is implemented.
+**ALPHA, frontend 0.2.1.** Profile1 is a bounded mod-native HTML/CSS authoring format for local UI. Acceptance is defined by the parser and layout shipped in [`Data/Scripts/HdrHtml`](../Data/Scripts/HdrHtml), followed by the selected painter's admission. Browser-valid HTML/CSS can still be rejected. The frontend embeds no JavaScript engine, browser DOM, Canvas, WebGL, network fetch, iframe or markup event-handler execution. A [separate optional JavaScript Runtime](../../../docs/wiki/JavaScript-Prototype.md) can explicitly bind retained local documents through the 0.2.1 batch/claim API; it does not add `<script>` or `on*` attributes to this parser.
 
 ## Markup
 
@@ -75,6 +75,8 @@ Viewport coordinates start at the top left, with +X right and +Y down. HUD units
 `SetText` replaces a node's content with plain text, without reparsing it as HTML. Text templates use `{{key}}` substitutions from `SetData`; missing keys substitute empty text. `data-bind` on a range selects its numeric data value; `data-action` supplies descriptive event data. Default range bounds/value/step are 0/100/minimum/1; `step="any"` is accepted. Values clamp to bounds and quantize relative to the minimum. No form submission, keyboard focus, tab navigation or browser accessibility tree is implemented.
 
 Consumers supply cooperative logical pointer coordinates and poll `click`/`change` events from the last committed visible revision. The consumer must already own and block the corresponding game input. See the [local API](Local-API.md) for cancellation, generation changes and event tuples.
+
+Client-local 0.2.1 adds atomic retained `mutate` operations for plain text/data and declared source attachment/removal, plus a private per-document script claim and exact read-only source admission check. Those host APIs do not expand HTML/CSS syntax, implement DOM/style/tree mutation, or add declarative animations. The separate runtime consumes events only after explicit C# binding/ID grants; PB documents retain their existing server-owned event contract.
 
 ## Bounds and backend admission
 

@@ -1,0 +1,50 @@
+{
+  "Version": 1,
+  "Suites": [
+    {
+      "Name": "Runtime",
+      "Assertions": 281,
+      "Cases": 29
+    },
+    {
+      "Name": "HtmlSeams",
+      "Assertions": 24,
+      "Cases": 3
+    },
+    {
+      "Name": "FrameworkNumeric",
+      "Assertions": 11,
+      "Cases": 1
+    }
+  ],
+  "FixtureFiles": [
+    {
+      "Path": "Tools/JavaScriptChecks/Framework/NumericFrameworkTests.cs",
+      "SHA256": "6372D5803B31F3FEB2ECAF86E8919F53BBDF4B1FF83BB8AB04BB5E41AD0B41FC"
+    },
+    {
+      "Path": "Tools/JavaScriptChecks/HtmlSeams/SeamTests.cs",
+      "SHA256": "D33A4594B3B76F2FBF1106EF6490A7C0F87287AAE45C04D995DABDC886A2FC04"
+    },
+    {
+      "Path": "Tools/JavaScriptChecks/Runtime/DocumentTests.cs",
+      "SHA256": "426E7005DDF7EF21215A590C53C938263D2AEEA3B7390F673474139BD9AB13E2"
+    },
+    {
+      "Path": "Tools/JavaScriptChecks/Runtime/HtmlAdapterTests.cs",
+      "SHA256": "494BED3DC140EB935B09B965B433CA4364B7013A1DC77DF6962AF1DF07C5256C"
+    },
+    {
+      "Path": "Tools/JavaScriptChecks/Runtime/RealmTests.cs",
+      "SHA256": "7593E99E0C594D4E22A84FF0C211AC330BC4B130E9BC99F51F87CA784D8E41EE"
+    },
+    {
+      "Path": "Tools/JavaScriptChecks/Runtime/RuntimeTests.cs",
+      "SHA256": "54657EF19C8E32FAB4E459954534DC85E3FD82174E1E900FA642B45755BA284B"
+    },
+    {
+      "Path": "Tools/JavaScriptChecks/Runtime/ServiceTests.cs",
+      "SHA256": "2A7C76EA1A6B0190032E074EAF5C05B2BB362B9C8CD037D49DBBF2AB3D48CD6F"
+    }
+  ]
+}

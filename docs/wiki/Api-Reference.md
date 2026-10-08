@@ -13,12 +13,31 @@ This page indexes public contracts and specifies the mod-facing envelopes. Drawi
 | General client-mod rendering | Local message `481770130` / request `481770131` | `Func<string,object[],object>`; `version` → `HDR.ModClient/1` | [HdrModApi.cs](../../Api/Mods/HdrModApi.cs), [ModClientApi.cs](../../Mod/Data/Scripts/HoloMap/ModClientApi.cs) |
 | Optional HTML/CSS frontend | Local message `481770150` / request `481770151` | `Func<string,object[],object>`; `version` → `HDR.Html/0.1` | [HdrHtmlApi.cs](../../Api/Mods/HdrHtmlApi.cs), [frontend reference](../../OptionalMods/HDRHtmlFrontend/Docs/Local-API.md) |
 | Optional PB HTML/CSS adapter | `Me.GetProperty("HDR.Html")` | `Func<string,object[],object>`; `version` → `HDR.HtmlPB/0.1` | [HdrHtmlIngameApi.cs](../../Api/Ingame/HdrHtmlIngameApi.cs), [PB HTML reference](../../OptionalMods/HDRHtmlFrontend/Docs/PB-API.md) |
+| Optional client JavaScript runtime | Local message `481770160` / request `481770161` | `Func<string,object[],object>`; `version` → `HDR.JS/0.1` | [HdrJavaScriptApi.cs](../../Api/Mods/HdrJavaScriptApi.cs), [runtime API](../../OptionalMods/HDRJavaScriptRuntime/Docs/Mod-API.md) |
 | Display source | Local `481770100` / registration `481770101` | Registration tuple carries protocol **1** or **2** | [DisplaySources.cs](../../Mod/Data/Scripts/HoloMap/DisplaySources.cs) |
 | Raster upload backend | Local `481770110` / registration `481770111` | Registration tuple carries protocol **1** | [RasterBackends.cs](../../Mod/Data/Scripts/HoloMap/RasterBackends.cs) |
 
 Interface versions, release versions, multiplayer protocol numbers and opaque resource generations are separate. The multiplayer scene protocol is an internal replication contract; do not use it as the public API version or send provider delegates through it. Existing protobuf tags and compatibility envelopes remain preserved.
 
-Current packages are HDR API **0.9.11 / scene protocol 20**, HTML Frontend **0.2.0** and optional Client Renderer **0.9.14**. Existing PB camera capture and native mouse input retain their **0.9.13** minimum. Client-local native source consumers require **0.9.14**. See the [composition contract](Composition.md) for ordered source slots, generic surface mapping and HTML attachments.
+Current packages are HDR API **0.9.11 / scene protocol 20**, HTML Frontend **0.2.1**, JavaScript Runtime **0.1.0** and optional Client Renderer **0.9.14**. Existing PB camera capture and native mouse input retain their **0.9.13** minimum. Client-local native source consumers require **0.9.14**. See the [composition contract](Composition.md) for ordered source slots, generic surface mapping and HTML attachments.
+
+## Client-local JavaScript prototype
+
+The optional `HDR.JS/0.1` service interprets explicitly registered scripts through the `HDR.JavaScript/ES5.1-Prototype1` profile. Copy the public SDK into a consuming mod; use `open(ownerId)` to acquire its owner endpoint. Only standard scalars, arrays, tuples and delegates cross this boundary. No Jint types or game objects are exposed to JavaScript.
+
+| SDK operation | Purpose |
+|---|---|
+| `CreateRealm`, `Execute`, `CallFunction` | Own an isolated interpreter and execute ES5.1 source or named functions |
+| `BindHtml` | Bind an actual caller-owned HTML endpoint/document with its generation witness and declared editable IDs |
+| `CreateHud`, `Pointer`, `CancelPointer` | Own a vector HUD and feed cooperative logical-pixel input; no native input acquisition |
+| `AddSourceChoice` | Grant a named source choice with an actual provider capability probe; JS never receives raw provider handles |
+| `Configure`, `Limits`, `RealmLimits` | Configure allowances for subsequently created realms and inspect the active policy |
+| `Status`, `Diagnostics` | Inspect execution failures separately from bounded host logs and capability reasons |
+| `DisposeRealm`, `ClearOwned`, `Dispose` | Retire scripts/timers/claims and explicitly clean up only runtime-owned displays |
+
+The HTML host stages text/data/source edits during a successful callback and publishes one validated mutation batch. Errors discard staged edits, stop that realm and preserve its last committed display. Externally owned documents remain the C# owner's responsibility. Native LCD binding is rejected where atomic publication is unavailable. Ordinary vector updates and custom mod-native sources need no plugin; native providers report their exact `Requires plugin` reason when absent. The [host reference](../../OptionalMods/HDRJavaScriptRuntime/Docs/Host-API.md) specifies events, timers and source selection.
+
+HTML Frontend 0.2.1 adds `mutate`, `script-claim`, `script-valid`, `script-release` and read-only provider-specific `source-check`; see its [local reference](../../OptionalMods/HDRHtmlFrontend/Docs/Local-API.md). Consumers must rebuild realm/document handles after connection-generation changes and must not separately drain a bound document's event queue. PB JavaScript execution, CSS keyframes, browser DOM, Canvas and modern ECMAScript are not implemented by this prototype.
 
 ## PB command index
 

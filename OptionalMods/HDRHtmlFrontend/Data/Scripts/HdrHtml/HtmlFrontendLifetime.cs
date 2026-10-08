@@ -25,6 +25,7 @@ namespace Hdr.Html
         readonly Dictionary<string,string> pendingData=new Dictionary<string,string>(StringComparer.Ordinal);
         readonly Dictionary<string,HtmlPbSourceAttachment> sources=new Dictionary<string,HtmlPbSourceAttachment>(StringComparer.Ordinal);
         int nextSource;
+        object scriptToken;
         bool pendingResize;double pendingWidth,pendingHeight;
         readonly List<MyTuple<string,string,string,MyTuple<double,long>>> events = new List<MyTuple<string,string,string,MyTuple<double,long>>>();
         HtmlHitRegion pressed;
@@ -50,6 +51,111 @@ namespace Hdr.Html
         {bool changed=Controller.SetText(node,text);if(changed)pendingText[node]=text;else if(Controller.LastError!=null)LastError=Controller.LastError;return changed;}
         internal bool Resize(double width,double height)
         {bool changed=Controller.Resize(width,height);if(changed){pendingResize=true;pendingWidth=width;pendingHeight=height;}else if(Controller.LastError!=null)LastError=Controller.LastError;return changed;}
+        internal bool ClaimScript(object token)
+        {if(disposed)return false;if(scriptToken!=null)return ReferenceEquals(scriptToken,token);scriptToken=token;return true;}
+        internal bool ScriptValid(object token){return !disposed&&scriptToken!=null&&ReferenceEquals(scriptToken,token);}
+        internal bool ReleaseScript(object token){if(!ScriptValid(token))return false;scriptToken=null;return true;}
+        internal MyTuple<bool,string> SourceCheck(string provider,string source)
+        {
+            var surface=Painter as HtmlSurfacePainter;if(disposed||surface==null)return new MyTuple<bool,string>(false,"Unsupported: this document has no retained local source consumer context.");
+            try{surface.ValidateSource(provider,source);return new MyTuple<bool,string>(true,"Supported");}
+            catch(ArgumentException error){return new MyTuple<bool,string>(false,BoundReason(error.Message));}
+            catch(InvalidOperationException error){return new MyTuple<bool,string>(false,BoundReason(error.Message));}
+        }
+        static string BoundReason(string reason){return string.IsNullOrEmpty(reason)?"Source capability check failed.":reason.Length<=512?reason:reason.Substring(0,512);}
+        internal bool Mutate(MyTuple<string,object[]>[] changes,int tick)
+        {
+            var surface=Painter as HtmlSurfacePainter;
+            if(disposed||surface==null||!RequiresHdr)throw new ArgumentException("Unsupported: atomic mutation batches require one retained local HUD/world/surface document; physical native LCD publication has no reversible context transaction.");
+            if(changes==null||changes.Length>64)throw new ArgumentException("Mutation batch requires at most 64 standard tuple entries.");
+            var captured=new MyTuple<string,object[]>[changes.Length];long capturedCharacters=0;
+            for(int i=0;i<changes.Length;i++)
+            {
+                string operation=changes[i].Item1;var args=changes[i].Item2;
+                if(operation!="text"&&operation!="data"&&operation!="attach-source"&&operation!="detach-source")throw new ArgumentException("Unsupported mutation operation.");
+                if(args==null||args.Length>4)throw new ArgumentException("Mutation entry requires a bounded argument array (at most four values).");
+                var copy=(object[])args.Clone();foreach(var value in copy)if(value is string)capturedCharacters+=((string)value).Length;
+                if(capturedCharacters>131072)throw new ArgumentException("Mutation batch exceeds 131072 direct string characters.");
+                if(operation=="attach-source"&&copy.Length==4){var hints=copy[3] as MyTuple<string,object[]>[];if(hints==null)throw new ArgumentException("Source hints require MyTuple<string,object[]>[].");copy[3]=HtmlPbSourceOptions.Copy(hints);}
+                captured[i]=new MyTuple<string,object[]>(operation,copy);
+            }
+            surface.RequireMutationContext();
+            object guardedScriptToken=scriptToken;
+            var candidate=Controller.Fork();var desiredSources=new Dictionary<string,HtmlPbSourceAttachment>(sources,StringComparer.Ordinal);
+            var desiredKeys=new HashSet<string>(BindingKeys,StringComparer.Ordinal);var textEdits=new Dictionary<string,string>(pendingText,StringComparer.Ordinal);
+            var attachments=new HashSet<string>(StringComparer.Ordinal);int desiredNextSource=nextSource;long characters=0;
+            foreach(var change in captured)
+            {
+                string operation=change.Item1;var args=change.Item2;
+                if(args==null)throw new ArgumentException("Mutation arguments require an object array.");
+                foreach(var value in args)if(value is string)characters+=((string)value).Length;
+                if(characters>131072)throw new ArgumentException("Mutation batch exceeds 131072 direct string characters.");
+                if(operation=="text"||operation=="data")
+                {
+                    if(args.Length!=2||!(args[0] is string)||!(args[1] is string))throw new ArgumentException("Text/data mutations require exactly two string arguments.");
+                    string key=(string)args[0],value=(string)args[1];bool changed;
+                    if(operation=="data")
+                    {
+                        if(desiredKeys.Count>=128&&!desiredKeys.Contains(key))throw new ArgumentException("Document binding-key limit reached (128).");
+                        changed=candidate.SetData(key,value);if(changed)desiredKeys.Add(key);
+                    }
+                    else{changed=candidate.SetText(key,value);if(changed)textEdits[key]=value;}
+                    if(candidate.LastError!=null)throw new ArgumentException(candidate.LastError);
+                }
+                else if(operation=="attach-source")
+                {
+                    if(args.Length<3||args.Length>4||!(args[0] is string)||!(args[1] is string)||!(args[2] is string))throw new ArgumentException("Source attachment mutation requires node, provider, source ID and optional named hints.");
+                    string node=(string)args[0],provider=(string)args[1],source=(string)args[2];MyTuple<string,object[]>[] hints=null;
+                    if(args.Length==4){hints=args[3] as MyTuple<string,object[]>[];if(hints==null)throw new ArgumentException("Source hints require MyTuple<string,object[]>[].");}
+                    var options=HtmlPbSourceOptions.Copy(hints);surface.ValidateSource(provider,source);
+                    HtmlPbSourceAttachment previous;desiredSources.TryGetValue(node,out previous);
+                    if(previous==null&&desiredSources.Count>=16)throw new ArgumentException("HTML source attachment limit reached (16).");
+                    string slot=previous==null?"hs"+(checked(desiredNextSource++)).ToString("x",CultureInfo.InvariantCulture):previous.Slot;
+                    desiredSources[node]=new HtmlPbSourceAttachment{Node=node,Provider=provider,Source=source,Slot=slot,Settings=options};attachments.Add(node);
+                }
+                else if(operation=="detach-source")
+                {if(args.Length!=1||!(args[0] is string))throw new ArgumentException("Source detach mutation requires exactly one node ID.");desiredSources.Remove((string)args[0]);attachments.Remove((string)args[0]);}
+                else throw new ArgumentException("Unsupported mutation operation: "+operation);
+            }
+            if(candidate.IsDirty&&!candidate.Update())throw new ArgumentException(candidate.LastError??"Mutation candidate layout failed.");
+            foreach(string node in attachments)if(candidate.Document==null||string.IsNullOrEmpty(node)||!candidate.Document.ById.ContainsKey(node))throw new ArgumentException("Source attachment mutation requires an explicit node ID in the final candidate document: "+node);
+            if(guardedScriptToken!=null&&!ReferenceEquals(scriptToken,guardedScriptToken)){LastError="Mutation script claim was released before publication; desired state and prior frame were preserved.";return false;}
+            surface.Sources=desiredSources.Values;HtmlPaintReport report;
+            bool painted;
+            try{painted=Painter.TryPaint(candidate.Frame,out report);}
+            catch(Exception error)
+            {surface.Sources=sources.Values;surface.Reset();RetireBatchPublication(tick);LastError="Mutation publication failed unexpectedly; prior renderer context and input were retired. "+error.Message;return false;}
+            if(!painted)
+            {
+                surface.Sources=sources.Values;LastError=report==null?"Mutation painter failed without a report.":report.Error;
+                if(report==null||(report.Changed||report.MutatingCalls>0)&&!report.RestoredPrevious)
+                {surface.Reset();RetireBatchPublication(tick);LastError=(LastError??"Mutation publication failed.")+" Prior renderer context could not be restored; input is retired.";}
+                return false;
+            }
+            if(guardedScriptToken!=null&&!ReferenceEquals(scriptToken,guardedScriptToken))
+            {
+                surface.Sources=sources.Values;
+                try
+                {HtmlPaintReport restored;if(VisibleFrame!=null&&Painter.TryPaint(VisibleFrame,out restored)){LastError="Mutation script claim was released during publication; prior frame was restored and desired state was preserved.";return false;}}
+                catch{}
+                surface.Reset();RetireBatchPublication(tick);LastError="Mutation script claim was released during publication; prior renderer context could not be restored and input is retired.";return false;
+            }
+            Controller.Commit(candidate);sources.Clear();foreach(var pair in desiredSources)sources.Add(pair.Key,pair.Value);surface.Sources=sources.Values;nextSource=desiredNextSource;
+            BindingKeys.Clear();foreach(string key in desiredKeys)BindingKeys.Add(key);foreach(var pair in textEdits)TextEdits[pair.Key]=pair.Value;
+            pendingText.Clear();pendingData.Clear();pendingResize=false;PendingPaint=false;NextAttempt=0;LastError=null;PublishVisibleFrame(Controller.Frame);return true;
+        }
+        void RetireBatchPublication(int tick)
+        {VisibleFrame=null;CancelPointer();events.Clear();PendingPaint=true;NextAttempt=tick+60;}
+        void PublishVisibleFrame(HtmlPaintFrame frame)
+        {
+            bool viewportChanged=VisibleFrame!=null&&(VisibleFrame.Width!=frame.Width||VisibleFrame.Height!=frame.Height);
+            VisibleFrame=HtmlPaintDiff.Snapshot(frame);
+            if(pointerHeld&&pressedRevision!=VisibleFrame.Revision)
+            {
+                HtmlHitRegion next=null;if(pressed!=null)foreach(var hit in VisibleFrame.Hits)if(hit.NodeId==pressed.NodeId){next=hit;break;}
+                if(!viewportChanged&&SameGrab(pressed,next)){pressed=next;pressedRevision=VisibleFrame.Revision;}else CancelPointer();
+            }
+        }
         internal bool AttachSource(string node,string provider,string source,MyTuple<string,object[]>[] settings,int tick)
         {
             var surface=Painter as HtmlSurfacePainter;if(surface==null)throw new ArgumentException("Unsupported: physical native LCD cannot embed external engine textures. Local source attachments require a retained HUD/world/surface document with an actual source anchor.");
@@ -99,16 +205,8 @@ namespace Hdr.Html
                 if(Painter.TryPaint(Controller.Frame,out report))
                 {
                     // Painter commits a snapshot. The controller frame is immutable between successful layouts.
-                    bool viewportChanged=VisibleFrame!=null&&(VisibleFrame.Width!=Controller.Frame.Width||VisibleFrame.Height!=Controller.Frame.Height);
-                    VisibleFrame=HtmlPaintDiff.Snapshot(Controller.Frame);PendingPaint=false;LastError=Controller.LastError;
+                    PublishVisibleFrame(Controller.Frame);PendingPaint=false;LastError=Controller.LastError;
                     // A new layout invalidates a grab; it may move/rebind the original element.
-                    if(pointerHeld&&pressedRevision!=VisibleFrame.Revision)
-                    {
-                        HtmlHitRegion next=null;
-                        if(pressed!=null)foreach(var hit in VisibleFrame.Hits)if(hit.NodeId==pressed.NodeId){next=hit;break;}
-                        if(!viewportChanged&&SameGrab(pressed,next)){pressed=next;pressedRevision=VisibleFrame.Revision;}
-                        else CancelPointer();
-                    }
                 }
                 else
                 {
@@ -195,6 +293,6 @@ namespace Hdr.Html
         internal MyTuple<string,long,long,MyTuple<bool,bool,string>,long> Status(bool rendererReady)
         {return new MyTuple<string,long,long,MyTuple<bool,bool,string>,long>(Backend,Controller.Revision,VisibleFrame==null?0:VisibleFrame.Revision,new MyTuple<bool,bool,string>(!RequiresHdr||rendererReady,PendingPaint,LastError??""),Controller.LayoutBuildCount);}
         internal static bool Finite(double value){return !double.IsNaN(value)&&!double.IsInfinity(value);}
-        public void Dispose(){if(disposed)return;disposed=true;CancelPointer();events.Clear();VisibleFrame=null;try{Painter.Dispose();}catch{}TextEdits.Clear();BindingKeys.Clear();pendingText.Clear();pendingData.Clear();sources.Clear();}
+        public void Dispose(){if(disposed)return;disposed=true;scriptToken=null;CancelPointer();events.Clear();VisibleFrame=null;try{Painter.Dispose();}catch{}TextEdits.Clear();BindingKeys.Clear();pendingText.Clear();pendingData.Clear();sources.Clear();}
     }
 }

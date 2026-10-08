@@ -28,7 +28,7 @@
     "Name": "Host",
     "Project": "Host/HostTests.csproj",
     "Pattern": "HTML host tests: \\d+ cases, (\\d+) assertions",
-    "Expected": 565
+    "Expected": 669
   },
   {
     "Name": "CoreSeams",

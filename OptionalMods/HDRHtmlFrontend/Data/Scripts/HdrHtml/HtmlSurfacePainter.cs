@@ -91,6 +91,8 @@ namespace Hdr.Html
             var capability=(MyTuple<bool,bool,string>)Call("context-source-status",Context,provider);
             if(!capability.Item1||!capability.Item2)throw new ArgumentException(capability.Item3??"Unsupported: local source consumer or actual source anchor is unavailable.");
         }
+        internal void RequireMutationContext()
+        {if(disposed||Context==0||!api.Ready||api.Generation!=generation||!(bool)Call("context-valid",Context))throw new ArgumentException("Retained mutation context or endpoint generation is inactive; publish the document before batching mutations.");}
         internal MyTuple<bool,string> SourceStatus(HtmlPbSourceAttachment source)
         {
             if(disposed||Context==0||!api.Ready||api.Generation!=generation)return new MyTuple<bool,string>(false,"Inactive: local Core context is unavailable.");

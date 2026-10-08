@@ -1,0 +1,65 @@
+[
+  {
+    "File": "LICENSES/Jint-BSD-2-Clause.txt",
+    "Spdx": "BSD-2-Clause",
+    "MustContain": [
+      "Copyright (c) 2013, Sebastien Ros",
+      "Redistributions of source code must retain",
+      "THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS"
+    ]
+  },
+  {
+    "File": "LICENSES/Jint-CREDITS.txt",
+    "Spdx": "LicenseRef-Upstream-Credits",
+    "MustContain": [
+      "Copyright (c) Ariya Hidayat",
+      "Copyright 2010 the V8 project authors",
+      "MPL 2.0 - http://mozilla.org/MPL/2.0/"
+    ]
+  },
+  {
+    "File": "LICENSES/V8-Dtoa-NOTICE.txt",
+    "Spdx": "BSD-3-Clause",
+    "MustContain": [
+      "Copyright 2010 the V8 project authors",
+      "Neither the name of Google Inc. nor the names of its",
+      "THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS"
+    ]
+  },
+  {
+    "File": "LICENSES/MPL-2.0.txt",
+    "Spdx": "MPL-2.0",
+    "MustContain": [
+      "Mozilla Public License Version 2.0",
+      "All distribution of Covered Software in Source Code Form",
+      "Covered Software is provided under this License on an"
+    ]
+  },
+  {
+    "File": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Number/Dtoa/FastDtoaBuilder.cs",
+    "Spdx": "MPL-2.0",
+    "MustContain": [
+      "This Source Code Form is subject to the terms of the Mozilla Public",
+      "License, v. 2.0.",
+      "http://mozilla.org/MPL/2.0/"
+    ]
+  },
+  {
+    "File": "LICENSES/Esprima-BSD.txt",
+    "Spdx": "BSD-2-Clause",
+    "MustContain": [
+      "Redistributions of source code must retain the above copyright",
+      "Redistributions in binary form must reproduce the above copyright",
+      "THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS"
+    ]
+  },
+  {
+    "File": "LICENSES/Esprima-COPYRIGHT-NOTICE.txt",
+    "Spdx": "BSD-2-Clause",
+    "MustContain": [
+      "Copyright (C) 2013 Ariya Hidayat",
+      "Redistributions of source code must retain the above copyright",
+      "THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS"
+    ]
+  }
+]

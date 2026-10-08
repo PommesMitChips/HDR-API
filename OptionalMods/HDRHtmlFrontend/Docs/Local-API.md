@@ -1,6 +1,6 @@
 # Local HTML frontend API
 
-**ALPHA — frontend 0.2.0, core 0.9.11 / scene 20.** `HDR.Html/0.1` is a client-local source frontend for `HDR.HTML/Profile1`. It is not a browser engine: it has no JavaScript, browser DOM, network loading, iframe, canvas, WebGL or arbitrary HTML event handlers. Unsupported markup, CSS and paint features are reported.
+**ALPHA — frontend 0.2.1, core 0.9.11 / scene 20.** `HDR.Html/0.1` is a client-local source frontend for `HDR.HTML/Profile1`. It is not a browser engine: it embeds no JavaScript engine, browser DOM, network loading, iframe, canvas, WebGL or arbitrary HTML event handlers. The separate [JavaScript Runtime 0.1.0](../../HDRJavaScriptRuntime/README.md) can bind these local retained documents explicitly. The parser still rejects `<script>` and `on*` attributes. Unsupported markup, CSS and paint features are reported.
 
 Copy [`HdrHtmlApi.cs`](../../../Api/Mods/HdrHtmlApi.cs) into the consumer mod. Vector/SVG geometry needs the core world mod and no client plugin. Native source attachments require actual block authority and explicit local-consumer provider negotiation; camera/LCD/portal sources use **Client Renderer 0.9.14**. The separate PB camera/persistent pointer route remains compatible with **0.9.13+**. Native LCD sprites are an explicitly selected alternative with their own measured font and feature limits.
 
@@ -42,6 +42,11 @@ The SDK wraps these exact endpoint calls:
 | `detach-source` | handle, node ID | Boolean accepted removal |
 | `source-status` | handle, node ID | `MyTuple<bool,string>` readiness and actual reason |
 | `source-capabilities` | handle | Detached `string[]` of actual supported capabilities/reasons |
+| `source-check` | handle, exact provider ID, exact source ID | `MyTuple<bool,string>` read-only consumer/provider admission and actual reason; no frame acquisition/attachment |
+| `mutate` | handle, `MyTuple<string,object[]>[]` operations | Boolean accepted atomic retained publication; schema below |
+| `script-claim` | handle, private non-null C# token object | Boolean exclusive script association for this actual owned document |
+| `script-valid` | handle, same token | Boolean current matching claim |
+| `script-release` | handle, same token | Boolean matching cleanup; a foreign token cannot release it |
 | `poll-events` | handle | event tuple array below |
 
 Logical coordinates have a top-left origin and Y points down. A world pose places that top-left at its translation: local +X is right, local −Y is down. HUD units are pixels. World metres per pixel must be finite and between 0.000001 and 1000. Native LCD layout dimensions match the surface's actual `SurfaceSize`.
@@ -69,6 +74,32 @@ var source = html.SourceStatus(document, "pov");
 For a HUD, use `CreateHud`, the same `SetSourceAnchor`/`AttachSource` calls and existing cooperative `Pointer` pixels. HUD sources retain top-left Y-down pixel bounds/clip and flat HUD mapping. `CreateSurface` can set its initial anchor through settings or later `SetSourceAnchor`. Only genuine physical `CreateNativeLcd` rejects external engine texture embedding; use an HDR HUD/world/surface renderer for provider images.
 
 Attachments use explicit visible block IDs, retain full node content bounds and effective rectangular clip, and insert after node background/border before children. Clipped provider UVs crop without stretching. The source hint schema matches the [PB attachment API](PB-API.md#attach-a-source-to-a-layout-node): refresh, panorama, quality and opacity. Admission checks actual anchor validity and explicitly negotiated local-consumer provider capability before changing accepted declarations. Native providers need Client Renderer 0.9.14; missing/unsupported service returns its actual reason. Readiness is separate from declaration acceptance, visible document revision and viewer/GPU acceptance. Detach/replacement retires only the appropriate owned source consumer.
+
+`source-check(handle, provider, sourceId)` tests that exact selected consumer/provider identity without acquiring a frame or changing the document. A negotiated mod-native provider does not inherit a universal renderer-plugin requirement. An absent native provider returns its specific `Requires plugin: ...` reason; an installed provider lacking the consumer capability returns its actual unsupported reason. Declaration support is not frame/GPU readiness.
+
+## Atomic mutations and document script claims
+
+`HdrHtmlApi.Mutate(document, operations)` supports one retained local HUD/world/general-surface candidate. Each standard tuple names one operation:
+
+| Operation | `object[]` values |
+| --- | --- |
+| `text` | Node ID string, plain text string |
+| `data` | Binding key string, plain value string |
+| `attach-source` | Node ID string, provider string, source ID string, optional `MyTuple<string,object[]>[]` hints |
+| `detach-source` | Node ID string |
+
+```csharp
+bool published = html.Mutate(document, new[] {
+    new MyTuple<string,object[]>("text", new object[] { "label", "Forward camera" }),
+    new MyTuple<string,object[]>("attach-source", new object[] { "pov", "camera-panorama", cameraId })
+});
+```
+
+The whole payload is copied/validated before publication: at most **64** operations, at most four values per operation and **131,072** direct string characters. Node/provider/hint validation, queued standalone edits and candidate layout all precede one painter publication. Success commits candidate desired state and the visible frame together. Rejection never splits an oversized batch. A confirmed restore leaves the prior accepted state; uncertain restoration retires visible output/input and gives a precise status error. Physical native-LCD batches reject before writes because they lack a reversible context transaction.
+
+`ClaimScript(document, token)`, `ScriptValid` and `ReleaseScript` reserve an exclusive script association on the actual document, independently of wrapper identity. Use one private non-null C# token and the actual owned endpoint; the token is not serialized or passed into JS. Claim ownership does not replace the frontend endpoint's document authority, and normal C# ownership remains intact. Matching release/valid checks can run during publication; release before/during a guarded mutation prevents its candidate commit and restores or retires prior output safely. Destroy/owner retirement releases the association.
+
+The [separate JS runtime](../../../docs/wiki/JavaScript-Prototype.md) acquires that claim and consumes the document's event queue. Do not also drain `PollEvents` while that bridge owns event dispatch. This frontend itself still executes no JavaScript or event-handler attributes, and the PB adapter does not expose these local batch/claim commands.
 
 ## Status and events
 

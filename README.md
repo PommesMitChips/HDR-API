@@ -14,7 +14,9 @@ HDR API is a display and hologram rendering library for **Space Engineers**. Pro
 - Create buttons, menus and [numeric sliders, constrained handles and rotation controls](docs/wiki/Interactive-Controls.md), with two-way script/mod values and retained artwork poses.
 - With the optional **HDR Client Renderer**, display camera feeds, raster interfaces and visual portals.
 
-An optional [HTML/CSS frontend prototype](OptionalMods/HDRHtmlFrontend/README.md) lets programmable blocks and client mods author interfaces on LCDs, Projectors, Consoles and curved surfaces. Content, surface mapping and input share a [composition API](docs/wiki/Composition.md): place camera images in HTML containers, layer SVG or controls above them, and map the result onto an ellipsoid or custom mesh. Its bounded profile uses existing vector/SVG renderers without a plugin; callers can also select explicitly owned native LCD sprites. It is not a complete browser and does not run JavaScript.
+An optional [HTML/CSS frontend prototype](OptionalMods/HDRHtmlFrontend/README.md) lets programmable blocks and client mods author interfaces on LCDs, Projectors, Consoles and curved surfaces. Content, surface mapping and input share a [composition API](docs/wiki/Composition.md): place camera images in HTML containers, layer SVG or controls above them, and map the result onto an ellipsoid or custom mesh. Its bounded profile uses existing vector/SVG renderers without a plugin; callers can also select explicitly owned native LCD sprites.
+
+The separate [JavaScript runtime prototype](OptionalMods/HDRJavaScriptRuntime/README.md) adds client-local ES5.1 scripts, closures, UI event handlers and timers through a source port of Jint. JavaScript and ordinary HTML updates need no plugin. Scripts are registered explicitly by a mod through a scoped document API; this is not a complete browser or a PB JavaScript endpoint. Jint's BSD 2-Clause license and the bundled dependencies' additional notices are included in the mod package.
 
 PBs can also select native sprites on a caller-owned LCD, or project that LCD's native texture onto a Console/Projector with the existing client renderer. See the [PB HTML/CSS guide](OptionalMods/HDRHtmlFrontend/Docs/PB-API.md) for backend selection, input and source-surface setup.
 
@@ -48,6 +50,7 @@ See the [client renderer setup guide](OptionalPlugins/HDRClientRenderer/README.m
 - [Interactive artwork controls](docs/wiki/Interactive-Controls.md)
 - [HUDs, menus and integration with other mods](docs/wiki/Mod-Integration.md)
 - [HTML/CSS frontend prototype](docs/wiki/HTML-Frontend.md)
+- [JavaScript runtime prototype](docs/wiki/JavaScript-Prototype.md)
 - [Combining content, surfaces and input](docs/wiki/Composition.md), with an HTML camera ellipsoid example
 - [API boundaries](docs/wiki/API-Boundaries.md) and [security](Security.md)
 - [Release history](CHANGELOG.md)

@@ -78,6 +78,11 @@ static partial class HostTests
         Run("legacy world HTML preserves top-left pose through source attachment and resize", LegacyWorldSourcesAndPose);
         Run("local source capability and hidden-node fences precede declarations", LocalSourceCapabilityFences);
         Run("hosted geometry allowance forwards unlimited sentinel and finite preflight", HostedGeometryForwarding);
+        Run("retained mutation batch commits once and keeps restored pending state", MutationBatchCommitAndRollback);
+        Run("mutation candidate and payload validation precede owned publication", MutationBatchPreflight);
+        Run("uncertain mutation renderer retires input without desired state commit", MutationBatchRetirement);
+        Run("actual document script claims isolate delegate aliases and retire cleanly", ScriptClaims);
+        Run("provider-aware source check permits custom feeds without native plugin", ProviderSourceCheck);
         Console.WriteLine("HTML host tests: " + cases + " cases, " + assertions + " assertions, " + failures + " failures; C#6 production glob and consumer helpers compiled against real SE assemblies.");
         return failures == 0 ? 0 : 1;
     }

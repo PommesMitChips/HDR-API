@@ -1,12 +1,12 @@
 # Optional HTML/CSS frontend
 
-**ALPHA.** [`HDRHtmlFrontend` 0.2.0](../../OptionalMods/HDRHtmlFrontend/README.md), with **core 0.9.11 / scene 20**, is an optional mod-native frontend for **`HDR.HTML/Profile1`**. It translates a strict HTML/CSS UI subset into HDR's existing retained drawing paths. Client mods own local documents; the `HDR.Html` PB property owns authenticated server documents on shared block displays. Projected documents combine layout nodes, provider sources, all five surface kinds and the input/effects supported by the selected backend. Neither route implements a complete HTML5 browser.
+**ALPHA.** [`HDRHtmlFrontend` 0.2.1](../../OptionalMods/HDRHtmlFrontend/README.md), with **core 0.9.11 / scene 20**, is an optional mod-native frontend for **`HDR.HTML/Profile1`**. It translates a strict HTML/CSS UI subset into HDR's existing retained drawing paths. Client mods own local documents; the `HDR.Html` PB property owns authenticated server documents on shared block displays. Projected documents combine layout nodes, provider sources, all five surface kinds and the input/effects supported by the selected backend. Neither route implements a complete HTML5 browser.
 
 ![HTML authoring, local ownership and rendering alternatives](diagrams/html-frontend.svg)
 
 ## Setup and first output
 
-Manually install and explicitly add both the core **HDR API 0.9.11+** world mod and the **HDR HTML frontend 0.2.0** world mod. Nothing is auto-installed or enabled. On startup the frontend registers its services and draws no demo.
+Manually install and explicitly add both the core **HDR API 0.9.11+** world mod and the **HDR HTML frontend 0.2.1** world mod. Nothing is auto-installed or enabled. On startup the frontend registers its services and draws no demo.
 
 Enter `/hdrhtml hud vector` or `/hdrhtml world svg`. Either location accepts `vector` or `svg`; the world demo stays at the flat plane placed three metres in front of the camera. `/hdrhtml status` reports backend, desired/visible revision, layout builds and errors. `/hdrhtml clear` releases only the demo owner. These commands do not capture game input, modify PBs/blocks, change preferences or load network resources.
 
@@ -20,7 +20,7 @@ For actual native sprites, use the separate [`HtmlPbSpritesDemo.cs`](../../Optio
 
 Profile1 accepts block containers, paragraphs/headings, inline spans, line breaks, buttons and range controls; styling covers solid boxes, content dimensions, margins/padding, single-row/column flex growth, measured text and rectangular clipping. It accepts embedded/inline CSS and compound element/class/ID selectors. See the [complete accepted/rejected profile](../../OptionalMods/HDRHtmlFrontend/Docs/Profile.md) before adapting browser markup.
 
-There is no JavaScript, browser DOM, Canvas, WebGL, network loading, iframe, URL asset loading or HTML event-handler execution. The parser rejects unsupported tags/styles explicitly, including `<img>`, `<svg>`, `strong`, `em`, form/text-input controls, grid, positioning and wrapping flex. The `svg` backend groups generated paint; it does not accept arbitrary SVG markup through HTML.
+The frontend embeds no JavaScript engine, browser DOM, Canvas, WebGL, network loading, iframe, URL asset loading or HTML event-handler execution. The separate [JavaScript Runtime prototype](JavaScript-Prototype.md) can explicitly bind client-local documents for scoped ES5.1 events, timers and atomic text/data/source updates. PB JavaScript execution is not implemented. The parser still rejects `<script>`, inline handlers and unsupported tags/styles, including `<img>`, `<svg>`, `strong`, `em`, form/text-input controls, grid, positioning and wrapping flex. The `svg` backend groups generated paint; it does not accept arbitrary SVG markup through HTML.
 
 Vector/SVG uses the same packaged Inter outlines as core HDR text and the exact **`HDR.TextMetrics/1:Inter:cap-height`** metric schema. A 16px font means 16 logical pixels of capital height, not a browser em box. Unsupported Unicode scalars render as `?`; shaping, kerning, ligatures, bidi and system-font fallback are absent. Native LCD instead measures the actual target's Debug font and uses a line-height proxy. Fonts and layout cannot be assumed interchangeable between these backends.
 

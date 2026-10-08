@@ -25,6 +25,7 @@ GUIDES = [
     ("Drawing", "Drawing and animation"),
     ("Interactive-Controls", "Interactive controls"),
     ("HTML-Frontend", "HTML/CSS frontend prototype"),
+    ("JavaScript-Prototype", "JavaScript runtime prototype"),
     ("Special-Effects", "Hologram effects"),
     ("Display-Surfaces", "Display surfaces"),
     ("Cameras-and-Portals", "Cameras and visual portals"),
@@ -176,6 +177,12 @@ The documented release is **HDR API {args.release}**, scene protocol
 - With the optional client renderer, show camera panoramas, raster interfaces
   and visual portals/capture shells.
 
+Optional [HTML Frontend 0.2.1]({WIKI}/HTML-Frontend) provides a bounded HTML/CSS
+authoring profile. The separate [JavaScript Runtime 0.1.0]({WIKI}/JavaScript-Prototype)
+adds explicitly registered client-local ES5.1 scripts, closures, events and timers
+without a plugin. It is a UI prototype, not a complete browser or PB JavaScript
+endpoint. The source mod includes Jint's BSD 2-Clause license and dependency notices.
+
 Ordinary vectors and hologram effects work without a client plugin. Plugin-only
 features remain inactive and explain the requirement when the component is absent.
 Native block UI mouse interaction requires **HDR API 0.9.9 or later** and
@@ -232,6 +239,14 @@ portals are documented
 in their [feature guides]({WIKI}/Documentation-Index). Each guide states bounds,
 ownership, dependencies and validation limits.
 
+The optional HTML Frontend **0.2.1** and JavaScript Runtime **0.1.0** provide
+mod-native parsing/layout and scoped client-local ES5.1 events/timers. Callback
+errors drop unflushed changes. Confirmed restoration preserves the prior frame;
+uncertain publication retires visible output and input. Native source features
+retain their provider checks. Broader CSS timelines, DOM features and Canvas remain
+planned; the [JavaScript guide]({WIKI}/JavaScript-Prototype) records that expansion
+policy separately from implemented capabilities.
+
 ## Supported, experimental: numeric interactive controls
 
 The interaction API includes bounded numeric values, sliders, constrained
@@ -283,10 +298,12 @@ and [API boundaries]({WIKI}/API-Boundaries) when integrating a feature.
 - [Drawing and animation]({WIKI}/Drawing)
 - [Interactive controls]({WIKI}/Interactive-Controls)
 - [HTML/CSS frontend]({WIKI}/HTML-Frontend)
+- [JavaScript runtime prototype]({WIKI}/JavaScript-Prototype)
 - [Hologram effects]({WIKI}/Special-Effects)
 - [Display surfaces]({WIKI}/Display-Surfaces)
 - [Cameras and visual portals]({WIKI}/Cameras-and-Portals)
 - [Composition recipes]({WIKI}/Composition-Recipes)
+- [Combining content, surfaces and input]({WIKI}/Composition)
 
 **Integrate**
 

@@ -8,3 +8,10 @@
 *.ttf binary
 *.otf binary
 *.zip binary
+
+# The optional source interpreter carries exact upstream notices and a per-file
+# provenance inventory. Preserve their bytes across Git checkout and packaging.
+OptionalMods/HDRJavaScriptRuntime/** -text
+Tools/JavaScriptChecks/** -text
+Api/Mods/HdrJavaScriptApi.cs -text
+OptionalMods/HDRHtmlFrontend/Data/Scripts/HdrHtml/HtmlRetainedPainter.cs -text

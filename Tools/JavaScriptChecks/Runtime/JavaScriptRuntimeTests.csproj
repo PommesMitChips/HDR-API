@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
+  <Import Project="../../HtmlChecks/GameReferences.props" />
+  <ItemGroup>
+    <Compile Include="RuntimeTests.cs" />
+    <Compile Include="DocumentTests.cs" />
+    <Compile Include="RealmTests.cs" />
+    <Compile Include="HtmlAdapterTests.cs" />
+    <Compile Include="ServiceTests.cs" />
+    <Compile Include="$(JavaScriptSourceRoot)/**/*.cs" />
+  </ItemGroup>
+</Project>

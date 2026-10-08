@@ -1,0 +1,1114 @@
+{
+  "Engine": "Jint",
+  "Tag": "2.11.10",
+  "Commit": "340f0f4ffc2f2b389ebac0d9a4da318f248f20b6",
+  "ArchiveUrl": "https://codeload.github.com/sebastienros/jint/zip/340f0f4ffc2f2b389ebac0d9a4da318f248f20b6",
+  "ArchiveSHA256": "38229A27DBB18905F73203EB60E707454209F54837CF4E0FCD3198242A9940B8",
+  "Profile": "HDR.JavaScript/ES5.1-Prototype1",
+  "OriginalSources": 157,
+  "SelectedOriginalSources": 140,
+  "AddedSources": [
+    {
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/HdrExecutionGuard.cs",
+      "ShippedSHA256": "7659B4EEE96AFA9130BC55F82ECDF159A7C84172D12B526CB31E34BDF85CC5AC",
+      "Origin": "HDR source-port guard/profile code; not represented as upstream Jint."
+    },
+    {
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Function/HdrUnavailableFunction.cs",
+      "ShippedSHA256": "B6F017A8D921C8DDB3B8D86D33DB450D62A323753A58157AE802918E9A1695E4",
+      "Origin": "HDR source-port guard/profile code; not represented as upstream Jint."
+    }
+  ],
+  "Sources": [
+    {
+      "UpstreamFile": "Jint/DeclarationBindingType.cs",
+      "UpstreamSHA256": "4D06D84F8BF1A116EA17CC1EDA1211C53FC91DC9D4BC969CFF75A37EF9010935",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/DeclarationBindingType.cs",
+      "ShippedSHA256": "39893301A345352CAF9C143B2D68BDB2CE1ED3E6B40EE493B8DABE095F1E71FB",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Engine.cs",
+      "UpstreamSHA256": "43518FC1E68D73BB072A75B5BC0E37F5576C4EF7226E90444AFCA3FFF5971FF4",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Engine.cs",
+      "ShippedSHA256": "809B41D89321679C8F07A007F374FBDBCBA2E39F06620A1273910E51F7B48CA8",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/EvalCodeScope.cs",
+      "UpstreamSHA256": "31D50C58B6EBD3102EA28462623DE214EED238D630A438B62C45A455E0DDFF67",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/EvalCodeScope.cs",
+      "ShippedSHA256": "F4BE00108FAE042C618947BA819F8DCE9442F654A16279A74CD00116341146C7",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Argument/ArgumentsInstance.cs",
+      "UpstreamSHA256": "BD7F989D4D5B9353084D49C06E50DC72F6ADCA6FE4BD829BCB275A1383A6004F",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Argument/ArgumentsInstance.cs",
+      "ShippedSHA256": "58DEE07EAB1FA0DBE3066C47FADC24B2D49303B15D5614DE5E7AD675B886CA99",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Array/ArrayConstructor.cs",
+      "UpstreamSHA256": "3BA8CC177AFA4AFB852DC1D08F856C1E4D134928D107E794A5E0A797A89CD49F",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Array/ArrayConstructor.cs",
+      "ShippedSHA256": "E2D21B331980C4615209A8038A420FA9254BD7FD86D6180B3A14A4E2A601B648",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Array/ArrayInstance.cs",
+      "UpstreamSHA256": "C4EE2BD59E4E0D56994A00A199F431D2EF9932240CD103BBA2BF777F766F05B0",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Array/ArrayInstance.cs",
+      "ShippedSHA256": "6D9A83F312499355646E91F35C9279839496039A258BD41927264B32A285518A",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Array/ArrayPrototype.cs",
+      "UpstreamSHA256": "11FD06F86FFFE1B544BA2A1D4C35C47223FEC9B8F2904CB006BF0897E1C061CF",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Array/ArrayPrototype.cs",
+      "ShippedSHA256": "0B91F4ACA4D4D54AEA42841523B9CA939D03AA2DD1E643262D37C12213F0F485",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Boolean/BooleanConstructor.cs",
+      "UpstreamSHA256": "FF96780F40851075195FE4FA45D5A863996DC27B6966D23A81A880316AB19169",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Boolean/BooleanConstructor.cs",
+      "ShippedSHA256": "BCBB2E5EB8BC87F11C9C89E04E513149557643FE4CA6887D9BF659B68944E3E2",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/Boolean/BooleanInstance.cs",
+      "UpstreamSHA256": "58B788DF77E668949DBB521113A4FB914C134FCE9011058E500BF576D2C49E26",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Boolean/BooleanInstance.cs",
+      "ShippedSHA256": "C31566769F63D66A744D4B90097B4DD55AF3BFE40C48740370E1A2ED3B4D6E93",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/Boolean/BooleanPrototype.cs",
+      "UpstreamSHA256": "9B96483AD04BC3FB510B3D63E0BF2E8F451120290AFF3444848B01825D673458",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Boolean/BooleanPrototype.cs",
+      "ShippedSHA256": "E5D474C5F374746A4E677D943C914E49759D8A693B7CBD63A6561CF095312099",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/Date/DateConstructor.cs",
+      "UpstreamSHA256": "CEFD760599778A260C381D22CE334F30B25D87125F43CFA4C505A3E3A220C9D6",
+      "ShippedFile": null,
+      "Omission": "Date/time-zone feature omitted explicitly from prototype profile."
+    },
+    {
+      "UpstreamFile": "Jint/Native/Date/DateInstance.cs",
+      "UpstreamSHA256": "519BC1934CB46486F024DE7E7E98D482F5CBBFDECF15E96B1BCDD1BC95DC7E1B",
+      "ShippedFile": null,
+      "Omission": "Date/time-zone feature omitted explicitly from prototype profile."
+    },
+    {
+      "UpstreamFile": "Jint/Native/Date/DatePrototype.cs",
+      "UpstreamSHA256": "B05EFB5220A302780271EA2C4DB5FC3ED73DF351C274CC5151E11BA436049DBD",
+      "ShippedFile": null,
+      "Omission": "Date/time-zone feature omitted explicitly from prototype profile."
+    },
+    {
+      "UpstreamFile": "Jint/Native/Error/ErrorConstructor.cs",
+      "UpstreamSHA256": "B72A69BDF88EE6DA2B37058DB14EE1CFD1D68432983FA5FB7C4C9F2FBE07865D",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Error/ErrorConstructor.cs",
+      "ShippedSHA256": "E07D5B8D54D36F926169677CB5251B053312A431EB4DB49563131A3C886F8A39",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/Error/ErrorInstance.cs",
+      "UpstreamSHA256": "519A0EA8E8050DFC7CA32B1B1136E0C8380844B7812EE0EA0ABBB92B8C33F321",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Error/ErrorInstance.cs",
+      "ShippedSHA256": "8D87106667D50491F02E5F81F4443EB0138D811ED316BCD344687C38985C3C8F",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/Error/ErrorPrototype.cs",
+      "UpstreamSHA256": "EF399EC456C7C1C118AB2693ED8551482FFF3575F1F0F687B3488DD863ED2AD0",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Error/ErrorPrototype.cs",
+      "ShippedSHA256": "04E41CE6C9312E1BA31D6A5CEEAF46D48586BDFBE2AB839225F526773D84E933",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/Function/BindFunctionInstance.cs",
+      "UpstreamSHA256": "29FEBB95154B60CDC93CCC661610DC8E781BF67C6D7A0D548134FE32301B26FC",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Function/BindFunctionInstance.cs",
+      "ShippedSHA256": "8AD4A4FD6C9710B04FDF785130AA0EBFFDE57FF71A783799C5792B56176BDBF8",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Function/EvalFunctionInstance.cs",
+      "UpstreamSHA256": "28A4A9C215DB0C9C97E022D964096ADDFF9A87FDCA36EC86BA5F26F8DEEDC631",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Function/EvalFunctionInstance.cs",
+      "ShippedSHA256": "520EE8E8F0A257F0715AF28E11F9DAF941A46EFAE4E499BCD3C338D0BB17F45F",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Function/FunctionConstructor.cs",
+      "UpstreamSHA256": "8E063D0F1C85478E3CF83E24FC6C3C7AE5210F4AE749D72A0AB6488947814B6E",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Function/FunctionConstructor.cs",
+      "ShippedSHA256": "543EAC9E2DC5D9364AD94CD6375600CFEF39B21F95F10841DA9C33BF41FEDA84",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Function/FunctionInstance.cs",
+      "UpstreamSHA256": "41DF99B435E17F1FF0F7C80E7DA2BE83BAC6C0F1F29341C6DD1D712B95AD0A69",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Function/FunctionInstance.cs",
+      "ShippedSHA256": "58A5F745A78139ECF013C1EA9F8C37D84397797F8A5116C3327D061A1194B124",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Function/FunctionPrototype.cs",
+      "UpstreamSHA256": "772993FC06B9D8F32CFEEFB37CF9CD646FB4155B40824EB726A064F982117416",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Function/FunctionPrototype.cs",
+      "ShippedSHA256": "2DE9AC4E20C4AFD4EC0BDA3F72A9B875ACC0C3AE6905E52D35803B6A5458BD3C",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Function/FunctionShim.cs",
+      "UpstreamSHA256": "5C51D84C18FFEB773E98AB7FC6DF243079A5F6C8C8DC546DB83A5C21E060092B",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Function/FunctionShim.cs",
+      "ShippedSHA256": "BC4F0D1DE3B129DD348304221A8D3483CA78AB58596506F85768469ECC783C5A",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/Function/ScriptFunctionInstance.cs",
+      "UpstreamSHA256": "6D1EFE66CCEEA4B3A07EC5F9BF191E2393EE264FE6B67EEB27432220994ABB9C",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Function/ScriptFunctionInstance.cs",
+      "ShippedSHA256": "2A1623D3760E65D203DD4355B128129E93A1F7DF1884562565B5F50FD2A335F1",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/Function/ThrowTypeError.cs",
+      "UpstreamSHA256": "5E1A71AAD7820922F8E04C052D9A6FB0008A9A79FC02964E26953E4A113645AD",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Function/ThrowTypeError.cs",
+      "ShippedSHA256": "AF5B23C03332F1A5319A9A1A72074F8F247AEB2E8AC6DD1F22C9B0F8038B4BE2",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/Global/GlobalObject.cs",
+      "UpstreamSHA256": "505F68473CE39609587030C6480C37E8AA61ACEBD6C9C4C22A8EA4359A878C2C",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Global/GlobalObject.cs",
+      "ShippedSHA256": "A2079D0BA9B1D28215A57EEA8C3B5CC9CD2A84D8FFC0A06D6541B32600D1F6B9",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/ICallable.cs",
+      "UpstreamSHA256": "3034D4A7D5AA29D10986E24738E377A6423D51EF7944112E622DEB3F28483EDB",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/ICallable.cs",
+      "ShippedSHA256": "B5F5CDA5CDF6E4E54B32AB5398395D17EBCAE5F542A322711BB513D6BF06A4D2",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/IConstructor.cs",
+      "UpstreamSHA256": "AC7C3E8B1F35A25F991A899394DAE50BD72A41194B8894E36338A04B753DF32C",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/IConstructor.cs",
+      "ShippedSHA256": "EDC74126BFB05DDA752A69BD72849DED6ABC87A6C64CD4C8610AAE3D14326D97",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/IPrimitiveInstance.cs",
+      "UpstreamSHA256": "160752D3197709A97090BC0CC95FBAEE8F03F79A2257BDE84E2D45F59D5F3EB7",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/IPrimitiveInstance.cs",
+      "ShippedSHA256": "1D5E051AB8C553D6D463AE9696DDFDE4D4FC7560FEA1BCC0EEF92611E4A03CF4",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/Json/JsonInstance.cs",
+      "UpstreamSHA256": "37BE312E4431FB1198E5ABD3353FF6B767865A8B444C6CA114333B2753E04AA0",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Json/JsonInstance.cs",
+      "ShippedSHA256": "FC4A898E8219A3FA7564755583356B75A799AC51F383245620252C7D77D4F208",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/Json/JsonParser.cs",
+      "UpstreamSHA256": "A895C4AF1B1B4A4C170BB8E9839F8CCB68D0BFC13EB8B68B459FDB6764212916",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Json/JsonParser.cs",
+      "ShippedSHA256": "1691E2BB3609828D52CD39B0D2F3E67A98400579839EEE6583C9EEFFA21109B8",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Json/JsonSerializer.cs",
+      "UpstreamSHA256": "A1BBF282AC3905674B171E15C5C3357E68E3613B3848A7185C33D2A706C94E8D",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Json/JsonSerializer.cs",
+      "ShippedSHA256": "78A3C00A03B94A991BCF0C7D6FE9501012CBEA97090BAAA672522CF05937808C",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/JsValue.cs",
+      "UpstreamSHA256": "9487DF88DA069E991D42DED38B7A23B6FE07FA779E76035D0F60AC0367341AE7",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/JsValue.cs",
+      "ShippedSHA256": "20E0C29A67A5A12702517F269C148A385354296729FBF0D2217C5973B7E6EAEA",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Math/MathInstance.cs",
+      "UpstreamSHA256": "220801E772D771B2EB836D204F4054C5580D17AF5E9CA190474492A5CAE7171E",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Math/MathInstance.cs",
+      "ShippedSHA256": "0B48C44DBF8220349F0797F390C9B79DECC5700AA82BF16CCA4CAB4635E45B99",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Null.cs",
+      "UpstreamSHA256": "FCB7BD92F1661AD16D46A58FD920C76ED916979E8C4EFCD9DE9723CDE6FB4B1A",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Null.cs",
+      "ShippedSHA256": "A5229D0E0B0A8EA5DA94CB7DEE625E50636594CCA8FEE78001FA6D5824C81A8A",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/Number/Dtoa/CachePowers.cs",
+      "UpstreamSHA256": "88415D8B4C1F86045310A33382690D2ABB35F22B641D935FE3B6166FE0B27709",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Number/Dtoa/CachePowers.cs",
+      "ShippedSHA256": "18DA7E562486AAAC23445FC32CB97E7DC1ADE4F1C454AB27A7DACFF46B9C27C9",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Number/Dtoa/DiyFp.cs",
+      "UpstreamSHA256": "A8F7230F18EB8CCC4C7F4164BA1E09BEC2EE7698CFAF02098B615F283CFB9D55",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Number/Dtoa/DiyFp.cs",
+      "ShippedSHA256": "C84FB2496AB0B73B2D69886CFC75C5AC2ACD3D330AB9474EBD26C04645EC5DE4",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Number/Dtoa/DoubleHelper.cs",
+      "UpstreamSHA256": "A267B8ED5A7B93206C92AEB3ADE25F5468A168EF31A91025618C7AC15B62D811",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Number/Dtoa/DoubleHelper.cs",
+      "ShippedSHA256": "B2D5685879F561012D1FCA7E473B1037DBCA2461671F655414F3272A7769699D",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Number/Dtoa/FastDtoa.cs",
+      "UpstreamSHA256": "8988720934515392BB13AF9CDBF518AA7CF6D3F27749AEC4332B420B4E0A2226",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Number/Dtoa/FastDtoa.cs",
+      "ShippedSHA256": "66CDA28D8DE365E152FFE9BA821F32AFD42423D175124596F6F9F24304DD3723",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Number/Dtoa/FastDtoaBuilder.cs",
+      "UpstreamSHA256": "89DDD5533FBE54BCC8AAB009304507F0C577A98FEC451634589C6B05423DF835",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Number/Dtoa/FastDtoaBuilder.cs",
+      "ShippedSHA256": "EE16A92B88C0C0564CA41D29C0738D706C08ED38241A06601443A02CF111FDBD",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Number/Dtoa/NumberExtensions.cs",
+      "UpstreamSHA256": "D01E8798E814459FF4D433616A829855AFBDB635A4DE26837045D2D85D57B3DF",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Number/Dtoa/NumberExtensions.cs",
+      "ShippedSHA256": "1192E4DA8B244895989AA2535ACCD997AEF65B8873F69192062E80F6512F78E5",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/Number/NumberConstructor.cs",
+      "UpstreamSHA256": "596504395F79FA8E0A3624A6645CA774759CB422673A6EA3B00048582D382BF9",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Number/NumberConstructor.cs",
+      "ShippedSHA256": "01DAF1EDBAF575692A29D240F352237D2C6FA0FBCB092C69A8A71CB2B4104A75",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/Number/NumberInstance.cs",
+      "UpstreamSHA256": "05A3064E9E635A9D1BD74F4E223B4877C313FE64240E4C03045D74943A8BA1F2",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Number/NumberInstance.cs",
+      "ShippedSHA256": "669A08DFBF90FE9A9663FBB913434E85CB475C18C76AB951FE6943C266E406C6",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/Number/NumberPrototype.cs",
+      "UpstreamSHA256": "1432F9662DF71D03E411B3F621875220FC515CA61BA0707A6ED65FA18BE42411",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Number/NumberPrototype.cs",
+      "ShippedSHA256": "FDD543DB78B786C510B404D6936B1EFED15540CF80BD52194EA503601490C6A8",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Object/ObjectConstructor.cs",
+      "UpstreamSHA256": "ACE5A8E4E5A4AFF997048AF51F12CCF4C27B15E1D2D89BEF6A09C8E3A32089F4",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Object/ObjectConstructor.cs",
+      "ShippedSHA256": "3683D89CC27C32D2043BCDF1B4163DDC899500F3ABDE89AEE7B57718F6F1828F",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Object/ObjectInstance.cs",
+      "UpstreamSHA256": "810C00A160E3C0E620D14A3679753642E9CD93C0E74B05E7E2B8D0194ED1AEE4",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Object/ObjectInstance.cs",
+      "ShippedSHA256": "4C03EEFAD9B94B90D677E2E41309E1802C48DFC477A3F21072A827E08341235B",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Object/ObjectPrototype.cs",
+      "UpstreamSHA256": "1C45E78EFAA7CD61163829E44942EDCCA7BF387FFEF4268B1F09AA66A12AFC87",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Object/ObjectPrototype.cs",
+      "ShippedSHA256": "BB5ACAEEBE814BF27F9615A670878C424303A52CD6F238879B40A8435F339362",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/RegExp/RegExpConstructor.cs",
+      "UpstreamSHA256": "7DEB7F19C98D59901B02E15B4D403927101BC48F5BEC9CE649836E81D5844AB6",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/RegExp/RegExpConstructor.cs",
+      "ShippedSHA256": "638AB06C50DB31716C90BBD164AA69D10B83C1E3740C504CFF3B7EDEA80C5D48",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/RegExp/RegExpInstance.cs",
+      "UpstreamSHA256": "09AEA0CF0359FFF2F98F2EC5A09ED491F18A7A87D0AB99564549AE11B72AFD0F",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/RegExp/RegExpInstance.cs",
+      "ShippedSHA256": "6CC165A77BA92CAC8E488072AB4DF959913A6A26C509C613D48DBB5E2D082599",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/RegExp/RegExpPrototype.cs",
+      "UpstreamSHA256": "3E333E35E5F4D0120F94DDD328476CCD035A0B90753847FD0E7AFFC5A52B7775",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/RegExp/RegExpPrototype.cs",
+      "ShippedSHA256": "7110EEE50BC6D9EEF833461EE16E514198292E42AB9F99C84AD77E266375C839",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/String/StringConstructor.cs",
+      "UpstreamSHA256": "73689CB2121FB6B4FE6688031C43C7D538D37DE3C1D25B1DF8D63549878A5C21",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/String/StringConstructor.cs",
+      "ShippedSHA256": "817156CE8661E942C2DE23CB438E0EA012B3EF9CCF285F7DE01A8599FE0E12FD",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/String/StringInstance.cs",
+      "UpstreamSHA256": "E78E3214A17276CC9CAFE97EB0D6EA5BDE447D668001F7BAB2729096317FB8A4",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/String/StringInstance.cs",
+      "ShippedSHA256": "D4423072DADE42AC89A5368DB06D778D51907874AFE2F6A993470C6E99BFAD93",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Native/String/StringPrototype.cs",
+      "UpstreamSHA256": "5C9C3057D88B662BFAB4023DF0896C690DB13690A3149EA527F35C9B7614C1E6",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/String/StringPrototype.cs",
+      "ShippedSHA256": "185BA40638EA2D4217143762307FFF8C6D84317979856C59FDD83AE73BE34F28",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Native/Undefined.cs",
+      "UpstreamSHA256": "1D1BFDCE6D2A76F0561DD5CFA53112230190B31166C1A6C5EE08B4BB7CBE9425",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Native/Undefined.cs",
+      "ShippedSHA256": "F3E8FF8B8E3A6357AB1C71F189F60D8D93B7428341D529E1BFC8D7BC3489476E",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Options.cs",
+      "UpstreamSHA256": "6EF110F236BE49BD6960593A8CA955679D30CEBE02B8142970E6E05AAF4242CB",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Options.cs",
+      "ShippedSHA256": "97658862F778F3FA945EEF60BD8B5E7A23524B8B5206E474824A93F2D5785079",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/ArrayExpression.cs",
+      "UpstreamSHA256": "1E0C8217495754081DBF965336B155DADD6C0B9EF7BCCDAB2CD412A48F6D970F",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/ArrayExpression.cs",
+      "ShippedSHA256": "1E0C8217495754081DBF965336B155DADD6C0B9EF7BCCDAB2CD412A48F6D970F",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/AssignmentExpression.cs",
+      "UpstreamSHA256": "F6323A798CD9088B163E1C275EE7973F94D503D71C71AC99EBA23C7700330095",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/AssignmentExpression.cs",
+      "ShippedSHA256": "6CC14B4AAE4E8E926658923F3AB0B4D71310C4DFB4B580C191A8CD4CB752B918",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/BinaryExpression.cs",
+      "UpstreamSHA256": "B7D4582B8A33FC3080A475DB30A0860F66A8877645CACE24CC295069391E5CE3",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/BinaryExpression.cs",
+      "ShippedSHA256": "734A1ECC218362FC6E6EB82BAFFC016CDD9210F04E1E22CF4AEDF7DC5B2B3F4D",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/BlockStatement.cs",
+      "UpstreamSHA256": "6E86AD36799647F535964C25D894E76ECDF5B0F14CC9C5821EE87D73B49C5A83",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/BlockStatement.cs",
+      "ShippedSHA256": "6E86AD36799647F535964C25D894E76ECDF5B0F14CC9C5821EE87D73B49C5A83",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/BreakStatement.cs",
+      "UpstreamSHA256": "C65410C770BD161FE6D9F8CE60C653C02E73EC4A13E8F95185E16575FF28AB77",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/BreakStatement.cs",
+      "ShippedSHA256": "C65410C770BD161FE6D9F8CE60C653C02E73EC4A13E8F95185E16575FF28AB77",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/CallExpression.cs",
+      "UpstreamSHA256": "0CC88EF691462217B0900391FFE037522D95DB060269EF6AE0FE43105AB86AFC",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/CallExpression.cs",
+      "ShippedSHA256": "0CC88EF691462217B0900391FFE037522D95DB060269EF6AE0FE43105AB86AFC",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/CatchClause.cs",
+      "UpstreamSHA256": "51661D7890BDAA3B1617082077D984550EA96B731A7ED4921603CB68D5E76C96",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/CatchClause.cs",
+      "ShippedSHA256": "51661D7890BDAA3B1617082077D984550EA96B731A7ED4921603CB68D5E76C96",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/ConditionalExpression.cs",
+      "UpstreamSHA256": "E64C228A941B66225A001975C12260A530A8241C998DBFB89B3A56145C520E9E",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/ConditionalExpression.cs",
+      "ShippedSHA256": "E64C228A941B66225A001975C12260A530A8241C998DBFB89B3A56145C520E9E",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/ContinueStatement.cs",
+      "UpstreamSHA256": "36C0942AE3BE94AA1793D81F77549146B46A91A9FEC1E344A03DFB4DF1D23A16",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/ContinueStatement.cs",
+      "ShippedSHA256": "36C0942AE3BE94AA1793D81F77549146B46A91A9FEC1E344A03DFB4DF1D23A16",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/DebuggerStatement.cs",
+      "UpstreamSHA256": "5E2CF02491944B18E1CED70062544FF7B4EC45AD885BA07897CE7E177D0A0D65",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/DebuggerStatement.cs",
+      "ShippedSHA256": "5E2CF02491944B18E1CED70062544FF7B4EC45AD885BA07897CE7E177D0A0D65",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/DoWhileStatement.cs",
+      "UpstreamSHA256": "4CDD4E1FF7569F682037F074085D14C0E7849EDE6622CA49834363004E5E49D4",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/DoWhileStatement.cs",
+      "ShippedSHA256": "4CDD4E1FF7569F682037F074085D14C0E7849EDE6622CA49834363004E5E49D4",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/EmptyStatement.cs",
+      "UpstreamSHA256": "0A9FEEC8D50ADDFA4B090F520D00DDEBBF595DC006F3539E1BB6BBD2DBA2BBA9",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/EmptyStatement.cs",
+      "ShippedSHA256": "0A9FEEC8D50ADDFA4B090F520D00DDEBBF595DC006F3539E1BB6BBD2DBA2BBA9",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/Expression.cs",
+      "UpstreamSHA256": "5E3AD4B3E3439520E42D1D56D783C2B7C53849FC554D7F5054584FCA84438780",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/Expression.cs",
+      "ShippedSHA256": "5E3AD4B3E3439520E42D1D56D783C2B7C53849FC554D7F5054584FCA84438780",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/ExpressionStatement.cs",
+      "UpstreamSHA256": "58E32D5371519E7AEF3B5EA23E8518E10761845F6D8F28B80FECA638675E2E60",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/ExpressionStatement.cs",
+      "ShippedSHA256": "58E32D5371519E7AEF3B5EA23E8518E10761845F6D8F28B80FECA638675E2E60",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/ForInStatement.cs",
+      "UpstreamSHA256": "82D00D3875C7BA4357A2D81A1159EFF6F36429A45EEE4BA8869012B56CBA99D9",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/ForInStatement.cs",
+      "ShippedSHA256": "82D00D3875C7BA4357A2D81A1159EFF6F36429A45EEE4BA8869012B56CBA99D9",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/ForStatement.cs",
+      "UpstreamSHA256": "1683734D13E8D5F7EF0AEF125A1DEBF9D3539CDEDF6E89AF5047EDC9292EF483",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/ForStatement.cs",
+      "ShippedSHA256": "1683734D13E8D5F7EF0AEF125A1DEBF9D3539CDEDF6E89AF5047EDC9292EF483",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/FunctionDeclaration.cs",
+      "UpstreamSHA256": "3A7585D4FBEE025BD96BA26FCE2BDE9BC8A4930AB5AE0C052E01E8C1B1FA1931",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/FunctionDeclaration.cs",
+      "ShippedSHA256": "3A7585D4FBEE025BD96BA26FCE2BDE9BC8A4930AB5AE0C052E01E8C1B1FA1931",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/FunctionExpression.cs",
+      "UpstreamSHA256": "41B2E4D0702B87C585AF5560FBD831D3FDF5D618BB5217CA1695A444C4DA8F6B",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/FunctionExpression.cs",
+      "ShippedSHA256": "41B2E4D0702B87C585AF5560FBD831D3FDF5D618BB5217CA1695A444C4DA8F6B",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/Identifier.cs",
+      "UpstreamSHA256": "40519E803FD8D1B6889637F4C9249065E2985C6D8DA7D8845FECF48DA1C9B8CD",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/Identifier.cs",
+      "ShippedSHA256": "40519E803FD8D1B6889637F4C9249065E2985C6D8DA7D8845FECF48DA1C9B8CD",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/IfStatement.cs",
+      "UpstreamSHA256": "332A04CC15DE1F467A39BAD997209B9AF030465ECC90D7C782ED820348209B86",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/IfStatement.cs",
+      "ShippedSHA256": "332A04CC15DE1F467A39BAD997209B9AF030465ECC90D7C782ED820348209B86",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/IPropertyKeyExpression.cs",
+      "UpstreamSHA256": "7F423C4CDB02271F61487623FA454811829DA2A6D9149E36D827B18FAA4007BD",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/IPropertyKeyExpression.cs",
+      "ShippedSHA256": "EE356F653EF34B1E2E2F0624A3FE9785AE9F416F203CEB93BC951C050B4C7FEF",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/LabeledStatement.cs",
+      "UpstreamSHA256": "6697F9FDD9B258DD1C22C32932BBA1B5DC402B269D5F2626B604B6FB61810599",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/LabeledStatement.cs",
+      "ShippedSHA256": "6697F9FDD9B258DD1C22C32932BBA1B5DC402B269D5F2626B604B6FB61810599",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/Literal.cs",
+      "UpstreamSHA256": "F3EFF119BACF64143B8F381FE4F8369691E520C4D1B42C9EBCDB1A52ABF5EBD8",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/Literal.cs",
+      "ShippedSHA256": "F3EFF119BACF64143B8F381FE4F8369691E520C4D1B42C9EBCDB1A52ABF5EBD8",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/LogicalExpression.cs",
+      "UpstreamSHA256": "3E9788C84CB9396D3D79DBFBCD7E267AFBAF6CFA644B2685E19AB3E3749C1F51",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/LogicalExpression.cs",
+      "ShippedSHA256": "E116EF2BED03EA5B0F7DFF3C31EAE1CCD722F801E26503E606870ED397CC4373",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/MemberExpression.cs",
+      "UpstreamSHA256": "C9A2B71A06FF640C14AA093BAC3C7E4D1EF4BC255A480EE9E7075E3F13C5A199",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/MemberExpression.cs",
+      "ShippedSHA256": "C9A2B71A06FF640C14AA093BAC3C7E4D1EF4BC255A480EE9E7075E3F13C5A199",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/NewExpression.cs",
+      "UpstreamSHA256": "57A9CB4604888D9922B71A74A93620AC40ACA41CB500D22F81AA5D9ECE99B5A0",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/NewExpression.cs",
+      "ShippedSHA256": "57A9CB4604888D9922B71A74A93620AC40ACA41CB500D22F81AA5D9ECE99B5A0",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/ObjectExpression.cs",
+      "UpstreamSHA256": "2ED8FE8EC8982CF663F5D72B4B63951180D7EA99B5F5D29DFDD5207D34D11E1D",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/ObjectExpression.cs",
+      "ShippedSHA256": "2ED8FE8EC8982CF663F5D72B4B63951180D7EA99B5F5D29DFDD5207D34D11E1D",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/Program.cs",
+      "UpstreamSHA256": "27FB5A3003CDD2B65D53E62AAB4566A8167000C2AE664E44B038056A404B77C7",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/Program.cs",
+      "ShippedSHA256": "27FB5A3003CDD2B65D53E62AAB4566A8167000C2AE664E44B038056A404B77C7",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/Property.cs",
+      "UpstreamSHA256": "B0B273E5DEF2B7710AA77F5507BFC51F9A254591F029E3667F1F941ED9B72EFF",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/Property.cs",
+      "ShippedSHA256": "B0B273E5DEF2B7710AA77F5507BFC51F9A254591F029E3667F1F941ED9B72EFF",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/RegExpLiteral.cs",
+      "UpstreamSHA256": "A1E1DE35960521AA7970F25EFD1313722B13A5FFD54083ED88A00E0AEDD36F39",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/RegExpLiteral.cs",
+      "ShippedSHA256": "A1E1DE35960521AA7970F25EFD1313722B13A5FFD54083ED88A00E0AEDD36F39",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/ReturnStatement.cs",
+      "UpstreamSHA256": "9032A5C3D0A854AA71381FE99F69A44F92C83BF238801D2B38715823E94AE799",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/ReturnStatement.cs",
+      "ShippedSHA256": "9032A5C3D0A854AA71381FE99F69A44F92C83BF238801D2B38715823E94AE799",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/SequenceExpression.cs",
+      "UpstreamSHA256": "0586C43F6F16D9BC8B897DAF4CAE0ED098113EDEBB03E8220191B85917137201",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/SequenceExpression.cs",
+      "ShippedSHA256": "0586C43F6F16D9BC8B897DAF4CAE0ED098113EDEBB03E8220191B85917137201",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/Statement.cs",
+      "UpstreamSHA256": "664E9E13F8806A063F40371C54136ACA9D39ECB464978F58A6B45EC42321EBF2",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/Statement.cs",
+      "ShippedSHA256": "664E9E13F8806A063F40371C54136ACA9D39ECB464978F58A6B45EC42321EBF2",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/SwitchCase.cs",
+      "UpstreamSHA256": "223085BC319F29D9DB143B793800672ABD3DA50F29A5B0B955E92F3E1FEDF993",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/SwitchCase.cs",
+      "ShippedSHA256": "223085BC319F29D9DB143B793800672ABD3DA50F29A5B0B955E92F3E1FEDF993",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/SwitchStatement.cs",
+      "UpstreamSHA256": "490061ED6F702BC5EA52DAC08AC7E702C97C71831230633D9E724A84C46E365E",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/SwitchStatement.cs",
+      "ShippedSHA256": "490061ED6F702BC5EA52DAC08AC7E702C97C71831230633D9E724A84C46E365E",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/SyntaxNode.cs",
+      "UpstreamSHA256": "91A4486A663EA28E5297E21D73C96B0F8D399B41093EA7D5D024447F2DF44BC0",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/SyntaxNode.cs",
+      "ShippedSHA256": "FEBE75F7B35CF9DE87FF6D14354F58AB5FA226497B19E0B2DB965C74B65D927B",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/SyntaxNodes.cs",
+      "UpstreamSHA256": "6FE41A4AF2DF3FE9DE0008802ED3FB2D98B2A6AC41277805718917CD0DCDD2A6",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/SyntaxNodes.cs",
+      "ShippedSHA256": "5B1E1BEFD9BDD3A183C2AD15114DAB5394617C2A3D13C4189CDFAB0ED5833697",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/ThisExpression.cs",
+      "UpstreamSHA256": "2621B140EFBE725AE5155AD2F4E8B72CD4A493B2F2E05BE3AC09831869C0B681",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/ThisExpression.cs",
+      "ShippedSHA256": "2621B140EFBE725AE5155AD2F4E8B72CD4A493B2F2E05BE3AC09831869C0B681",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/ThrowStatement.cs",
+      "UpstreamSHA256": "89EE35F961F0238700B7C28AB1B35B1C80282A0DB80DEC69B2B152604B3BC2FC",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/ThrowStatement.cs",
+      "ShippedSHA256": "89EE35F961F0238700B7C28AB1B35B1C80282A0DB80DEC69B2B152604B3BC2FC",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/TryStatement.cs",
+      "UpstreamSHA256": "351CCF8993AD4EBA2D1D03F37BA638B5D0DB67C66DBAEE96A7A7970AEE4AD86E",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/TryStatement.cs",
+      "ShippedSHA256": "351CCF8993AD4EBA2D1D03F37BA638B5D0DB67C66DBAEE96A7A7970AEE4AD86E",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/UnaryExpression.cs",
+      "UpstreamSHA256": "90164A29750B02692AD3EA8AB06A8A93B4A070D1FB482661469EC4BF782A6B1F",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/UnaryExpression.cs",
+      "ShippedSHA256": "2D587E9DA9F16EB68FCFD34F484DB9056973E1AB502FF69296E3AB5B293DB6F2",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/UpdateExpression.cs",
+      "UpstreamSHA256": "8A9293FB98CA8AE03C693932917985FC449351F71590AA8BA10FB71BF6AE4369",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/UpdateExpression.cs",
+      "ShippedSHA256": "8A9293FB98CA8AE03C693932917985FC449351F71590AA8BA10FB71BF6AE4369",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/VariableDeclaration.cs",
+      "UpstreamSHA256": "B2651E5D82088DAEEA46257EF7FDF68B7DFE5B39C7733078C77EBBA3EA1AC166",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/VariableDeclaration.cs",
+      "ShippedSHA256": "B2651E5D82088DAEEA46257EF7FDF68B7DFE5B39C7733078C77EBBA3EA1AC166",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/VariableDeclarator.cs",
+      "UpstreamSHA256": "B9760D046C4547E8E1FE28EB4FCB5875A12B5F0DAD908E472BE50BC780B7EF96",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/VariableDeclarator.cs",
+      "ShippedSHA256": "B9760D046C4547E8E1FE28EB4FCB5875A12B5F0DAD908E472BE50BC780B7EF96",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/WhileStatement.cs",
+      "UpstreamSHA256": "66C2282B75761FD862FE627BD9716DE5220D40718E37B188AC74156005EB6CA3",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/WhileStatement.cs",
+      "ShippedSHA256": "66C2282B75761FD862FE627BD9716DE5220D40718E37B188AC74156005EB6CA3",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Ast/WithStatement.cs",
+      "UpstreamSHA256": "BDC6A28A5406A0B8F1067A73C14659DF55AFA5D22D8103C36277FAA04E28F0D6",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Ast/WithStatement.cs",
+      "ShippedSHA256": "BDC6A28A5406A0B8F1067A73C14659DF55AFA5D22D8103C36277FAA04E28F0D6",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Comment.cs",
+      "UpstreamSHA256": "387D60740B40DF1A26A6988BC893021002E9CD5FBA281E6A1BC5A9E3B2BDBBA7",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Comment.cs",
+      "ShippedSHA256": "4FFEE9DA1F56EE254141A69D127DB8CD0C9B05B9F5000FE3D4104FA5E66AC2CB",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/IFunctionDeclaration.cs",
+      "UpstreamSHA256": "1BF02F1DED8A6529E20175D09A62DFC44D5FF5BB1BA9B1E5F267DFDA1F5446CF",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/IFunctionDeclaration.cs",
+      "ShippedSHA256": "1BF02F1DED8A6529E20175D09A62DFC44D5FF5BB1BA9B1E5F267DFDA1F5446CF",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/IFunctionScope.cs",
+      "UpstreamSHA256": "2E92DA82B67AD246C82D2A7B2DBBF5F69E60C8E98DE453517DEA4C961DBE0D75",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/IFunctionScope.cs",
+      "ShippedSHA256": "2E92DA82B67AD246C82D2A7B2DBBF5F69E60C8E98DE453517DEA4C961DBE0D75",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/IVariableScope.cs",
+      "UpstreamSHA256": "03E604B0D86A03E48846435313061A74520A3CF0622D2234F7A66B607A0CB127",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/IVariableScope.cs",
+      "ShippedSHA256": "03E604B0D86A03E48846435313061A74520A3CF0622D2234F7A66B607A0CB127",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/JavascriptParser.cs",
+      "UpstreamSHA256": "3BFED906892F0896E00E9E811F3BEE3430680864F47CA3F437E7E12E4ECF7E47",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/JavascriptParser.cs",
+      "ShippedSHA256": "4FBA24F9B66B18F65D7B39936943D1CD45E67946B4F399033FAAC20C6C8E6332",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Loc.cs",
+      "UpstreamSHA256": "234372829ABD92B60E09F38E07CF558359F7CDEF777E15370EFC8857319CE505",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Loc.cs",
+      "ShippedSHA256": "2AC49DA402667454BF597F5A48D24706F011315B579F64B41D45715C4CB227AD",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Messages.cs",
+      "UpstreamSHA256": "5494FD2C9CEA73AC7D11942A4871597891354B98708A97CE8C61D5DB70F03026",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Messages.cs",
+      "ShippedSHA256": "DB5D1B1F57EE24A13D4114379DC2060E5E54733ECD2D1312407AB53A391BA0CA",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/ParserException.cs",
+      "UpstreamSHA256": "995923325811D5F4FA62EEF49C151DD3BACDD5081A050047619923017C659CF8",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/ParserException.cs",
+      "ShippedSHA256": "D468A2A15E901DD1DEC012E4756DFEC3ECF78B38888A71271731562828287428",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/ParserExtensions.cs",
+      "UpstreamSHA256": "C73432ED03271137F46CAF727A66C3C8E9B58D12035F5D0CE92C6948BA71BC90",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/ParserExtensions.cs",
+      "ShippedSHA256": "538DFFFEBDD6B6AC5F9C0507F4ED98384E8EFFCA7ED70980D13B19524BB97A6F",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/ParserOptions.cs",
+      "UpstreamSHA256": "5FD3866C4886E9DB6675F0B215392ED0035D707914BCA413B10F345EB11D158A",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/ParserOptions.cs",
+      "ShippedSHA256": "05AA18EB1047CD964BDF8E9732B021152EEDAAD914E34218BD50001A46C24806",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Position.cs",
+      "UpstreamSHA256": "EDA42B3713D982110E300338F9FA638633D3783F06124EEB52DF5972644AAF01",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Position.cs",
+      "ShippedSHA256": "F9AD7EDDF92F25C1D84E1B5F5D4F9D6E84BEE74488EE7A14A77A7918CB2ADF36",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/State.cs",
+      "UpstreamSHA256": "9E7E57B539AB485D1F27C4B9B5A6D43CCC30BFC0A3AF1F30C3C225CAE250583A",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/State.cs",
+      "ShippedSHA256": "B3FB38527D0546698AB37336B7653EA7ADDA44BCE41927443286B0584AE3D5C9",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Parser/Token.cs",
+      "UpstreamSHA256": "6D2A0A75A8A9DDA3660697D7D439B8CCEF1AD66974BE27DDEEBA4A7074BF8E96",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Parser/Token.cs",
+      "ShippedSHA256": "7B5A07285404518A761241CA5D3420F462EB874DB37432D394311115C41319A9",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/ReflectionExtensions.cs",
+      "UpstreamSHA256": "A7F53D80B18DC71FAB9945AAC9BFDD36DFE2C593FF9AEF882BE07E33E8384262",
+      "ShippedFile": null,
+      "Omission": "CLR reflection/object-wrapper/converter interoperability is excluded from Workshop source."
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Arguments.cs",
+      "UpstreamSHA256": "A266DF8BAB0AA3EF36F532B3A39D69045EAD773587FE9FE05A7C99763F976241",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/Arguments.cs",
+      "ShippedSHA256": "653EAD159F41EDA86A15763537949A389B1B53EA88539FF0C31B73319860E3D3",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/CallStack/CallStackElement.cs",
+      "UpstreamSHA256": "18529895EED9B9726BCBD9BAD29C956E9E5E67CC646BA07968F3A6465DFA853F",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/CallStack/CallStackElement.cs",
+      "ShippedSHA256": "F1AF090408B37B5A40FA5EB89E4E4B40A8D90B60E63A6A15B5E3164781F248D6",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/CallStack/CallStackElementComparer.cs",
+      "UpstreamSHA256": "7D1A7B5E63FE0B32A69AF0E4FC0DFF377224E564931C2BF227C2BDADAEE935DD",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/CallStack/CallStackElementComparer.cs",
+      "ShippedSHA256": "0A1895E0FE6807161BE35050E206DAD2062A678FFF292EE2A87505E2614C97B2",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/CallStack/JintCallStack.cs",
+      "UpstreamSHA256": "64906C4D23F4AC5134C01D2C1E588F85FB3EDC471BE8C2B533910197CFBC3A4B",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/CallStack/JintCallStack.cs",
+      "ShippedSHA256": "53D1BC8A539DA6302E8B78C35D34652B0DECF44148E01FF77201D050775C755A",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Completion.cs",
+      "UpstreamSHA256": "3637424C76D0F86835EB341959D49956B23E1C619EC764CEA150203706748118",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/Completion.cs",
+      "ShippedSHA256": "6CC44623BC5A980FBC042CD43A987BBF3D791BDAD66736BB3A171C6F02D8EF56",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Debugger/BreakPoint.cs",
+      "UpstreamSHA256": "1E745E513AE5E8141F8630386D3E2FA725E2768AA0B283CAE5769532E72CDA25",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/Debugger/BreakPoint.cs",
+      "ShippedSHA256": "73146672E3C11A9D1350C63EAED7F782038E8788BD0E4BE260F6ED25933BA52F",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Debugger/DebugHandler.cs",
+      "UpstreamSHA256": "D36FB920D6118447669CAB3266D388B93331A6BE1933B4CCF5D7CA642575C4FC",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/Debugger/DebugHandler.cs",
+      "ShippedSHA256": "31D4C22D89361D2E9CC5074DD85BD14B7E307C0AC3EDB969B731EB0D6C475D34",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Debugger/DebugInformation.cs",
+      "UpstreamSHA256": "1E8CD0FC11B5D6E42ED1E1D2FE41000FEF362968ACEEC5694C2607BB97DC5D27",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/Debugger/DebugInformation.cs",
+      "ShippedSHA256": "E947985DCB4B72CC67FF7BFC4248085829D9DA0838955810CBBB9DA58EF1CBE3",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Debugger/StepMode.cs",
+      "UpstreamSHA256": "4B3211D980153068212BED804B9A2B288F3E069296DE96551B79D40E3EE57AE9",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/Debugger/StepMode.cs",
+      "ShippedSHA256": "257DD6B46E46BCDD4ACDCC81CC5C45B11712ECFFB918F55C5AC8D9A7BB1A5F3F",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Descriptors/PropertyDescriptor.cs",
+      "UpstreamSHA256": "16BD80AF60476A5B35D536A7B5ABFC03AC7C81AA3A16DF8A530751BD77E8A73B",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/Descriptors/PropertyDescriptor.cs",
+      "ShippedSHA256": "29663CC0F1905843461F57581E0B1C83021878081799468908F7E8FBD3ED4B65",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Descriptors/Specialized/ClrAccessDescriptor.cs",
+      "UpstreamSHA256": "B6B65A3ABFD9C3C303EC0CAB3E62B13CA5298810A3108731B23C063A7C5300E1",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/Descriptors/Specialized/ClrAccessDescriptor.cs",
+      "ShippedSHA256": "10BE40E901A476DC5CA6283424108463A62901C627D43DF93CD550357EAC8FC7",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Descriptors/Specialized/FieldInfoDescriptor.cs",
+      "UpstreamSHA256": "6B78E67A515F691C10F6F75A6270EFECDB2C4A75F624397DE1A2470C8ADD3657",
+      "ShippedFile": null,
+      "Omission": "CLR reflection/object-wrapper/converter interoperability is excluded from Workshop source."
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Descriptors/Specialized/IndexDescriptor.cs",
+      "UpstreamSHA256": "9F993AEA3DC628EE0F515BDFD1100B101B9EF7866D521978FFFDBA021B9ABAF1",
+      "ShippedFile": null,
+      "Omission": "CLR reflection/object-wrapper/converter interoperability is excluded from Workshop source."
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Descriptors/Specialized/PropertyInfoDescriptor.cs",
+      "UpstreamSHA256": "C959FB4FD1B6CDEC89091E02C628DAE224A152A02C00206079C19EDA5387022C",
+      "ShippedFile": null,
+      "Omission": "CLR reflection/object-wrapper/converter interoperability is excluded from Workshop source."
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Environments/Binding.cs",
+      "UpstreamSHA256": "45869C21134EB5027EB789EC1DBEF25CC2109721B34EDAED74A65ED658FF9CC0",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/Environments/Binding.cs",
+      "ShippedSHA256": "1DCFB5752ABD5F2409F64D085818A8029507009AF43C649849BF7A0E3FC7BF09",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Environments/DeclarativeEnvironmentRecord.cs",
+      "UpstreamSHA256": "C11BBC67B7ACC8F6BB9B84E7F40ACA469CEA5A9E47D12C70F5032913CB7F7644",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/Environments/DeclarativeEnvironmentRecord.cs",
+      "ShippedSHA256": "6030EEE5D8FB1B5529EBB5739F7B1466F885B60F29897DCA236BE2370CAA11D1",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Environments/EnvironmentRecord.cs",
+      "UpstreamSHA256": "8DDCAB10AC98C13F3EC8879D26AC6FF7DFF4B811BCA17701999FE185C7EDBCCE",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/Environments/EnvironmentRecord.cs",
+      "ShippedSHA256": "5F97D63D09F8FC61253CF721003008F22944A78713F27395DA0538D6AA9658C4",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Environments/ExecutionContext.cs",
+      "UpstreamSHA256": "77DCF78117DB8145D538E8473CBDECCF980F52E8FA8EAC8CC727478CCA62CABF",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/Environments/ExecutionContext.cs",
+      "ShippedSHA256": "5896054177AC6FE412DBAF1663D0201D75737995773C051A49EA504FCA00106B",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Environments/LexicalEnvironment.cs",
+      "UpstreamSHA256": "396CA4BE5D1B63C5BFF4DF59AEC9DD66A7D66F534081B4B691D04B97F0688289",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/Environments/LexicalEnvironment.cs",
+      "ShippedSHA256": "D12227129B16FB0FF2EF0A30294DFF26BF7ECE4FE591F5B4291A4E110A9B1BF9",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Environments/ObjectEnvironmentRecord.cs",
+      "UpstreamSHA256": "51948B7AA350BF29D0511F21C299C0CC9BBCA98EA889A1C386A416B46EA8E60C",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/Environments/ObjectEnvironmentRecord.cs",
+      "ShippedSHA256": "6546254BEA120846BE66E3DBFD7422846DAF6E31956D8BC837A44882A44E04DE",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/ExpressionIntepreter.cs",
+      "UpstreamSHA256": "3C72298FD4DC1A501B18B0231C7A8C5D535593BBF6CEC67E8C8B88FF03B2DF13",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/ExpressionIntepreter.cs",
+      "ShippedSHA256": "E271C36BB307AB472173FE39DA61E8901BDC5BD9F9AD76DCE1A11C6028D86A16",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Interop/ClrFunctionInstance.cs",
+      "UpstreamSHA256": "C65EA2DFC6D53EFE9F4045B69C672B84BFA563CCAEAAB2912D10D0466075FE10",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/Interop/ClrFunctionInstance.cs",
+      "ShippedSHA256": "794DA16EB0B0F51EDA2225B1B15A1671B13F9D7D54E2647698B6041DB9713882",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Interop/DefaultTypeConverter.cs",
+      "UpstreamSHA256": "CDEF84DFAA9279E0B60F00DDBA5B967080F418A90B0FD5414687894A94EF55D7",
+      "ShippedFile": null,
+      "Omission": "CLR reflection/object-wrapper/converter interoperability is excluded from Workshop source."
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Interop/DelegateWrapper.cs",
+      "UpstreamSHA256": "C54A76989BC9EA480E5E44B038653598BAE0DC354B35A6249774723E88C4F9E0",
+      "ShippedFile": null,
+      "Omission": "CLR reflection/object-wrapper/converter interoperability is excluded from Workshop source."
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Interop/GetterFunctionInstance.cs",
+      "UpstreamSHA256": "0C4BD6E5F91568B507FD11353741BB1774641EBD0F28EF81E7EC76DAF9EB8898",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/Interop/GetterFunctionInstance.cs",
+      "ShippedSHA256": "4DDAB1F806A4C2118FD6EAE22F54F5A6DA8AE34F271046D7325C6E28BD0C2BB0",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Interop/IObjectConverter.cs",
+      "UpstreamSHA256": "EED2ADB71B39AAD8F9D9B85AC8DC4B4301AF441E7EF7B37CC97EF42825821F6F",
+      "ShippedFile": null,
+      "Omission": "CLR reflection/object-wrapper/converter interoperability is excluded from Workshop source."
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Interop/IObjectWrapper.cs",
+      "UpstreamSHA256": "2A3658AD3562B58CAB1CCB175075767B243F9DBAE587E6CEC1DB2D33DADF393C",
+      "ShippedFile": null,
+      "Omission": "CLR reflection/object-wrapper/converter interoperability is excluded from Workshop source."
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Interop/ITypeConverter.cs",
+      "UpstreamSHA256": "F9C4BD909433C4D737B941D79BF984A466334F3CBBB6C9D0B437E90BACACA501",
+      "ShippedFile": null,
+      "Omission": "CLR reflection/object-wrapper/converter interoperability is excluded from Workshop source."
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Interop/MethodInfoFunctionInstance.cs",
+      "UpstreamSHA256": "568E8FABC0B0120CED46F8DF643C97CC7FDB860672B3A63B5B2585572C947D66",
+      "ShippedFile": null,
+      "Omission": "CLR reflection/object-wrapper/converter interoperability is excluded from Workshop source."
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Interop/NamespaceReference.cs",
+      "UpstreamSHA256": "D4673A7FC49C1BE16FD2D0CCE517BB3FEE1C74E05F397C58B9C3968D43B71663",
+      "ShippedFile": null,
+      "Omission": "CLR reflection/object-wrapper/converter interoperability is excluded from Workshop source."
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Interop/ObjectWrapper.cs",
+      "UpstreamSHA256": "EC9410D0E0982C5C54ADF5EC85F6E64F45056240A419568BAE12B57429EFBE0A",
+      "ShippedFile": null,
+      "Omission": "CLR reflection/object-wrapper/converter interoperability is excluded from Workshop source."
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Interop/SetterFunctionInstance.cs",
+      "UpstreamSHA256": "6F36395F244B932B1CA31109C118D911F1362D4DAD27682A687A4F6A552B65F3",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/Interop/SetterFunctionInstance.cs",
+      "ShippedSHA256": "E04D31FBB50B627EC3EBFE21F859CF169BADD1D822F4521CB8393B91239211C4",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Interop/TypeReference.cs",
+      "UpstreamSHA256": "AACAAA612232EC88AE8031A7C74250B9BA6D092F0E1CCF9CF2BC107FA93470D1",
+      "ShippedFile": null,
+      "Omission": "CLR reflection/object-wrapper/converter interoperability is excluded from Workshop source."
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/Interop/TypeReferencePrototype.cs",
+      "UpstreamSHA256": "C0C5366C67A95E51FB508E38A7B5836E3EB1F85734F5C045EC0A0C30EE3BB134",
+      "ShippedFile": null,
+      "Omission": "CLR reflection/object-wrapper/converter interoperability is excluded from Workshop source."
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/JavaScriptException.cs",
+      "UpstreamSHA256": "E2A46D8FE58EF31B6BA9273CD455B84A0669927CFDE39FC23105553DEC0EEB6E",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/JavaScriptException.cs",
+      "ShippedSHA256": "AB4F0A001ACBFA0122A4FFBBE80C2CB022176046EF0F62398A42F1F43ABC9665",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/MruPropertyCache.cs",
+      "UpstreamSHA256": "287469D0E175B6FE9D1572DF8FF015B94D4801572AB54DA49E2E9B29DC4112EC",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/MruPropertyCache.cs",
+      "ShippedSHA256": "A4936C39BB46CA74D3FD270D426F793F0BA0D867D381FA175B03E2E3A772122A",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/MruPropertyCache2.cs",
+      "UpstreamSHA256": "BDBFF19208E230C4FD61A96772C4131E2F5D5264C567B49FB9C319596635BD49",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/MruPropertyCache2.cs",
+      "ShippedSHA256": "C296A35075FC87771DD7A2EC9DA08119F4904DFD352C5D3F2B72630CE4770531",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/RecursionDepthOverflowException.cs",
+      "UpstreamSHA256": "6985F8B378D9CE17436A9F4887A6FB24E89008E39552250D1841B1C0D9DF3078",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/RecursionDepthOverflowException.cs",
+      "ShippedSHA256": "744593877D8AF785E7C96CD10F87651A7D2957965F0B625BC5537EF13D248C8B",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/References/Reference.cs",
+      "UpstreamSHA256": "0213D6169D155916EC63DEA3633E79AEDC86A991F817CEF8516E1139BD61F597",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/References/Reference.cs",
+      "ShippedSHA256": "9D080C32298727A6A926382BAB32F5791B5E63EC28B18C4A4C246E24930E2B5A",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/StatementInterpreter.cs",
+      "UpstreamSHA256": "EA4B55E12AC1D7FEA52C61ABCC4BC7284FD68140D6CEFC24722848A629BEB983",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/StatementInterpreter.cs",
+      "ShippedSHA256": "7D54290BE2DE0778E1DC92BDD4DA40C14B4C42C36C6893152A8309072D31F217",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/StatementsCountOverflowException.cs",
+      "UpstreamSHA256": "004F3ED6FF7770C4F50D086114DB41F78163B2AF804E9097A8114E356297530F",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/StatementsCountOverflowException.cs",
+      "ShippedSHA256": "FDFDC26DB17BC497B53CE475AEEAF7F35CF88FEB30034D20C1512CBDF763111B",
+      "ContentModified": false
+    },
+    {
+      "UpstreamFile": "Jint/Runtime/TypeConverter.cs",
+      "UpstreamSHA256": "FA7D2DD5B7A9B724A1B54B94E4B382847B2DDBB89C0D0F46B0D4755848646852",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/Runtime/TypeConverter.cs",
+      "ShippedSHA256": "615F3C0C9A6398E5282B65620D7368BA7F40FCB53F0A67BD1F28BEC109F865EA",
+      "ContentModified": true
+    },
+    {
+      "UpstreamFile": "Jint/StrictModeScope.cs",
+      "UpstreamSHA256": "ECF3451000527FC1201A1526019A4B0696F4903849EA2EE4DF78C6109ECAC8F8",
+      "ShippedFile": "Data/Scripts/HDRJavaScriptRuntime/Vendor/Jint/StrictModeScope.cs",
+      "ShippedSHA256": "61D6608298C371EE02F7FE3583BC0166CDC4B9CB6D7A27CAEF0BA1E42EF557C5",
+      "ContentModified": true
+    }
+  ],
+  "AdaptationSummary": [
+    "Reflection-based CLR integration is not compiled; deliberate scalar/function-handle host crossings replace it.",
+    "Date/time zones, eval, dynamically generated Function bodies, user regular expressions and debugger statements report explicit profile omissions.",
+    "Recursive parser/evaluator/native call paths and native loops use configurable cooperative execution, size and allocation accounting guards.",
+    "Numeric parsing uses Framework-compatible TryParse with explicit ECMAScript overflow handling; bound argument lists preserve duplicates.",
+    "Allocation accounting units are not measured CLR heap bytes. Limits bound known operations/sizes and accumulate charged units until realm recreation.",
+    "Original licenses and Dtoa file notices are retained; parser credits remain bundled Esprima port with upstream revision unspecified."
+  ]
+}

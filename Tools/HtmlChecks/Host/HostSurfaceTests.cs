@@ -16,10 +16,11 @@ static partial class HostTests
         internal sealed class SourceSlot
         {internal string Provider,Source;internal Vector4 Rect,Clip,UV;internal int Order;}
         internal sealed class SurfaceState
-        {internal string Kind;internal double Width,Height;internal object[] Parameters;internal bool Visible=true;internal Block Anchor;internal MatrixD Pose;internal readonly Dictionary<string,SourceSlot> Slots=new Dictionary<string,SourceSlot>();internal readonly Dictionary<string,int> Orders=new Dictionary<string,int>();internal readonly Dictionary<string,MatrixD> SvgPoses=new Dictionary<string,MatrixD>();}
+        {internal string Kind;internal double Width,Height;internal object[] Parameters;internal bool Visible=true;internal Block Anchor;internal MatrixD Pose;internal readonly Dictionary<string,SourceSlot> Slots=new Dictionary<string,SourceSlot>();internal readonly Dictionary<string,int> Orders=new Dictionary<string,int>();internal readonly Dictionary<string,MatrixD> SvgPoses=new Dictionary<string,MatrixD>();internal readonly Dictionary<string,string> ArtworkSources=new Dictionary<string,string>();}
         internal readonly Dictionary<long,SurfaceState> Surfaces=new Dictionary<long,SurfaceState>();
         internal int ArtworkCalls,SourceCalls,RayCalls;
-        internal bool SourceSupported=true,FailSlotOnce;
+        internal bool SourceSupported=true,NativeSourceSupported=true,FailSlotOnce,FailAllArtwork;
+        internal Action OnArtworkCall;
         SurfaceState Surface(long handle)
         {SurfaceState state;if(!Surfaces.TryGetValue(handle,out state)){state=new SurfaceState();Surfaces.Add(handle,state);}return state;}
         internal bool TrySurfaceCommand(string command,object[] args,out object result)
@@ -35,7 +36,7 @@ static partial class HostTests
             if(command=="context-slot-validate")
             {string provider=(string)args[1],source=(string)args[2];if(string.IsNullOrEmpty(provider)||provider.Any(c=>!(c>='a'&&c<='z'||c>='0'&&c<='9'||c=='-'))||string.IsNullOrEmpty(source))throw new ArgumentException("Invalid provider/source declaration.");result=true;return true;}
             if(command=="context-source-status")
-            {var state=Surface((long)args[0]);result=new MyTuple<bool,bool,string>(SourceSupported,state.Anchor!=null,!SourceSupported?"Unsupported: provider did not negotiate local source consumers.":state.Anchor==null?"Pending: actual source anchor required.":"Ready");return true;}
+            {var state=Surface((long)args[0]);bool supported=SourceSupported&&(NativeSourceSupported||args.Length>1&&(string)args[1]=="custom-feed");result=new MyTuple<bool,bool,string>(supported,state.Anchor!=null,!SourceSupported?"Unsupported: provider did not negotiate local source consumers.":!supported?"Requires plugin: native source local-consumer provider is unavailable.":state.Anchor==null?"Pending: actual source anchor required.":"Ready");return true;}
             if(command=="context-surface-ray")
             {
                 var origin=(Vector3D)args[1];var direction=(Vector3D)args[2];if(!HtmlFrontendDocument.Finite(origin.X)||!HtmlFrontendDocument.Finite(origin.Y)||!HtmlFrontendDocument.Finite(origin.Z)||!HtmlFrontendDocument.Finite(direction.X)||!HtmlFrontendDocument.Finite(direction.Y)||!HtmlFrontendDocument.Finite(direction.Z)||direction.LengthSquared()<1e-12)throw new ArgumentException("Invalid finite ray.");
@@ -52,7 +53,7 @@ static partial class HostTests
             return false;
         }
         internal void RecordArtwork(string command,object[] args)
-        {ArtworkCalls++;var state=Surface((long)args[0]);string id=(string)args[1];if(command=="item-order")state.Orders[id]=(int)args[2];if(command=="svg")state.SvgPoses[id]=(MatrixD)args[3];if(command=="remove"){state.Orders.Remove(id);state.SvgPoses.Remove(id);}}
+        {ArtworkCalls++;if(OnArtworkCall!=null)OnArtworkCall();if(FailAllArtwork&&(command=="svg"||command=="text"||command=="mesh"))throw new ArgumentException("Injected persistent artwork publication failure.");var state=Surface((long)args[0]);string id=(string)args[1];if(command=="item-order")state.Orders[id]=(int)args[2];if(command=="svg"){state.SvgPoses[id]=(MatrixD)args[3];state.ArtworkSources[id]=(string)args[2];}if(command=="text")state.ArtworkSources[id]=(string)args[2];if(command=="remove"){state.Orders.Remove(id);state.SvgPoses.Remove(id);state.ArtworkSources.Remove(id);}}
     }
     static Block SourceAnchor()
     {var block=DispatchProxy.Create<Block,HtmlHostProxy>();((HtmlHostProxy)block).Handler=delegate(MethodInfo method,object[] values){if(method.Name=="get_EntityId")return 901L;throw new Exception("Unexpected anchor call: "+method.Name);};return block;}

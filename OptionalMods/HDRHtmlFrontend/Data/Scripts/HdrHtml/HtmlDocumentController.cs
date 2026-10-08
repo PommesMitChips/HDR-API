@@ -80,6 +80,25 @@ namespace Hdr.Html
             _pendingWidth = width; _pendingHeight = height; RefreshDirty(); return true;
         }
         public Dictionary<string, string> GetData() { return new Dictionary<string, string>(_data, StringComparer.Ordinal); }
+        // Candidate edits remain queued and text writes clone the DOM in Update.
+        // Unchanged document nodes retain identity across source/data-only batches.
+        internal HtmlDocumentController Fork()
+        {
+            var candidate=new HtmlDocumentController(_metrics,_limits);
+            candidate.Document=Document;candidate.Frame=HtmlPaintDiff.Snapshot(Frame);candidate.Revision=Revision;candidate.LayoutBuildCount=LayoutBuildCount;
+            candidate._data=new Dictionary<string,string>(_data,StringComparer.Ordinal);
+            candidate._pendingData=_pendingData==null?null:new Dictionary<string,string>(_pendingData,StringComparer.Ordinal);
+            foreach(var pair in _pendingText)candidate._pendingText.Add(pair.Key,pair.Value);
+            candidate._width=_width;candidate._height=_height;candidate._pendingWidth=_pendingWidth;candidate._pendingHeight=_pendingHeight;candidate.IsDirty=IsDirty;
+            return candidate;
+        }
+        internal void Commit(HtmlDocumentController candidate)
+        {
+            if(candidate==null||!ReferenceEquals(candidate._metrics,_metrics)||candidate.IsDirty)throw new ArgumentException("Mutation candidate must be fully validated by this controller's metrics.");
+            bool retainFrame=Revision==candidate.Revision&&HtmlPaintDiff.Equal(Frame,candidate.Frame);
+            Document=candidate.Document;if(!retainFrame)Frame=candidate.Frame;Revision=candidate.Revision;LayoutBuildCount=candidate.LayoutBuildCount;
+            _data=new Dictionary<string,string>(candidate._data,StringComparer.Ordinal);_width=candidate._width;_height=candidate._height;ResetPending();LastError=null;
+        }
         public bool Update()
         {
             if (!IsDirty) return false;

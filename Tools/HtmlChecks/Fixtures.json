@@ -24,7 +24,7 @@
   {
     "Fixture": "Host/HostTests.cs",
     "Original": "Tools/HtmlChecks/Host/HostTests.cs",
-    "SHA256": "EF30EA03A0A7EF243FEC889745C9DDF2FA759AFEAF7454071E519139FA74F4F6",
+    "SHA256": "E1DEAA5C19279F710DB88C2146FD07E2511EA7E1F12345EFA321B11866108D92",
     "Commission": "Composition local frontend host delta preserving original407"
   },
   {
@@ -88,6 +88,12 @@
     "Fixture": "Host/HostSurfaceTests.cs",
     "Original": "Tools/HtmlChecks/Host/HostSurfaceTests.cs",
     "Commission": "Composition local frontend host delta",
-    "SHA256": "5095854DB6C7A445EAB9DD8C54ACE4FC878AF69331ADFADE81A354697634930B"
+    "SHA256": "4DD13A7EF17F7D2A378FA43A61C9289C53702A7C38B0AD767306637B295C7CEA"
+  },
+  {
+    "Fixture": "Host/HostMutationTests.cs",
+    "Original": "Tools/HtmlChecks/Host/HostMutationTests.cs",
+    "Commission": "Atomic64-operation batch, script claims and provider source-check delta",
+    "SHA256": "B34551255240952074CF782FB34AFECE217E06C05C4C488FE3AFF176BBD54236"
   }
 ]

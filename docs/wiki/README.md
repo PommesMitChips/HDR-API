@@ -2,6 +2,8 @@
 
 HDR API **0.9.11**, scene protocol **20**, optional Client Renderer **0.9.14**.
 
+Optional HTML Frontend **0.2.1** and JavaScript Runtime **0.1.0** add explicit client-local document scripting. The core and native renderer versions are unchanged.
+
 > **ALPHA:** Native rendering and input remain experimental. Offline compilation and checks do not establish live GPU, GUI/input or multiplayer acceptance.
 
 Start with the API boundary for your caller. Programmable blocks declare shared displays on blocks; mods can own local HUD/world contexts; source providers supply content; renderer backends own GPU preparation.
@@ -19,6 +21,7 @@ Start with the API boundary for your caller. Programmable blocks declare shared 
 | [Hologram effects](Special-Effects.md) | Flicker, refresh bars, depth layers, particles, projector rays and transitions |
 | [Interactive controls](Interactive-Controls.md) | Numeric values, line/polyline/rotation constraints, two-way bindings and the persistent bundle viewer |
 | [HTML/CSS frontend](HTML-Frontend.md) | Optional plugin-free UI prototype, supported profile, backends and consumer-owned input |
+| [JavaScript prototype](JavaScript-Prototype.md) | Source-vendored Jint, scoped document scripts, events, timers, licenses and execution allowances |
 | [Display surfaces](Display-Surfaces.md) | LCD backends, floating/curved/mesh surfaces and raster UI |
 | [Cameras and portals](Cameras-and-Portals.md) | Direct camera images, panorama composition and capture shells |
 | [Mod integration](Mod-Integration.md) | HUD/menu consumers, source providers and renderer backends |

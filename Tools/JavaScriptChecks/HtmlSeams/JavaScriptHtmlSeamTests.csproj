@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <StartupObject>JavaScriptHtmlSeamTests</StartupObject>
+    <FrontendRoot Condition="'$(FrontendRoot)' == ''">$(RepositoryRoot)/OptionalMods/HDRHtmlFrontend</FrontendRoot>
+  </PropertyGroup>
+  <Import Project="../../HtmlChecks/GameReferences.props" />
+  <ItemGroup>
+    <Compile Include="SeamTests.cs" />
+    <Compile Include="$(JavaScriptSourceRoot)/**/*.cs" />
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/*.cs" />
+    <Compile Include="$(RepositoryRoot)/Tools/HtmlChecks/Host/Host*.cs" />
+  </ItemGroup>
+</Project>
