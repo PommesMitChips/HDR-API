@@ -45,6 +45,14 @@ The [HTML frontend](../OptionalMods/HDRHtmlFrontend/README.md) remains a separat
 
 Pass `-GameBin` for a custom game installation. Compilation and the actual ModApi whitelist gate are separate checks. The whitelist gate uses the installed game's registry and analyzer; it never relaxes the mod whitelist. Developer reflection used by offline fixtures does not ship in the mod. A successful offline gate does not certify live UI, LCD or GPU behavior. The build never installs the mod, adds it to a world or changes input/Pulsar preferences.
 
+### Plain HTML authoring examples
+
+Keep the primary [PB bootstrap](../OptionalMods/HDRHtmlFrontend/Examples/HtmlPbDemo.cs) small: obtain `HDR.Html`, invoke `run(targetName, command)` and print its result. Author the companion [HTML document](../OptionalMods/HDRHtmlFrontend/Examples/PlainHtmlPbDemo.html) as plain markup with embedded CSS; users paste it into the programmable block's Custom Data. Mounting, exact target lookup, aspect/centering, watch cadence, failed-source retention, range bindings and retirement belong in the frontend mod. Do not copy that boilerplate into every user PB.
+
+Controller/gameplay event logic belongs in the separate [advanced bindings example](../OptionalMods/HDRHtmlFrontend/Examples/HtmlPbBindingsDemo.cs), with explicit script-variable assignment and no inferred terminal actions. Preserve the raw API for composed/provider surfaces. A plain HTML adapter does not mean full browser support: unsupported Profile1 markup/CSS and all `<script>`/inline handlers still fail, and PB JavaScript remains unimplemented.
+
+Validate the companion HTML through the actual parser/layout, compile the tiny script through the installed Ingame analyzer and official memory-safe rewrite, and exercise the mod-side mount lifecycle independently. Test invalid edits against an already published document, exact/ambiguous target selection, manual LCD content fences, repeated mounts, `clear` preserving advanced documents, PB program/power loss and no automatic reattachment. Keep stage candidates separate from the currently published snapshot until their gates and promotion are approved. See the [authoring tutorial](../OptionalMods/HDRHtmlFrontend/Docs/PB-Tutorial.md).
+
 ## Optional native renderer
 
 ```powershell

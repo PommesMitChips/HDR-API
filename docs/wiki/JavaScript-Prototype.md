@@ -1,6 +1,6 @@
 # JavaScript prototype
 
-**ALPHA — JavaScript Runtime 0.1.0 / HTML Frontend 0.2.1 / HDR API 0.9.11 / scene 20.** JavaScript runs in an optional Workshop mod through a source adaptation of Jint 2.11.10. The interpreter and ordinary retained HTML drawing need no client plugin. Native camera/texture/input features keep their independent optional provider requirements; the current native renderer remains **0.9.14**.
+**ALPHA — JavaScript Runtime 0.1.0 / HTML Frontend 0.2.2 / HDR API 0.9.11 / scene 20.** The JavaScript host requires HTML Frontend **0.2.1 or later**. JavaScript runs in an optional Workshop mod through a source adaptation of Jint 2.11.10. The interpreter and ordinary retained HTML drawing need no client plugin. Native camera/texture/input features keep their independent optional provider requirements; the current native renderer remains **0.9.14**.
 
 This is `HDR.JavaScript/ES5.1-Prototype1` with a small `HDR.JS/Host1` document API, not a browser. Final gate results are recorded separately from this capability description. Live game/GPU/input/multiplayer acceptance remains unverified.
 
@@ -14,7 +14,7 @@ The HTML parser still rejects `<script>` and inline `on*` attributes. A C# owner
 
 ## Try the counter
 
-Enable the matched [`HDRJavaScriptRuntime`](../../OptionalMods/HDRJavaScriptRuntime), [`HDRHtmlFrontend`](../../OptionalMods/HDRHtmlFrontend) and core [`Mod`](../../Mod) as separate world mods. The interpreter can run without the display mods; this HUD demo needs HTML Frontend **0.2.1** and core **0.9.11**. No renderer plugin is needed for this demo.
+Enable [`HDRJavaScriptRuntime`](../../OptionalMods/HDRJavaScriptRuntime), [`HDRHtmlFrontend`](../../OptionalMods/HDRHtmlFrontend) and core [`Mod`](../../Mod) as separate world mods. The interpreter can run without the display mods; this HUD demo needs HTML Frontend **0.2.1+** and core **0.9.11**. No renderer plugin is needed for this demo.
 
 1. Enter `/hdrjs demo` explicitly to create a vector HUD counter.
 2. Enter `/hdrjs click` to deliver an explicit synthetic HTML pointer click. The real committed document event invokes a JS closure, which changes its declared text node.

@@ -1,6 +1,6 @@
 # HTML frontend rendering
 
-**ALPHA, frontend 0.2.1 / core 0.9.11 / scene 20.** Profile1 builds a bounded paint frame, then the selected painter presents it. The projected canvas maps onto a plane, cylinder, sphere, ellipsoid or authored UV mesh; source acquisition, layout, surface, input and effects retain their separate contracts. This frontend uses the existing HDR renderers; it does not embed a browser or add a HTML rasterizer. The authored viewport stays fixed when camera distance changes. See [Composition](../../../docs/wiki/Composition.md), [Profile](Profile.md), [Local API](Local-API.md) and [PB API](PB-API.md).
+**ALPHA, frontend 0.2.2 / core 0.9.11 / scene 20.** Profile1 builds a bounded paint frame, then the selected painter presents it. The projected canvas maps onto a plane, cylinder, sphere, ellipsoid or authored UV mesh; source acquisition, layout, surface, input and effects retain their separate contracts. This frontend uses the existing HDR renderers; it does not embed a browser or add a HTML rasterizer. The authored viewport stays fixed when camera distance changes. See [Composition](../../../docs/wiki/Composition.md), [Profile](Profile.md), [Local API](Local-API.md) and [PB API](PB-API.md).
 
 ## Implemented choices
 

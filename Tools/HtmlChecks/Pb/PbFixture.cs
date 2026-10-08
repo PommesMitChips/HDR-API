@@ -30,6 +30,9 @@ internal sealed class PbFixture : IHtmlPbBridge, IDisposable
     internal readonly Func<string, object[], object> CoreDraw, CoreUi;
     internal bool Working = true, Enabled = true, TargetWorking = true, Access = true, SameConstruct = true, Closed;
     internal string Program = "html-pb-fixture";
+    internal string CustomData = "", TargetName = "HTML Display";
+    internal int CustomDataReads, MatchingTargetCount = 1;
+    internal Vector2 TargetSurfaceSize = new Vector2(512, 512);
     internal string TargetSubtype = "LargeProjector";
     internal VRage.Game.GUI.TextPanel.ContentType LcdContent = VRage.Game.GUI.TextPanel.ContentType.SCRIPT;
     internal string LcdScript = "HDR API";
@@ -81,6 +84,7 @@ internal sealed class PbFixture : IHtmlPbBridge, IDisposable
                 case "get_Closed": return Closed;
                 case "get_IsWorking": return Working;
                 case "get_Enabled": return Enabled;
+                case "get_CustomData": CustomDataReads++; return CustomData;
                 case "get_CubeGrid": return null;
                 case "get_BlockDefinition": return Activator.CreateInstance(m.ReturnType);
                 case "get_Model": return null;
@@ -101,7 +105,7 @@ internal sealed class PbFixture : IHtmlPbBridge, IDisposable
                 case "get_Closed": return false;
                 case "get_IsWorking": return TargetWorking;
                 case "get_Enabled": return TargetWorking;
-                case "get_CustomName": return "HTML Display";
+                case "get_CustomName": return TargetName;
                 case "get_CubeGrid": return null;
                 case "get_BlockDefinition": return new VRage.ObjectBuilders.SerializableDefinitionId(typeof(Sandbox.Common.ObjectBuilders.MyObjectBuilder_Projector), TargetSubtype);
                 case "get_Model": return null;
@@ -110,7 +114,7 @@ internal sealed class PbFixture : IHtmlPbBridge, IDisposable
                 case "GetPosition": return new Vector3D(1, 0, 0);
                 case "get_ContentType": return LcdContent;
                 case "get_Script": return LcdScript;
-                case "get_SurfaceSize": case "get_TextureSize": return new Vector2(512, 512);
+                case "get_SurfaceSize": case "get_TextureSize": return TargetSurfaceSize;
                 default: throw new Exception("PB fixture display: " + m.Name);
             }
         });
@@ -147,7 +151,7 @@ internal sealed class PbFixture : IHtmlPbBridge, IDisposable
             {
                 if (method.Name != "GetBlocksOfType") throw new Exception("PB fixture terminal: " + method.Name);
                 var output = (IList)args[0]; var filter = (Delegate)args[1];
-                if ((bool)filter.DynamicInvoke(Target)) output.Add(Target);
+                if ((bool)filter.DynamicInvoke(Target)) for(int i=0;i<MatchingTargetCount;i++)output.Add(Target);
                 return null;
             });
         });

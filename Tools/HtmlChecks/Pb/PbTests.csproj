@@ -6,8 +6,9 @@
   </PropertyGroup>
   <Import Project="../GameReferences.props" />
   <ItemGroup>
-    <AssemblyMetadata Include="HtmlPbDemoPath" Value="$(FrontendRoot)/Examples/HtmlPbDemo.cs" />
+    <AssemblyMetadata Include="HtmlPbDemoPath" Value="$(FrontendRoot)/Examples/HtmlPbBindingsDemo.cs" />
     <AssemblyMetadata Include="HtmlPbSpritesDemoPath" Value="$(FrontendRoot)/Examples/HtmlPbSpritesDemo.cs" />
+    <AssemblyMetadata Include="PlainHtmlPbDemoPath" Value="$(FrontendRoot)/Examples/PlainHtmlPbDemo.html" />
     <Compile Include="$(RepositoryRoot)/Mod/Data/Scripts/HoloMap/*.cs" />
     <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/*.cs" />
     <Compile Include="$(RepositoryRoot)/Api/Mods/HdrHtmlApi.cs" />
@@ -16,5 +17,6 @@
     <Compile Include="PbFixture.cs" />
     <Compile Include="PbTests.cs" />
     <Compile Include="PbNativeTests.cs" />
+    <Compile Include="AuthoringTests.cs" />
   </ItemGroup>
 </Project>

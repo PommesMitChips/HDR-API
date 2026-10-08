@@ -46,19 +46,19 @@
     "Fixture": "Pb/PbTests.cs",
     "Original": "Tools/HtmlChecks/Pb/PbTests.cs",
     "Commission": "PB HTML adapter delta",
-    "SHA256": "86EE44659F93E190E15CCB27CE4D59C749888534D232222A86620A3F53472E3A"
+    "SHA256": "45F2975565BBF9414C16331BF20EA70244BA24847EDFD7ED36A8603E8A96AA18"
   },
   {
     "Fixture": "Pb/PbFixture.cs",
     "Original": "Tools/HtmlChecks/Pb/PbFixture.cs",
     "Commission": "PB HTML adapter delta",
-    "SHA256": "E388AFA34A0CBECF1B6D2AE839C7109A038DC66E6D9749A9D1E91FB8DE3E1EBA"
+    "SHA256": "550AC065055E4298AB3064C1B1C379C856C0C4B8420B6EC7AA489D379077A4C1"
   },
   {
     "Fixture": "Pb/PbTests.csproj",
     "Original": "Tools/HtmlChecks/Pb/PbTests.csproj",
     "Commission": "PB HTML adapter delta",
-    "SHA256": "52216D3BCE240E313AD7EA291014F2F72C5225D248964BCCDB3133E791615E45"
+    "SHA256": "BBFC5A9501F281E765E386BE3B4E40423BE2975A8543ABDD63BBACE1C888278D"
   },
   {
     "Fixture": "Pb/PbNativeTests.cs",
@@ -95,5 +95,11 @@
     "Original": "Tools/HtmlChecks/Host/HostMutationTests.cs",
     "Commission": "Atomic64-operation batch, script claims and provider source-check delta",
     "SHA256": "B34551255240952074CF782FB34AFECE217E06C05C4C488FE3AFF176BBD54236"
+  },
+  {
+    "Fixture": "Pb/AuthoringTests.cs",
+    "Original": "artifacts/html-authoring-stage/Fixtures/AuthoringTests.cs",
+    "Commission": "Mod-side authored PB mount/run lifecycle delta",
+    "SHA256": "2CC99D02E7B7434DCABA72687C468F7AA2B49E7554DD59E00ACBA21437B230C8"
   }
 ]

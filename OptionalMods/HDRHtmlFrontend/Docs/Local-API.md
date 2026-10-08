@@ -1,6 +1,6 @@
 # Local HTML frontend API
 
-**ALPHA — frontend 0.2.1, core 0.9.11 / scene 20.** `HDR.Html/0.1` is a client-local source frontend for `HDR.HTML/Profile1`. It is not a browser engine: it embeds no JavaScript engine, browser DOM, network loading, iframe, canvas, WebGL or arbitrary HTML event handlers. The separate [JavaScript Runtime 0.1.0](../../HDRJavaScriptRuntime/README.md) can bind these local retained documents explicitly. The parser still rejects `<script>` and `on*` attributes. Unsupported markup, CSS and paint features are reported.
+**ALPHA — frontend 0.2.2, core 0.9.11 / scene 20.** `HDR.Html/0.1` is a client-local source frontend for `HDR.HTML/Profile1`. It is not a browser engine: it embeds no JavaScript engine, browser DOM, network loading, iframe, canvas, WebGL or arbitrary HTML event handlers. The separate [JavaScript Runtime 0.1.0](../../HDRJavaScriptRuntime/README.md) can bind these local retained documents explicitly. The parser still rejects `<script>` and `on*` attributes. Unsupported markup, CSS and paint features are reported.
 
 Copy [`HdrHtmlApi.cs`](../../../Api/Mods/HdrHtmlApi.cs) into the consumer mod. Vector/SVG geometry needs the core world mod and no client plugin. Native source attachments require actual block authority and explicit local-consumer provider negotiation; camera/LCD/portal sources use **Client Renderer 0.9.14**. The separate PB camera/persistent pointer route remains compatible with **0.9.13+**. Native LCD sprites are an explicitly selected alternative with their own measured font and feature limits.
 

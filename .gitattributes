@@ -15,3 +15,4 @@ OptionalMods/HDRJavaScriptRuntime/** -text
 Tools/JavaScriptChecks/** -text
 Api/Mods/HdrJavaScriptApi.cs -text
 OptionalMods/HDRHtmlFrontend/Data/Scripts/HdrHtml/HtmlRetainedPainter.cs -text
+OptionalMods/HDRHtmlFrontend/metadata.mod -text

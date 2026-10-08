@@ -16,10 +16,31 @@ function Assert-HtmlWhitelistReceipt($Report, [string]$Target) {
         if (-not $Report.DefaultIngameBlacklistApplied -or $restrictions -ne $expectedRestrictions -or $Report.BlacklistEvidenceMethod -ne 'Sandbox.MySandboxGame.InitIlChecker' -or -not $Report.BlacklistEvidenceAssembly -or $modErrors.Count -lt 1 -or $blacklistErrors.Count -lt 1 -or -not $Report.OriginalSourceWhitelistCheckedBeforeRewrite -or $Report.CustomInjectedSyntaxAnnotations -or -not $Report.OfficialEngineRewriterMayProduceAnnotations -or $Report.RewriterType -ne $rewriter -or -not $Report.MemorySafeRewriteApplied -or -not $Report.RewrittenEmitSucceeded -or @($Report.PbCompilations).Count -ne $Report.CandidateSourceCount) {
             throw 'Ingame receipt does not certify stock restrictions, authentic target controls, and the official PB rewriter.'
         }
+        if ($Report.PositiveControlMemorySafeRewrite.RewrittenTextChanged -isnot [bool] -or -not $Report.PositiveControlMemorySafeRewrite.RewrittenTextChanged) { throw 'The trigger-bearing PB positive control must change under the official memory-safe rewriter.' }
         foreach ($compilation in @($Report.PositiveControlMemorySafeRewrite) + @($Report.PbCompilations)) {
-            if (-not $compilation.MemorySafeRewriteApplied -or $compilation.RewriterType -ne $rewriter -or -not $compilation.RewrittenTextChanged -or -not $compilation.RewrittenEmitSucceeded -or $compilation.EmittedBytes -lt 1 -or @($compilation.RewrittenDiagnostics).Count -ne 0 -or @($compilation.Sources).Count -lt 1) { throw 'A PB control or candidate did not change under the official memory-safe rewrite and emit successfully.' }
+            if (-not $compilation.MemorySafeRewriteApplied -or $compilation.RewriterType -ne $rewriter -or $compilation.RewrittenTextChanged -isnot [bool] -or -not $compilation.RewrittenEmitSucceeded -or $compilation.EmittedBytes -lt 1 -or @($compilation.RewrittenDiagnostics).Count -ne 0 -or @($compilation.Sources).Count -lt 1) { throw 'A PB control or candidate lacks the actual official memory-safe rewrite and successful emission.' }
             foreach ($source in $compilation.Sources) { if ($source.RewrittenSourceSHA256 -notmatch '^[0-9A-F]{64}$') { throw 'PB rewrite evidence has no valid source fingerprint.' } }
         }
+        # The installed visitor can validly leave a candidate unchanged. Require
+        # its recorded change flag to agree with every original/rewritten hash.
+        $originalSources = @{}
+        foreach ($source in $Report.PreprocessedSources) {
+            if (-not $source.File -or $source.SHA256 -notmatch '^[0-9A-F]{64}$' -or $originalSources.ContainsKey([string]$source.File)) { throw 'PB original-source rewrite evidence is missing, duplicated, or invalid.' }
+            $originalSources[[string]$source.File] = [string]$source.SHA256
+        }
+        if ($originalSources.Count -ne $Report.CandidateSourceCount) { throw 'PB rewrite evidence does not cover every original candidate source.' }
+        $rewrittenSources = @{}
+        foreach ($compilation in $Report.PbCompilations) {
+            $changed = $false
+            foreach ($source in $compilation.Sources) {
+                $file = [string]$source.SourceFile
+                if (-not $originalSources.ContainsKey($file) -or $rewrittenSources.ContainsKey($file)) { throw 'PB rewrite evidence does not map uniquely to an original candidate source.' }
+                $rewrittenSources[$file] = [string]$source.RewrittenSourceSHA256
+                if ($source.RewrittenSourceSHA256 -ne $originalSources[$file]) { $changed = $true }
+            }
+            if ($compilation.RewrittenTextChanged -ne $changed) { throw 'PB rewrite change metadata disagrees with the original and rewritten source fingerprints.' }
+        }
+        if ($rewrittenSources.Count -ne $originalSources.Count) { throw 'PB rewrite evidence omits an original candidate source.' }
     }
     else {
         $ambiguity = @($Report.CompatibilityAmbiguityControlDiagnostics | Where-Object { $_.Origin -eq 'Compiler' -and $_.Id -eq 'CS0104' -and $_.Severity -eq 'Error' })

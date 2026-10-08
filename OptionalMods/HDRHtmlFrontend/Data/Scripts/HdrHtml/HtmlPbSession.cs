@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Sandbox.ModAPI;
+using Sandbox.ModAPI.Interfaces;
 using Sandbox.ModAPI.Interfaces.Terminal;
 using VRage;
 using VRage.Game.Components;
@@ -18,11 +20,21 @@ namespace Hdr.Html
         bool active,busy;
         long nextHandle;
         int tick;
+        const double AuthoringWidth=480,AuthoringHeight=280,AuthoringUnits=.005;
+        const int AuthoringCharacters=131072,AuthoringPollTicks=30;
+        sealed class AuthoringMount
+        {
+            internal long Handle;
+            internal string TargetName,LastAttempted,SourceError;
+            internal bool OversizedAttempt;
+        }
         sealed class Owner
         {
             internal IMyProgrammableBlock Caller;
             internal string Program;
             internal bool Retired;
+            internal AuthoringMount Authoring;
+            internal string AuthoringError;
             internal readonly Dictionary<long,HtmlPbDocument> Documents=new Dictionary<long,HtmlPbDocument>();
             internal readonly Dictionary<long,IMyTerminalBlock> Targets=new Dictionary<long,IMyTerminalBlock>();
         }
@@ -63,8 +75,9 @@ namespace Hdr.Html
         object Execute(Owner owner,string op,Args a)
         {
             if(op=="version"){a.End();return Protocol;}
-            if(op=="capabilities"){a.End();return new[]{HtmlDocument.Profile,"server-layout","core-replicated-svg","owned-projected-screen-binding","generic-node-source-slots","ordered-source-artwork","lcd-console-projector","native-lcd-sprites","native-sprites-texture-relay","native-cooperative-pointer","owned-prefix-cleanup","filtered-ui-events","input-requires-client-renderer-0.9.13","relay-requires-client-renderer-0.9.13","no-javascript","no-hud"};}
-            if(op=="clear-owned"){a.End();foreach(var doc in owner.Documents.Values)Cleanup(doc);owner.Documents.Clear();owner.Targets.Clear();return true;}
+            if(op=="capabilities"){a.End();return new[]{HtmlDocument.Profile,"server-layout","core-replicated-svg","owned-projected-screen-binding","generic-node-source-slots","ordered-source-artwork","lcd-console-projector","native-lcd-sprites","native-sprites-texture-relay","native-cooperative-pointer","owned-prefix-cleanup","filtered-ui-events","custom-data-authoring","mod-owned-authoring-refresh","input-requires-client-renderer-0.9.13","relay-requires-client-renderer-0.9.13","no-javascript","no-hud"};}
+            if(op=="run"){string name=a.Text(),command=a.Has?a.Text():"";a.End();return RunAuthoring(owner,name,command);}
+            if(op=="clear-owned"){a.End();foreach(var doc in owner.Documents.Values)Cleanup(doc);owner.Documents.Clear();owner.Targets.Clear();owner.Authoring=null;owner.AuthoringError=null;return true;}
             if(op=="bind-sprites"||op=="bind-sprites-screen")
             {
                 var anchor=a.Target();string screenId=op=="bind-sprites-screen"?a.Text():null;var source=a.Target() as IMyTextPanel;string html=a.Text(),css=a.Text();MatrixD pose=a.Pose();double scale=a.Has?a.Number():.005;int index=a.Has?a.Integer():0;bool owns=a.Has?a.Flag():false;a.End();
@@ -102,8 +115,8 @@ namespace Hdr.Html
             }
             long handle=a.Handle();HtmlPbDocument document;
             if(!owner.Documents.TryGetValue(handle,out document))throw new ArgumentException("PB HTML document does not belong to this live PB endpoint.");
-            if(!document.Ready){Cleanup(document);owner.Documents.Remove(handle);owner.Targets.Remove(handle);throw new ArgumentException("PB HTML display/source lifecycle ended; explicitly bind again.");}
-            if(op=="destroy"){a.End();Cleanup(document);owner.Documents.Remove(handle);owner.Targets.Remove(handle);return true;}
+            if(!document.Ready){RemoveDocument(owner,document,"HTML display lifecycle ended; run mount explicitly to select a display again.");throw new ArgumentException("PB HTML display/source lifecycle ended; explicitly bind again.");}
+            if(op=="destroy"){a.End();RemoveDocument(owner,document,null);return true;}
             if(op=="status"){a.End();return document.Status();}
             if(op=="backend"){a.End();return document.Backend();}
             if(op=="source-capabilities"){a.End();return document.SourceCapabilities();}
@@ -119,6 +132,119 @@ namespace Hdr.Html
             if(op=="resize"){double w=a.Number(),h=a.Number();a.End();return document.Resize(w,h);}
             throw new ArgumentException("Unknown PB HTML command: "+op);
         }
+        string RunAuthoring(Owner owner,string name,string command)
+        {
+            command=(command??"").Trim().ToLowerInvariant();
+            if(command=="clear")
+            {
+                var mounted=owner.Authoring;HtmlPbDocument doc;
+                if(mounted!=null&&owner.Documents.TryGetValue(mounted.Handle,out doc))RemoveDocument(owner,doc,null);
+                owner.Authoring=null;owner.AuthoringError=null;return "HTML authoring document cleared.";
+            }
+            if(command=="status")return AuthoringStatus(owner);
+            if(command!=""&&command!="demo"&&command!="mount"&&command!="reload")return "HTML commands: mount, reload, status, clear.";
+            try
+            {
+                if(string.IsNullOrWhiteSpace(name)||name.Length>128)throw new ArgumentException("HTML display name requires 1..128 characters.");
+                HtmlPbDocument current;var mounted=owner.Authoring;
+                if(mounted!=null&&mounted.TargetName==name&&owner.Documents.TryGetValue(mounted.Handle,out current))
+                {
+                    if(!current.Ready){RemoveDocument(owner,current,"HTML display lifecycle ended; run mount explicitly to select a display again.");throw new ArgumentException(owner.AuthoringError);}
+                    ReadAuthoring(owner,current,command=="reload");current.Update(tick);return AuthoringStatus(owner);
+                }
+                MountAuthoring(owner,name);return AuthoringStatus(owner);
+            }
+            catch(ArgumentException error){owner.AuthoringError=BoundError(error.Message);return AuthoringStatus(owner);}
+            catch(InvalidOperationException error){owner.AuthoringError=BoundError(error.Message);return AuthoringStatus(owner);}
+        }
+        void MountAuthoring(Owner owner,string name)
+        {
+            string markup=owner.Caller.CustomData??"";
+            ValidateAuthoringSource(markup);
+            var drawProperty=owner.Caller.GetProperty("HDR.Draw");
+            if(drawProperty==null)throw new ArgumentException("Requires mod: HDR API with HDR.Draw/1.");
+            var draw=drawProperty.As<Func<string,object[],object>>().GetValue(owner.Caller);
+            if(draw==null||(string)draw("version",new object[0])!="HDR.Draw/1")throw new ArgumentException("Requires compatible HDR.Draw/1.");
+            var matches=draw("finddisplays",new object[]{name}) as List<PbBlock>;
+            if(matches==null||matches.Count!=1)throw new ArgumentException("Name exactly one LCD, Console or Projector '"+name+"' on this construct; found "+(matches==null?0:matches.Count)+".");
+            var target=matches[0] as IMyTerminalBlock;
+            if(target==null||target.CustomName!=name||target.Closed||!target.IsWorking||!ReferenceEquals(MyAPIGateway.Entities.GetEntityById(target.EntityId),target)||!owner.Caller.IsSameConstructAs(target)||!target.HasPlayerAccess(owner.Caller.OwnerId))throw new ArgumentException("HTML target must be the actual working, accessible display on this PB construct.");
+            int replacing=owner.Authoring==null?0:1,total=0;
+            if(owner.Documents.Count-replacing>=4)throw new ArgumentException("PB HTML document budget reached (4 per PB).");
+            foreach(var entry in owners.Values)total+=entry.Documents.Count;
+            if(total-replacing>=16)throw new ArgumentException("PB HTML shared document budget reached (16).");
+            var port=new HtmlPbBridge(owner.Caller,target);
+            var capabilities=(MyTuple<string,string,int>)port.Draw("capabilities",(PbBlock)target);
+            if(capabilities.Item1!="HDR.DisplayCapabilities/1"||(capabilities.Item3&1)==0||(capabilities.Item3&64)==0)throw new ArgumentException("PB HTML needs an authorized LCD, Console or Projector UI target.");
+            if(capabilities.Item2!="lcd"&&(capabilities.Item3&8)==0)throw new ArgumentException("HTML authoring requires an LCD, Console or Projector.");
+            var pose=MatrixD.CreateTranslation(-AuthoringWidth*AuthoringUnits*.5,AuthoringHeight*AuthoringUnits*.5,0);
+            var candidate=new HtmlPbDocument(++nextHandle,port,pose,AuthoringUnits){TargetKind=capabilities.Item2};
+            try
+            {
+                // Parse/layout completely before changing the LCD's logical canvas or publishing artwork.
+                if(!candidate.TryLoad(markup,"",AuthoringWidth,AuthoringHeight))throw new ArgumentException(candidate.LastError);
+                var seeded=new HashSet<string>(StringComparer.Ordinal);
+                foreach(var hit in candidate.Controller.Frame.Hits)
+                    if(hit.Kind=="range"&&!string.IsNullOrEmpty(hit.Binding)&&seeded.Add(hit.Binding))candidate.SetData(hit.Binding,hit.Value.ToString("R",CultureInfo.InvariantCulture));
+                if(capabilities.Item2=="lcd")
+                {
+                    var panel=target as Sandbox.ModAPI.Ingame.IMyTextPanel;
+                    if(panel==null)throw new ArgumentException("LCD target must provide its physical panel surface.");
+                    var size=panel.SurfaceSize;
+                    if(!HtmlFrontendDocument.Finite(size.X)||!HtmlFrontendDocument.Finite(size.Y)||size.X<=0||size.Y<=0)throw new ArgumentException("LCD SurfaceSize is invalid.");
+                    double factor=Math.Max(AuthoringWidth/size.X,AuthoringHeight/size.Y);
+                    port.Draw("lcd",size.X*factor*AuthoringUnits,size.Y*factor*AuthoringUnits);
+                }
+                candidate.Update(tick);
+                if(candidate.PublishedFrame==null)throw new ArgumentException(candidate.LastError??"HTML initial publication failed.");
+                var previous=owner.Authoring;HtmlPbDocument old;
+                if(previous!=null&&owner.Documents.TryGetValue(previous.Handle,out old))RemoveDocument(owner,old,null);
+                owner.Documents.Add(candidate.Handle,candidate);owner.Targets.Add(candidate.Handle,target);
+                owner.Authoring=new AuthoringMount{Handle=candidate.Handle,TargetName=name,LastAttempted=markup};owner.AuthoringError=null;
+            }
+            catch{Cleanup(candidate);throw;}
+        }
+        void ReadAuthoring(Owner owner,HtmlPbDocument document,bool force)
+        {
+            var mounted=owner.Authoring;if(mounted==null||mounted.Handle!=document.Handle)return;
+            string markup=owner.Caller.CustomData??"";
+            // Never retain or compare an unbounded rejected CustomData string in the mod.
+            if(markup.Length>AuthoringCharacters)
+            {
+                mounted.LastAttempted=null;mounted.OversizedAttempt=true;mounted.SourceError="HTML Custom Data exceeds the 131072-character authoring limit.";return;
+            }
+            if(!force&&!mounted.OversizedAttempt&&string.Equals(markup,mounted.LastAttempted,StringComparison.Ordinal))return;
+            mounted.OversizedAttempt=false;
+            mounted.LastAttempted=markup;
+            try
+            {
+                ValidateAuthoringSource(markup);
+                if(!document.TryLoad(markup,"",AuthoringWidth,AuthoringHeight))throw new ArgumentException(document.LastError);
+                mounted.SourceError=null;owner.AuthoringError=null;
+            }
+            catch(ArgumentException error){mounted.SourceError=BoundError(error.Message);}
+            catch(InvalidOperationException error){mounted.SourceError=BoundError(error.Message);}
+        }
+        static void ValidateAuthoringSource(string markup)
+        {if(markup.Length>AuthoringCharacters)throw new ArgumentException("HTML Custom Data exceeds the 131072-character authoring limit.");if(string.IsNullOrWhiteSpace(markup))throw new ArgumentException("Put an HTML document, with optional inline <style>, in this PB's Custom Data.");}
+        string AuthoringStatus(Owner owner)
+        {
+            var mounted=owner.Authoring;HtmlPbDocument doc;
+            string error=owner.AuthoringError;
+            if(mounted==null||!owner.Documents.TryGetValue(mounted.Handle,out doc))return "HTML authoring is not mounted."+(string.IsNullOrEmpty(error)?" Run mount after adding HTML to Custom Data.":"\n"+error);
+            var status=doc.Status();
+            string output="HTML / "+mounted.TargetName+" / "+status.Item1+" / Custom Data\nPublished revision "+status.Item3+"; pending "+status.Item4.Item2+". Mod refreshes changed HTML automatically.";
+            if(!string.IsNullOrEmpty(mounted.SourceError))output+="\n"+mounted.SourceError+" Last published HTML is retained.";
+            if(!string.IsNullOrEmpty(error))output+="\n"+error;
+            if(!string.IsNullOrEmpty(status.Item4.Item3)&&status.Item4.Item3!=mounted.SourceError)output+="\n"+status.Item4.Item3;
+            return output;
+        }
+        static string BoundError(string error){return string.IsNullOrEmpty(error)?"HTML authoring failed.":error.Length<=512?error:error.Substring(0,512);}
+        static void RemoveDocument(Owner owner,HtmlPbDocument document,string reason)
+        {
+            Cleanup(document);owner.Documents.Remove(document.Handle);owner.Targets.Remove(document.Handle);
+            if(owner.Authoring!=null&&owner.Authoring.Handle==document.Handle){owner.Authoring=null;owner.AuthoringError=reason;}
+        }
         public override void UpdateAfterSimulation()
         {
             if(!active||busy)return;tick++;busy=true;
@@ -128,9 +254,9 @@ namespace Hdr.Html
                 foreach(var pair in owners)
                 {
                     var owner=pair.Value;if(!Current(owner)){Retire(owner);retired.Add(pair.Key);continue;}
-                    var lost=new List<long>();foreach(var doc in owner.Documents.Values)
-                    {if(!doc.Ready){Cleanup(doc);lost.Add(doc.Handle);}else doc.Update(tick);}
-                    foreach(long handle in lost){owner.Documents.Remove(handle);owner.Targets.Remove(handle);}
+                    var lost=new List<HtmlPbDocument>();foreach(var doc in owner.Documents.Values)
+                    {if(!doc.Ready)lost.Add(doc);else{if(tick%AuthoringPollTicks==0)ReadAuthoring(owner,doc,false);doc.Update(tick);}}
+                    foreach(var doc in lost)RemoveDocument(owner,doc,"HTML display lifecycle ended; run mount explicitly to select a display again.");
                 }
                 foreach(long id in retired)owners.Remove(id);
             }
@@ -138,7 +264,7 @@ namespace Hdr.Html
         }
         static void Cleanup(HtmlPbDocument doc)
         {var port=doc.Bridge as HtmlPbBridge;if(port!=null)port.RetireOwned(doc.Dispose);else doc.Dispose();}
-        static void Retire(Owner owner){owner.Retired=true;foreach(var doc in owner.Documents.Values)Cleanup(doc);owner.Documents.Clear();owner.Targets.Clear();}
+        static void Retire(Owner owner){owner.Retired=true;foreach(var doc in owner.Documents.Values)Cleanup(doc);owner.Documents.Clear();owner.Targets.Clear();owner.Authoring=null;owner.AuthoringError=null;}
         protected override void UnloadData()
         {
             foreach(var owner in owners.Values)Retire(owner);owners.Clear();active=false;

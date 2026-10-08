@@ -15,6 +15,11 @@
       "Source": "OptionalMods/HDRHtmlFrontend/Examples/HtmlCameraEllipsoidDemo.cs",
       "Wrapper": "CameraEllipsoidProgram.cs",
       "PasteArtifact": "HtmlCameraEllipsoidDemo.pb.cs"
+    },
+    {
+      "Source": "OptionalMods/HDRHtmlFrontend/Examples/HtmlPbBindingsDemo.cs",
+      "Wrapper": "BindingsDemoProgram.cs",
+      "PasteArtifact": "HtmlPbBindingsDemo.pb.cs"
     }
   ]
 }

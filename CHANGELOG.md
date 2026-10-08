@@ -2,6 +2,14 @@
 
 These notes preserve release-time behavior and validation limits. Later releases supersede earlier defaults and limits. Current setup and commands are in [README.md](README.md) and the [client renderer guide](OptionalPlugins/HDRClientRenderer/README.md).
 
+## HTML Frontend 0.2.2 — mod-owned PB authoring
+
+- The primary PB example is a short invocation. Players put plain HTML and inline CSS in Custom Data; no copied API helper, layout/setup code, refresh loop or document handle state is needed in the PB.
+- New `HDR.HtmlPB/0.1` command `run(targetName, command)` owns one authoring document, exact authorized display discovery, centered placement, LCD aspect fitting, initial range bindings and automatic source refresh.
+- Invalid source edits retain the prior display and a bounded diagnostic. Unchanged source is not reparsed. Program, power, access or target loss retires the mount and requires explicit remounting; cleanup preserves other manual documents.
+- The former C# variable/event example remains separately available as `HtmlPbBindingsDemo.cs`. Gameplay policy is optional consumer code; HTML actions do not run terminal commands automatically.
+- Core 0.9.11 / scene 20, JavaScript Runtime 0.1.0 and Client Renderer 0.9.14 are unchanged. This authoring path uses the existing bounded HTML/CSS profile, with native feature requirements preserved.
+
 ## JavaScript Runtime 0.1.0 / HTML Frontend 0.2.1 — alpha prototype
 
 - Adds a separate Workshop source mod using Jint 2.11.10 and its bundled parser, adapted to the installed Space Engineers C#6 ModApi compiler. The declared ES5.1 prototype includes functions/closures, objects/arrays, JSON and Math; CLR interop, dynamic eval/Function, Date, RegExp and modern ECMAScript are omitted explicitly.

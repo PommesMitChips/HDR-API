@@ -19,7 +19,9 @@ This page indexes public contracts and specifies the mod-facing envelopes. Drawi
 
 Interface versions, release versions, multiplayer protocol numbers and opaque resource generations are separate. The multiplayer scene protocol is an internal replication contract; do not use it as the public API version or send provider delegates through it. Existing protobuf tags and compatibility envelopes remain preserved.
 
-Current packages are HDR API **0.9.11 / scene protocol 20**, HTML Frontend **0.2.1**, JavaScript Runtime **0.1.0** and optional Client Renderer **0.9.14**. Existing PB camera capture and native mouse input retain their **0.9.13** minimum. Client-local native source consumers require **0.9.14**. See the [composition contract](Composition.md) for ordered source slots, generic surface mapping and HTML attachments.
+Current packages are HDR API **0.9.11 / scene protocol 20**, HTML Frontend **0.2.2**, JavaScript Runtime **0.1.0** and optional Client Renderer **0.9.14**. Existing PB camera capture and native mouse input retain their **0.9.13** minimum. Client-local native source consumers require **0.9.14**. See the [composition contract](Composition.md) for ordered source slots, generic surface mapping and HTML attachments.
+
+The PB convenience command `run(targetName, [command=""])` returns printable status and reads the authenticated caller's **Custom Data** as a plain HTML document with embedded CSS. Empty, `demo` or `mount` starts one managed document; `reload`, `status` and `clear` operate only that document. The mod owns target discovery, fitting, bindings, refresh and retirement. Existing handle-based APIs remain available. See the [authoring tutorial](../../OptionalMods/HDRHtmlFrontend/Docs/PB-Tutorial.md) for the small invocation and [advanced bindings example](../../OptionalMods/HDRHtmlFrontend/Examples/HtmlPbBindingsDemo.cs) for optional gameplay integration.
 
 ## Client-local JavaScript prototype
 

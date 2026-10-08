@@ -2,7 +2,7 @@
 
 HDR API **0.9.11**, scene protocol **20**, optional Client Renderer **0.9.14**.
 
-Optional HTML Frontend **0.2.1** and JavaScript Runtime **0.1.0** add explicit client-local document scripting. The core and native renderer versions are unchanged.
+Optional HTML Frontend **0.2.2** provides plain Custom Data authoring with a tiny PB invocation; JavaScript Runtime **0.1.0** adds explicit client-local document scripting. The core and native renderer versions are unchanged.
 
 > **ALPHA:** Native rendering and input remain experimental. Offline compilation and checks do not establish live GPU, GUI/input or multiplayer acceptance.
 

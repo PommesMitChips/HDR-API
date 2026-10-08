@@ -1,6 +1,6 @@
 # HDR.HTML/Profile1
 
-**ALPHA, frontend 0.2.1.** Profile1 is a bounded mod-native HTML/CSS authoring format for local UI. Acceptance is defined by the parser and layout shipped in [`Data/Scripts/HdrHtml`](../Data/Scripts/HdrHtml), followed by the selected painter's admission. Browser-valid HTML/CSS can still be rejected. The frontend embeds no JavaScript engine, browser DOM, Canvas, WebGL, network fetch, iframe or markup event-handler execution. A [separate optional JavaScript Runtime](../../../docs/wiki/JavaScript-Prototype.md) can explicitly bind retained local documents through the 0.2.1 batch/claim API; it does not add `<script>` or `on*` attributes to this parser.
+**ALPHA, frontend 0.2.2.** Profile1 is a bounded mod-native HTML/CSS authoring format for local UI. Acceptance is defined by the parser and layout shipped in [`Data/Scripts/HdrHtml`](../Data/Scripts/HdrHtml), followed by the selected painter's admission. Browser-valid HTML/CSS can still be rejected. The frontend embeds no JavaScript engine, browser DOM, Canvas, WebGL, network fetch, iframe or markup event-handler execution. A [separate optional JavaScript Runtime](../../../docs/wiki/JavaScript-Prototype.md) can explicitly bind retained local documents through the 0.2.1 batch/claim API; it does not add `<script>` or `on*` attributes to this parser.
 
 ## Markup
 

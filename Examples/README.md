@@ -5,6 +5,7 @@ PB source files stay in this directory because the build compiles and generates 
 | Goal | Maintained source | Notes |
 | --- | --- | --- |
 | First short-command script | [DrawDemo.cs](DrawDemo.cs) | Small `HDR.Draw` forwarding function |
+| Plain HTML/CSS interface | [Tiny HTML PB invocation](../OptionalMods/HDRHtmlFrontend/Examples/HtmlPbDemo.cs) + [HTML document](../OptionalMods/HDRHtmlFrontend/Examples/PlainHtmlPbDemo.html) | Put HTML in PB Custom Data; frontend 0.2.2 owns setup, fitting, bindings, refresh and cleanup |
 | Retained Console/Projector geometry | [ConsoleDemo.cs](ConsoleDemo.cs) | Includes live construct preview |
 | Native/vector LCD | [LcdDemo.cs](LcdDemo.cs) | Physical screen rendering |
 | SVG/images | [SvgDemo.cs](SvgDemo.cs) | Artwork and packaged materials |
@@ -29,5 +30,7 @@ PB source files stay in this directory because the build compiles and generates 
 `Api/HoloMapApi.cs` is the compatibility typed PB helper. [Api/Ingame/HdrIngameApi.cs](../Api/Ingame/HdrIngameApi.cs) is the smaller current PB helper; [Api/Mods](../Api/Mods/HdrModApi.cs) contains the separate client-mod wrapper. The mod example is deliberately outside the flat PB source directory so it is compiled as mod code rather than pasted into a programmable block.
 
 See the [composition recipes](../docs/wiki/Composition-Recipes.md) and [API reference](../docs/wiki/Api-Reference.md).
+
+The [HTML authoring tutorial](../OptionalMods/HDRHtmlFrontend/Docs/PB-Tutorial.md) is the normal HTML/CSS path. The separate [advanced bindings demo](../OptionalMods/HDRHtmlFrontend/Examples/HtmlPbBindingsDemo.cs) shows optional C# gameplay values and event polling; its code is not required to render an HTML interface.
 
 The [interactive controls guide](../docs/wiki/Interactive-Controls.md) describes ranges/snapping, explicit value bindings and source-write preemption. Native PB mouse input is ALPHA: Use enters the world bundle, mouse-up ends only the gesture, and Escape/context loss closes the viewer. The renderer build and offline checks do not establish installation or live input acceptance.

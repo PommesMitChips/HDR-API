@@ -177,8 +177,10 @@ The documented release is **HDR API {args.release}**, scene protocol
 - With the optional client renderer, show camera panoramas, raster interfaces
   and visual portals/capture shells.
 
-Optional [HTML Frontend 0.2.1]({WIKI}/HTML-Frontend) provides a bounded HTML/CSS
-authoring profile. The separate [JavaScript Runtime 0.1.0]({WIKI}/JavaScript-Prototype)
+Optional [HTML Frontend 0.2.2]({WIKI}/HTML-Frontend) provides a bounded HTML/CSS
+authoring profile. Put plain HTML and inline CSS in PB Custom Data; a short
+invocation mounts it while the mod owns display setup, bindings, refresh and
+cleanup. Larger C# helpers are optional. The separate [JavaScript Runtime 0.1.0]({WIKI}/JavaScript-Prototype)
 adds explicitly registered client-local ES5.1 scripts, closures, events and timers
 without a plugin. It is a UI prototype, not a complete browser or PB JavaScript
 endpoint. The source mod includes Jint's BSD 2-Clause license and dependency notices.
@@ -239,7 +241,7 @@ portals are documented
 in their [feature guides]({WIKI}/Documentation-Index). Each guide states bounds,
 ownership, dependencies and validation limits.
 
-The optional HTML Frontend **0.2.1** and JavaScript Runtime **0.1.0** provide
+The optional HTML Frontend **0.2.2** and JavaScript Runtime **0.1.0** provide
 mod-native parsing/layout and scoped client-local ES5.1 events/timers. Callback
 errors drop unflushed changes. Confirmed restoration preserves the prior frame;
 uncertain publication retires visible output and input. Native source features

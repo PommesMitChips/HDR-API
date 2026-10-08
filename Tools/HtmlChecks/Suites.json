@@ -40,7 +40,7 @@
     "Name": "Pb",
     "Project": "Pb/PbTests.csproj",
     "Pattern": "PB HTML tests: (\\d+) assertions",
-    "Expected": 396,
+    "Expected": 550,
     "EvidenceDirectory": "pb-evidence"
   },
   {

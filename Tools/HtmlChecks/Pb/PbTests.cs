@@ -282,6 +282,7 @@ internal static partial class PbTests
         Run("LCD admission requires existing HDR content mode", LcdModeAdmission);
         Run("canonical whole PB demo admits on LCD, Console and Projector", CanonicalDemoAdmission);
         Run("PB HTML unlimited geometry sentinel and explicit finite budget", UnlimitedPbGeometry);
+        RunAuthoring();
         RunNative();
         string summary = "PB HTML tests: " + assertions + " assertions; " + cases + " cases, " + failures + " failures; actual frontend/Core compilers and retained/UI delegates against installed SE assemblies.";
         Console.WriteLine(summary);

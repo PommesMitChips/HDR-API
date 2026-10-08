@@ -12,6 +12,8 @@
 
 PB helpers are pasted inside `Program` using the standard PB imports; consumer mod helpers compile as mod source. They are not interchangeable endpoints. See [API boundaries](../docs/wiki/API-Boundaries.md) and the [complete reference](../docs/wiki/Api-Reference.md).
 
+Ordinary HTML authoring needs no copied helper. Use the [small PB invocation](../OptionalMods/HDRHtmlFrontend/Examples/HtmlPbDemo.cs), put plain HTML/CSS in Custom Data, and let the mod own mounting and updates. `HdrHtmlIngameApi` remains available for optional programmatic integration.
+
 The stable API contract is distinct from product version, scene replication protocol and native resource generations. External source/backend protocols are described in [mod integration](../docs/wiki/Mod-Integration.md).
 
 The [JavaScript prototype](../docs/wiki/JavaScript-Prototype.md) uses client-local ES5.1 realms. C# grants allowed document edits and source choices; JavaScript receives no raw game objects or CLR bridge. Keep the actual HTML endpoint and connection generation with each binding, and rebuild realm handles after reconnection. Ordinary vector HTML needs no renderer plugin; native provider operations retain their precise capability checks.
