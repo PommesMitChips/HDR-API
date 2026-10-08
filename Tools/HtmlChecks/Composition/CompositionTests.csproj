@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <Import Project="../GameReferences.props" />
+  <ItemGroup>
+    <Compile Include="$(RepositoryRoot)/Mod/Data/Scripts/HoloMap/*.cs" />
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/*.cs" />
+    <Compile Include="$(RepositoryRoot)/Api/Mods/HdrHtmlApi.cs" />
+    <Compile Include="$(RepositoryRoot)/Tools/Checks/DrawCommandTests.cs" />
+    <Compile Include="$(RepositoryRoot)/Tools/Checks/ClientReplicationTests.cs" />
+    <Compile Include="../Pb/PbFixture.cs" />
+    <Compile Include="CompositionFixture.cs" />
+    <Compile Include="CompositionTests.cs" />
+  </ItemGroup>
+</Project>

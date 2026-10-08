@@ -39,6 +39,7 @@ namespace Hdr.Html
             Dimensions(frame.Width, frame.Height);
             if (frame.Operations.Count > limits.MaxPaintOperations || frame.Hits.Count > limits.MaxHitRegions || limits.MaxPaintOperations < 0 || limits.MaxHitRegions < 0) throw new ArgumentException("HTML paint/hit limit exceeded.");
             var keys = new HashSet<string>(StringComparer.Ordinal); var hitIds = new HashSet<string>(StringComparer.Ordinal);
+            var sourceIds = new HashSet<string>(StringComparer.Ordinal);
             for (int i = 0; i < frame.Operations.Count; i++)
             {
                 HtmlPaintOperation operation = frame.Operations[i];
@@ -62,6 +63,16 @@ namespace Hdr.Html
                 Rect(hit.Bounds, true);
                 if (hit.Bounds.X < 0 || hit.Bounds.Y < 0 || hit.Bounds.X + hit.Bounds.Width > frame.Width + 1e-8 || hit.Bounds.Y + hit.Bounds.Height > frame.Height + 1e-8) throw new ArgumentException("Hit region escaped the visual surface clip.");
                 if (!HtmlLayoutCss.Finite(hit.Value) || !HtmlLayoutCss.Finite(hit.Minimum) || !HtmlLayoutCss.Finite(hit.Maximum) || !HtmlLayoutCss.Finite(hit.Step) || hit.Step < 0 || hit.Value < hit.Minimum || hit.Value > hit.Maximum || (hit.Kind == "range" && hit.Minimum >= hit.Maximum)) throw new ArgumentException("Invalid canonical range value.");
+            }
+            if (frame.SourceRegions.Count > limits.MaxNodes || frame.SourceRegions.Count > 512) throw new ArgumentException("HTML source region limit exceeded.");
+            int previousSourceOrder = 0;
+            for (int i = 0; i < frame.SourceRegions.Count; i++)
+            {
+                HtmlSourceRegion source = frame.SourceRegions[i];
+                if (source == null || string.IsNullOrEmpty(source.NodeId) || !sourceIds.Add(source.NodeId) || !source.Visible || source.Order < previousSourceOrder || source.Order > frame.Operations.Count || !HtmlLayoutCss.Finite(source.Opacity) || source.Opacity <= 0 || source.Opacity > 1) throw new ArgumentException("Invalid source region identity/order/visibility.");
+                Text(source.NodeId, 128); Rect(source.Bounds, true); Rect(source.Clip, true);
+                if (source.Clip.X < 0 || source.Clip.Y < 0 || source.Clip.X + source.Clip.Width > frame.Width + 1e-8 || source.Clip.Y + source.Clip.Height > frame.Height + 1e-8 || source.Clip.X < source.Bounds.X - 1e-8 || source.Clip.Y < source.Bounds.Y - 1e-8 || source.Clip.X + source.Clip.Width > source.Bounds.X + source.Bounds.Width + 1e-8 || source.Clip.Y + source.Clip.Height > source.Bounds.Y + source.Bounds.Height + 1e-8) throw new ArgumentException("Source region clip escaped its content or surface bounds.");
+                previousSourceOrder = source.Order;
             }
         }
     }

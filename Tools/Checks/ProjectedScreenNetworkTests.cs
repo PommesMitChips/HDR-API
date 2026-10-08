@@ -97,19 +97,26 @@ internal static class ProjectedScreenNetworkTests
         Invalid(s=>{
             s.Scenes.Clear();for(int anchor=0;anchor<5;anchor++){var scene=ClientReplicationTests.Scene(20+anchor);scene.Items.Clear();scene.Screens=new List<HoloProjectedScreenData>();for(int i=0;i<(anchor==4?1:4);i++)scene.Screens.Add(Screen("s"+i));s.Scenes.Add(scene);}
         },"global 16 screen cap");
-        Invalid(s=>{
-            var scene=s.Scenes[0];scene.Items.Clear();scene.Items.Add(ClientReplicationTests.Item());scene.Screens=new List<HoloProjectedScreenData>();
+        void FiniteGeometry(Action<HoloSceneData> mutate,string name)
+        {
+            var bad=Snapshot();var data=bad.Scenes[0];data.Budget=new HoloRenderBudgetData{Points=4096,Primitives=8192,DrawWork=20000};mutate(data);
+            RejectAtomic(session,bad,name);
+            data.Budget=null;var unlimited=new HoloMapSession();Call(unlimited,"ApplySnapshot",RoundTrip(bad));
+            Check(((IDictionary)Field(Scene(unlimited),"Screens")).Count==2&&((IDictionary)Field(Scene(unlimited),"Items")).Count==1,name+" fixture succeeds with unlimited default aggregate geometry");
+        }
+        FiniteGeometry(scene=>{
+            scene.Items.Clear();scene.Items.Add(ClientReplicationTests.Item());scene.Screens=new List<HoloProjectedScreenData>();
             for(int i=0;i<2;i++){var screen=Screen("s"+i);screen.SourcePoints=new double[2048*3];scene.Screens.Add(screen);}
         },"native and projected meshes share point cap");
-        Invalid(s=>{
-            var scene=s.Scenes[0];scene.Screens=new List<HoloProjectedScreenData>();scene.Items[0].Id="line";
+        FiniteGeometry(scene=>{
+            scene.Screens=new List<HoloProjectedScreenData>();scene.Items[0].Id="line";
             for(int i=0;i<2;i++){var screen=Screen("s"+i);screen.SourceTriangles=new int[4096*3];screen.SourceColors=Enumerable.Range(0,4096*4).Select(n=>n%4==3?1f:0f).ToArray();scene.Screens.Add(screen);}
         },"native and projected meshes share primitive cap");
         Invalid(s=>{
             s.Scenes.Clear();for(int anchor=0;anchor<8;anchor++){var scene=ClientReplicationTests.Scene(20+anchor);scene.Items.Clear();scene.Screens=new List<HoloProjectedScreenData>();for(int i=0;i<2;i++){var screen=Screen("s"+i);screen.SourcePoints=new double[2048*3];screen.SourceTriangles=new int[4094*3];screen.SourceColors=Enumerable.Range(0,4094*4).Select(n=>n%4==3?1f:0f).ToArray();scene.Screens.Add(screen);}s.Scenes.Add(scene);}
         },"global projected declaration replication budget");
         int protocol=(int)typeof(HoloMapSession).GetField("NetworkProtocol",BindingFlags.NonPublic|BindingFlags.Static).GetRawConstantValue();
-        Check(protocol==19,"portal, effect and numeric interaction declarations use explicit protocol");
+        Check(protocol==20,"composable projected source and interaction declarations use explicit protocol");
         return _checks;
     }
 }

@@ -4,5 +4,5 @@
   <FriendlyName>HDR Client Renderer</FriendlyName>
   <Tooltip>Direct camera panoramas, raster displays and scoped hologram mouse interaction for HDR API.</Tooltip>
   <Author>Leo</Author>
-  <Description>HDR Client Renderer 0.9.13 adds a scoped on-foot mouse provider for HDR API 0.9.9 interactive controls. Native Use enters a transparent input screen; confirmed routing enables clicks and dragging, with cancellation and release cleanup. Camera, raster and portal rendering remain compatible with HDR API 0.9.6 and later.</Description>
+  <Description>HDR Client Renderer 0.9.14 adds explicit client-local mod consumers for camera, LCD and declared portal sources in HDR API 0.9.11. Real anchors, source access and scoped evidence control their lifetime. Scoped on-foot mouse input and existing capture pipelines remain intact.</Description>
 </PluginData>

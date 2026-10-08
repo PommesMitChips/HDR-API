@@ -76,9 +76,10 @@ namespace HoloMap
                 {
                     if(control.Value!=value.Id||control.Kind==0)continue;
                     ModClientItem item;MatrixD delta;if(!c.Items.TryGetValue(control.Artwork,out item)||!ModClientDelta(control,value,canonical,out delta)){c.PendingPoses.Clear();return false;}
-                    var pose=delta*control.ReferencePose;ModClientRules.Placement(item.Geometry,pose,c.Pose,c.Hud);
+                    var pose=delta*control.ReferencePose;ModClientSurfacePlacement(owner,c,item,pose);
                     c.PendingPoses.Add(new ModClientPoseUpdate{Item=item,Pose=pose});
                 }
+                if(c.Surface!=null&&!ModClientSurfacePendingFits(owner,c)){c.PendingPoses.Clear();return false;}
             }
             catch(ArgumentException){c.PendingPoses.Clear();return false;}
             if(programmatic&&c.Capture!=null&&ReferenceEquals(c.Capture.Value,value))ModClientCancel(c,"source-value");
@@ -172,6 +173,7 @@ namespace HoloMap
             {
                 string artwork=ModClientRules.Id(a.Text());var rect=a.Typed<Vector4>();a.End();ModClientRules.Bound(rect);ModClientItem item;
                 if(!c.Items.TryGetValue(artwork,out item))throw new ArgumentException("Control artwork must already exist.");
+                if(c.Surface!=null)ModClientSurfaceControlPose(item.Transform);
                 foreach(var old in c.Controls.Values)if(old.Id!=id&&old.Artwork==artwork)throw new ArgumentException("Artwork can have one controlling declaration.");
                 if(!c.Controls.ContainsKey(id)&&c.Controls.Count>=64)throw new ArgumentException("Context control limit reached.");
                 ModClientControl previous;if(c.Controls.TryGetValue(id,out previous))ModClientCancelParticipant(c,previous,"control-replaced");
@@ -190,13 +192,13 @@ namespace HoloMap
                 if(kind=="line"||kind=="path")
                 {
                     var points=kind=="line"?new[]{a.Point(),a.Point()}:a.Typed<Vector3D[]>();a.End();
-                    if(c.Hud)foreach(var p in points)if(Math.Abs(p.Z)>1e-6)throw new ArgumentException("HUD paths must stay on Z=0.");
+                    if(c.Hud||c.Surface!=null)foreach(var p in points)if(Math.Abs(p.Z)>1e-6)throw new ArgumentException("Canvas paths must stay on Z=0.");
                     if(!PathConstraint.TryPolyline(value.Range,points,out path))throw new ArgumentException("Invalid finite path constraint.");mode=1;
                 }
                 else if(kind=="rotation")
                 {
                     var pivot=a.Point();var axis=a.Point();angleMin=a.Number();angleMax=a.Number();a.End();NumericRange angles;
-                    if(c.Hud&&(Math.Abs(pivot.Z)>1e-6||Math.Abs(axis.X)>1e-6||Math.Abs(axis.Y)>1e-6))throw new ArgumentException("HUD rotations require a Z axis and Z=0 pivot.");
+                    if((c.Hud||c.Surface!=null)&&(Math.Abs(pivot.Z)>1e-6||Math.Abs(axis.X)>1e-6||Math.Abs(axis.Y)>1e-6))throw new ArgumentException("Canvas rotations require a Z axis and Z=0 pivot.");
                     if(!NumericRange.TryCreate(angleMin,angleMax,0,out angles)||!RotationConstraint.TryCreate(angles,pivot,axis,out rotation))throw new ArgumentException("Invalid finite angular constraint.");mode=2;
                 }
                 else throw new ArgumentException("Constraint requires line, path or rotation.");

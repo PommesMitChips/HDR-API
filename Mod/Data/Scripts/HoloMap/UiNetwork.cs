@@ -17,6 +17,14 @@ namespace HoloMap
         [ProtoMember(5)] public long Sequence;
         [ProtoMember(6)] public int Action;
         [ProtoMember(7)] public long ViewerId;
+        [ProtoMember(8)] public double OriginX;
+        [ProtoMember(9)] public double OriginY;
+        [ProtoMember(10)] public double OriginZ;
+        [ProtoMember(11)] public double DirectionX;
+        [ProtoMember(12)] public double DirectionY;
+        [ProtoMember(13)] public double DirectionZ;
+        [ProtoMember(14)] public string ScreenId;
+        [ProtoMember(15)] public long SurfaceGeneration;
     }
     [ProtoContract]
     public sealed class UiAck
@@ -31,6 +39,8 @@ namespace HoloMap
         [ProtoMember(8)] public string Argument;
         [ProtoMember(9)] public long SourceTileId;
         [ProtoMember(10)] public long ViewerId;
+        [ProtoMember(11)] public string ScreenId;
+        [ProtoMember(12)] public long SurfaceGeneration;
     }
     public sealed partial class HoloMapSession
     {
@@ -39,7 +49,7 @@ namespace HoloMap
         sealed class UiPeer
         {
             public long Sequence, OpenCaller, OpenTarget, OpenTile, OpenRevision, OpenCharacter;
-            public string OpenBundle, FocusSourceWidget;
+            public string OpenBundle, FocusSourceWidget,OpenScreenId;public long OpenSurfaceGeneration;
             public bool IsFocus;
             public Vector3D FocusLocal;
             public MatrixD FocusView;
@@ -73,6 +83,8 @@ namespace HoloMap
             if (display == null || widget == null || _uiPending != null || _ticks - _uiLastSendTick < 12) return;
             var press = new UiPress { CallerId = display.CallerId, TargetId = display.TargetId,
                 WidgetId = widget.Id, Revision = display.Revision, Sequence = NextUiClientSequence(), Action = action, ViewerId=action==4?_uiViewerId:0 };
+            press.ScreenId=widget.ScreenId;press.SurfaceGeneration=widget.ScreenId==null?0:UiProjectedGeneration(display,widget);
+            if(action==4&&widget.ScreenId!=null){UiPointerSample pointer;Vector3D origin,direction;if(_uiPointer==null||!_uiPointer.Sample(out pointer)||!UiViewerPointerWorld(pointer,out origin,out direction))return;press.OriginX=origin.X;press.OriginY=origin.Y;press.OriginZ=origin.Z;press.DirectionX=direction.X;press.DirectionY=direction.Y;press.DirectionZ=direction.Z;}
             _uiPending = press; _uiPendingTick = _ticks; _uiLastSendTick = _ticks;
             if (MyAPIGateway.Multiplayer.IsServer)
             {
@@ -140,6 +152,7 @@ namespace HoloMap
             var pending = _uiPending;
             if (pending == null || ack == null || ack.Sequence != pending.Sequence || ack.CallerId != pending.CallerId
                 || ack.TargetId != pending.TargetId || ack.WidgetId != pending.WidgetId || ack.Revision != pending.Revision || ack.ViewerId!=pending.ViewerId) return;
+            if(ack.ScreenId!=pending.ScreenId||ack.SurfaceGeneration!=pending.SurfaceGeneration)return;
             _uiPending = null;
             if (!ack.Accepted) { if (pending.Action == 2) ClearUiClient(); return; }
             if (!UiActionAllowed(ack.ActionKind) || ack.Argument == null || ack.Argument.Length > 256) return;
@@ -176,6 +189,7 @@ namespace HoloMap
                     || player.Controller == null || !ReferenceEquals(player.Controller.ControlledEntity, character)
                     || anchor == null || anchor.Closed || Vector3D.DistanceSquared(character.GetPosition(), anchor.GetPosition()) > 25
                     || display == null || display.Revision != peer.OpenRevision) peer.OpenBundle = null;
+                else if(peer.OpenScreenId!=null&&!UiProjectedOpenContext(peer,display))peer.OpenBundle=null;
                 else if (peer.IsFocus && !UiFocusGrantContext(peer, player, display)) peer.OpenBundle = null;
             }
             foreach (var sender in remove) _uiPeers.Remove(sender);
@@ -183,7 +197,7 @@ namespace HoloMap
 
         UiAck ProcessUiPress(ulong sender, UiPress press)
         {
-            var ack = new UiAck { CallerId = press.CallerId, TargetId = press.TargetId, WidgetId = press.WidgetId, Revision = press.Revision, Sequence = press.Sequence, ViewerId=press.ViewerId };
+            var ack = new UiAck { CallerId = press.CallerId, TargetId = press.TargetId, WidgetId = press.WidgetId, Revision = press.Revision, Sequence = press.Sequence, ViewerId=press.ViewerId,ScreenId=press.ScreenId,SurfaceGeneration=press.SurfaceGeneration };
             try
             {
                 if (!ValidUiPress(press)) return ack;
@@ -207,13 +221,14 @@ namespace HoloMap
                 var widget = GetUiWidget(press.CallerId, press.TargetId, press.WidgetId, false);
                 bool opened = widget != null && peer.OpenCaller == press.CallerId && peer.OpenTarget == press.TargetId
                     && peer.OpenRevision == press.Revision && peer.OpenBundle == widget.Bundle
-                    && peer.OpenCharacter == character.EntityId && _ticks <= peer.OpenExpires;
-                if(press.Action==4){Vector3D viewerHit;long viewerTile;if(!UiDragViewerClick(sender,press.ViewerId,display,widget,player,out viewerHit,out viewerTile))return ack;opened=true;}
+                    && peer.OpenCharacter == character.EntityId && _ticks <= peer.OpenExpires&&peer.OpenScreenId==widget.ScreenId&&(widget.ScreenId==null||UiProjectedGeneration(display,widget)==peer.OpenSurfaceGeneration);
+                if(widget!=null&&(widget.ScreenId!=press.ScreenId||widget.ScreenId!=null&&UiProjectedGeneration(display,widget)!=press.SurfaceGeneration))return ack;
+                if(press.Action==4){Vector3D viewerHit;long viewerTile;if(!UiDragViewerClick(sender,press.ViewerId,display,widget,player,out viewerHit,out viewerTile,press))return ack;opened=true;}
                 if (display == null || display.Revision != press.Revision || widget == null || !HasVisibleUiWidget(display, widget, opened)
                     || !UiActionAllowed(widget.ActionKind) || widget.Argument == null || widget.Argument.Length > 256) return ack;
                 if((press.Action==3||press.Action==4)&&widget.ActionKind!="control")return ack;
                 var head = character.GetHeadMatrix(true, true, true, true); Vector3D hit; long tileId;
-                if(press.Action==4){if(!UiDragViewerClick(sender,press.ViewerId,display,widget,player,out hit,out tileId))return ack;}
+                if(press.Action==4){if(!UiDragViewerClick(sender,press.ViewerId,display,widget,player,out hit,out tileId,press))return ack;}
                 else if (press.Action == 2)
                 {
                     if (!opened || !peer.IsFocus || !UiFocusGrantContext(peer, player, display)) return ack;
@@ -233,8 +248,8 @@ namespace HoloMap
                 if (widget.ActionKind == "pb" && !caller.TryRun(widget.Argument)) return ack;
                 if (widget.ActionKind == "toggle")
                 {
-                    var state = GetLayerState(caller, anchor, widget.Argument);
-                    if (!state.Item1 || !SetLayerVisible(caller, anchor, widget.Argument, !state.Item3).Item1) return ack;
+                    string layer=widget.ScreenId==null?widget.Argument:ScreenLayer(widget.ScreenId,widget.Argument);
+                    var toggleContext=new DrawContext{Caller=caller,Target=anchor,ScreenId=widget.ScreenId};bool toggled=(bool)WithProjectedUiWrite(toggleContext,()=>{var state=GetLayerState(caller,anchor,layer);return state.Item1&&SetLayerVisible(caller,anchor,layer,!state.Item3).Item1;});if(!toggled)return ack;
                 }
                 if (widget.ActionKind == "menu" || widget.ActionKind == "focus")
                 {
@@ -253,10 +268,11 @@ namespace HoloMap
                         Scene focusTileScene; if (!_scenes.TryGetValue(tileId, out focusTileScene)) return ack;
                         peer.FocusLayout = CaptureUiFocusLayout(focusScene, focusTileScene); peer.FocusTileSourceId = focusTileScene.LcdSourceId;
                     }
-                    peer.IsFocus = widget.ActionKind == "focus" || continueFocus;
+                    peer.IsFocus = widget.ScreenId==null&&(widget.ActionKind == "focus" || continueFocus);
                     peer.OpenCaller = display.CallerId; peer.OpenTarget = display.TargetId;
                     peer.OpenRevision = display.Revision; peer.OpenBundle = widget.Argument;
                     peer.OpenCharacter = character.EntityId; peer.OpenTile = tileId; peer.OpenExpires = _ticks + 1800;
+                    peer.OpenScreenId=widget.ScreenId;peer.OpenSurfaceGeneration=widget.ScreenId==null?0:UiProjectedGeneration(display,widget);
                 }
                 else if (opened) peer.OpenExpires = _ticks + 1800;
                 ack.Accepted = true; ack.ActionKind = widget.ActionKind; ack.Argument = widget.Argument; ack.SourceTileId = tileId;

@@ -20,9 +20,21 @@ public sealed class HdrHtmlIngameApi
     public string[] Capabilities(){return (string[])Call("capabilities");}
     public long Bind(IMyTerminalBlock target,string html,string css,double width,double height,VRageMath.MatrixD modelPose,double unitsPerPixel=.005)
     {return (long)Call("bind",target,html,css,width,height,modelPose,unitsPerPixel);}
+    // Canvas pose is the document center in selected-screen canvas metres; +X right, -Y down.
+    // The owned screen keeps its shape, surface mapping and other content.
+    public long BindScreen(IMyTerminalBlock target,string screenId,string html,string css,double width,double height,VRageMath.MatrixD canvasPose,double unitsPerPixel=.005)
+    {return (long)Call("bind-screen",target,screenId,html,css,width,height,canvasPose,unitsPerPixel);}
     // Source LCD must be manually SCRIPT/NONE. Real sprites on that LCD; world relay needs existing renderer.
     public long BindSprites(IMyTerminalBlock anchor,IMyTerminalBlock sourceLcd,string html,string css,VRageMath.MatrixD modelPose,double metresPerPixel,int surfaceIndex,bool callerOwnsSurface)
     {return (long)Call("bind-sprites",anchor,sourceLcd,html,css,modelPose,metresPerPixel,surfaceIndex,callerOwnsSurface);}
+    public long BindSpritesScreen(IMyTerminalBlock anchor,string screenId,IMyTerminalBlock sourceLcd,string html,string css,VRageMath.MatrixD canvasPose,double metresPerPixel,int surfaceIndex,bool callerOwnsSurface)
+    {return (long)Call("bind-sprites-screen",anchor,screenId,sourceLcd,html,css,canvasPose,metresPerPixel,surfaceIndex,callerOwnsSurface);}
+    public bool AttachSource(long handle,string nodeId,string provider,string sourceId,VRage.MyTuple<string,object[]>[] settings=null)
+    {return (bool)(settings==null?Call("attach-source",handle,nodeId,provider,sourceId):Call("attach-source",handle,nodeId,provider,sourceId,settings));}
+    public bool DetachSource(long handle,string nodeId){return (bool)Call("detach-source",handle,nodeId);}
+    public VRage.MyTuple<bool,string> SourceStatus(long handle,string nodeId)
+    {return (VRage.MyTuple<bool,string>)Call("source-status",handle,nodeId);}
+    public string[] SourceCapabilities(long handle){return (string[])Call("source-capabilities",handle);}
     public VRage.MyTuple<string,string,string,bool> Backend(long handle)
     {return (VRage.MyTuple<string,string,string,bool>)Call("backend",handle);}
     // Coordinates must come from a consumer-owned touch/eye/GUI provider, not unmanaged game input.

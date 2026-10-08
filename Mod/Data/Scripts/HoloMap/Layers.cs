@@ -36,6 +36,16 @@ namespace HoloMap
         {
             return Guard(()=>{var display=Authorize(caller,target);if(order < -1024 || order > 1024)throw new ArgumentException("Layer order must be -1024 through 1024.");GetLayer(GetScene(display.EntityId),caller.EntityId,name).Order=order;});
         }
+        MyTuple<bool,string> RemoveLayer(PbBlock caller,PbBlock target,string name)
+        {
+            return Guard(()=>{var display=Authorize(caller,target);var scene=GetScene(display.EntityId);name=LayerRules.Name(name);ValidateWriteLayer(scene,caller.EntityId,name);
+                foreach(var item in scene.Items.Values)if(item.CallerId==caller.EntityId&&item.Layer==name)throw new ArgumentException("Layer is still referenced by artwork.");
+                foreach(var label in scene.Labels.Values)if(label.CallerId==caller.EntityId&&label.Layer==name)throw new ArgumentException("Layer is still referenced by labels.");
+                if(scene.TrackingCallerId==caller.EntityId&&scene.ConstructLayer==name)throw new ArgumentException("Layer is still referenced by a live construct.");
+                foreach(var screen in scene.Screens.Values)if(screen.Data.CallerId==caller.EntityId&&screen.Data.SourceSlots!=null)foreach(var slot in screen.Data.SourceSlots)if(slot.Layer!=null&&ScreenLayer(screen.Data.Id,slot.Layer)==name)throw new ArgumentException("Layer is still referenced by a source slot.");
+                UiDisplay ui;if(_uiDisplays.TryGetValue(UiKey(caller.EntityId,display.EntityId),out ui))foreach(var widget in ui.Widgets)if(widget.ActionKind=="toggle"&&widget.Argument==name)throw new ArgumentException("Layer is still referenced by a UI action.");
+                scene.Layers.Remove(Key(caller.EntityId,name));});
+        }
         MyTuple<bool, string> SetObjectLayer(PbBlock caller, PbBlock console, string id, string name)
         {
             return Guard(() =>

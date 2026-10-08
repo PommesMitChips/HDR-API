@@ -22,6 +22,9 @@ namespace HoloMap
    public int UiAttemptTick=-10000,SourceAttemptTick=-10000;
    public bool AdaptiveKnown;public DisplayLodResult Adaptive;public SurfaceMesh AdaptiveMesh,AdaptiveBounds;public HoloProjectedScreenData AdaptiveData;public MatrixD AdaptiveWorld,AdaptiveView;public Vector2I AdaptiveViewport;
    public HoloProjectedScreenData SpriteVersion,ViewVersion;
+   public string ConsumerSuffix;
+   public readonly Dictionary<string,CompositionSlotCache> Slots=new Dictionary<string,CompositionSlotCache>();
+   public readonly Dictionary<string,ProjectedCache> UiChunks=new Dictionary<string,ProjectedCache>();
   }
   readonly Dictionary<string,ProjectedCache> _projectedCaches=new Dictionary<string,ProjectedCache>();
   string _lastProjectedJob,_lastUiRasterJob;
@@ -112,21 +115,23 @@ namespace HoloMap
    // Capture full source enclosures before budgets, opacity, sidedness or LOD
    // can omit a consumer. Reuse exactly this draw's anchor transform below.
    MatrixD? drawWorld=null;
-   if(_sourceOcclusionDrawing!=null)foreach(var candidate in scene.Screens.Values)if(candidate.Data.SourceProvider=="camera-panorama")
+   if(_sourceOcclusionDrawing!=null)foreach(var candidate in scene.Screens.Values)if(ScreenHasProvider(candidate.Data,"camera-panorama"))
    {try{drawWorld=anchor.WorldMatrix;RecordDisplaySourceOcclusion(scene,anchor,drawWorld.Value);}catch{/* Unknown inventory retains capture demand. */}break;}
    foreach(var screen in scene.Screens.Values)
    {
-    if(budget<=0)return;var d=screen.Data;if(!d.Visible||d.Opacity<=0)continue;string key=PackedKey(d.CallerId,scene.ConsoleId,d.Id);ProjectedCache cache;
+    if(budget<=0)return;var d=screen.Data;string key=PackedKey(d.CallerId,scene.ConsoleId,d.Id);ProjectedCache cache;if(!d.Visible||d.Opacity<=0){if(_projectedCaches.TryGetValue(key,out cache)){ClearExternalBudgetView(cache);ReleaseSourceSlots(cache);}continue;}
     if(!_projectedCaches.TryGetValue(key,out cache)){cache=new ProjectedCache{Anchor=scene.ConsoleId,Caller=d.CallerId,Id=d.Id};_projectedCaches.Add(key,cache);}cache.Seen=_ticks;
     cache.Front=false;try
     {
-     var world=drawWorld??anchor.WorldMatrix;var camera=MyAPIGateway.Session.Camera.Position;float screenOpacity=d.Opacity*ScreenSideOpacity(d,world,camera);cache.Front=screenOpacity>0&&ScreenLod(d,anchor,cache).Visible;if(!cache.Front){ReleaseUiRaster(cache);ClearExternalBudgetView(cache);cache.NextSample=cache.NextCapture=-1;continue;}
-     PruneScreenMeshes(cache,d);ValidateCachedExternalView(scene,d,cache);PrepareProjectedSources(scene,screen,cache,ref compileBudget);
+     var world=drawWorld??anchor.WorldMatrix;var camera=MyAPIGateway.Session.Camera.Position;float screenOpacity=d.Opacity*ScreenSideOpacity(d,world,camera);cache.Front=screenOpacity>0&&ScreenLod(d,anchor,cache).Visible;if(!cache.Front){ReleaseUiRaster(cache);ClearExternalBudgetView(cache);ReleaseSourceSlots(cache);cache.NextSample=cache.NextCapture=-1;continue;}
+     bool composition=PrepareCompositionMode(scene,d,cache);
+     PruneScreenMeshes(cache,d);ValidateCachedExternalView(scene,d,cache);PrepareProjectedSources(scene,screen,cache,ref compileBudget);if(composition)PrepareSourceSlots(scene,d,cache,ref compileBudget);
      if(cache.Data==null||cache.Data.ContentRenderer!=d.ContentRenderer||cache.Data.UiRasterWidth!=d.UiRasterWidth||cache.Data.UiRasterHeight!=d.UiRasterHeight||cache.Data.UiRasterSamples!=d.UiRasterSamples||cache.Data.CanvasWidth!=d.CanvasWidth||cache.Data.CanvasHeight!=d.CanvasHeight||!SameArray(cache.Data.View,d.View))cache.NextSample=-1;
      if(!RasterLayersCurrent(scene,cache)){ReleaseUiRaster(cache);cache.NextSample=-1;}
      if(d.ContentRenderer==1&&(cache.NextSample<0||_ticks/60d+1e-8>=cache.NextSample)&&!OldestRasterJob(cache,_ticks/60d,true))cache.NextSample=_ticks/60d+1/60d;
      bool sampled=SampleProjectedItems(scene,screen,cache,ref compileBudget);
-     if(sampled){if(d.ContentRenderer!=1||_uiRasterTick!=_ticks){if(d.ContentRenderer==1){_uiRasterTick=_ticks;cache.UiAttemptTick=_ticks;_lastUiRasterJob=key;}PrepareScreenUiRaster(scene,d,cache);}else cache.NextSample=-1;}
+     if(composition)ReleaseUiRaster(cache);
+     else if(sampled){if(d.ContentRenderer!=1||_uiRasterTick!=_ticks){if(d.ContentRenderer==1){_uiRasterTick=_ticks;cache.UiAttemptTick=_ticks;_lastUiRasterJob=key;}PrepareScreenUiRaster(scene,d,cache);}else cache.NextSample=-1;}
      cache.Data=d;
      var inverse=MatrixD.Invert(world);uint parent=anchor.Render.GetRenderObjectID();var volume=SurfaceCrop(d,anchor,d.SurfaceKind==0?ProjectedVolume(scene,d,anchor):GetDisplayVolume(scene,anchor));
      var background=ScreenColor(d.Background);
@@ -139,6 +144,7 @@ namespace HoloMap
      if(HasExternalSource(d)&&cache.View!=null&&(!ExternalEvidenceValid(scene,d,cache)||cache.SourceRaster!=null&&!RasterImageCurrent(cache.SourceRaster)))ClearExternalBudgetView(cache);
      if(cache.View!=null)DrawScreenMesh(scene,cache,"source",cache.View,d,MatrixD.Identity,d.SourceProvider=="native-portal"?0:.0005,cache.SourceTexture?(double)d.UiRasterWidth/d.UiRasterHeight:0,true,cache.SourceTexture,volume,screenOpacity,0,cache.SourceTextureMaterial,world,inverse,camera,parent,ref budget,ref compileBudget);
      if(cache.Sprites!=null)DrawScreenMesh(scene,cache,"sprites",cache.Sprites,d,MatrixD.CreateScale(d.CanvasWidth,d.CanvasHeight,1),.001,0,true,false,volume,screenOpacity,0,null,world,inverse,camera,parent,ref budget,ref compileBudget);
+     if(composition){DrawCompositionContent(scene,cache,d,sampled,volume,screenOpacity,world,inverse,camera,parent,ref budget,ref compileBudget);continue;}
      bool raster=d.ContentRenderer==1&&RasterImageCurrent(cache.UiRaster)&&cache.UiRasterMesh!=null;
      if(cache.UiRaster!=null&&!raster){ReleaseUiRaster(cache);cache.NextSample=-1;}
      if(raster)
@@ -168,8 +174,8 @@ namespace HoloMap
      var inverse=MatrixD.Invert(world);uint parent=anchor.Render.GetRenderObjectID();var volume=SurfaceCrop(d,anchor,d.SurfaceKind==0?ProjectedVolume(scene,d,anchor):GetDisplayVolume(scene,anchor));
      for(int i=0;i<cache.Items.Count&&budget>0;i++)
      {
-      var item=cache.Items[i].Item;if(item==null||item.Effects==null)continue;float opacity=screenOpacity*item.Opacity*ClientLayerAlpha(scene,item.CallerId,item.Layer);if(opacity<=0)continue;
-      DrawScreenMesh(scene,cache,"item:"+item.Id,new SurfaceMesh{Geometry=item.Geometry,Colors=item.TriangleColors,EdgeColors=item.EdgeColors,UV=item.UV},d,item.Transform*ProjectedContentView(d),.0015+i*.00001,0,true,false,volume,opacity,item.Emission,item.Material,world,inverse,camera,parent,ref budget,ref compileBudget,item.FillColor,item.LineColor,item.Thickness*(d.SurfaceKind==0?d.Width/d.CanvasWidth:1),item,true);
+      var item=cache.Items[i].Item;if(item==null||item.Effects==null||CompositionEntryRasterized(cache,cache.Items[i]))continue;float opacity=screenOpacity*item.Opacity*ClientLayerAlpha(scene,item.CallerId,item.Layer);if(opacity<=0)continue;
+      DrawScreenMesh(scene,cache,"item:"+item.Id,new SurfaceMesh{Geometry=item.Geometry,Colors=item.TriangleColors,EdgeColors=item.EdgeColors,UV=item.UV},d,item.Transform*ProjectedContentView(d),CompositionItemDepth(cache,i),0,true,false,volume,opacity,item.Emission,item.Material,world,inverse,camera,parent,ref budget,ref compileBudget,item.FillColor,item.LineColor,item.Thickness*(d.SurfaceKind==0?d.Width/d.CanvasWidth:1),item,true);
      }
     }
     catch(Exception error){ReportProjectedError(cache,error);}
@@ -181,7 +187,7 @@ namespace HoloMap
    for(int t=0;t<g.Triangles.Length&&budget>0;t+=3){int a=g.Triangles[t],b=g.Triangles[t+1],c=g.Triangles[t+2];var color=mesh.Colors==null?fill??Vector4.One:mesh.Colors[t/3];var wa=g.WorldPoints[a];var wb=g.WorldPoints[b];var wc=g.WorldPoints[c];float side=1;if(surface!=null){bool front;side=ScreenTriangleOpacity(surface,g.Points[a],g.Points[b],g.Points[c],localSurfaceEye,out front);if(!front&&layerDepth!=0){wa-=Vector3D.TransformNormal(ScreenPointNormal(surface,g.Points[a],g.Points[b],g.Points[c])*2*layerDepth,matrix);wb-=Vector3D.TransformNormal(ScreenPointNormal(surface,g.Points[b],g.Points[c],g.Points[a])*2*layerDepth,matrix);wc-=Vector3D.TransformNormal(ScreenPointNormal(surface,g.Points[c],g.Points[a],g.Points[b])*2*layerDepth,matrix);}}color=HologramEffectColor(effectState,color,(g.Points[a]+g.Points[b]+g.Points[c])/3,t/3);color.W*=opacity*side;if(color.W<=0)continue;DrawVolumeTriangle(volume,wa,wb,wc,mesh.UV==null?Vector2.Zero:mesh.UV[a],mesh.UV==null?Vector2.Zero:mesh.UV[b],mesh.UV==null?Vector2.Zero:mesh.UV[c],color,emission,false,material,world,inverse,camera,parent,ref budget);}
    var normal=Vector3D.Normalize(Vector3D.Cross(matrix.Right,matrix.Up));for(int e=0;e<g.Edges.Length&&budget>0;e+=2){var color=mesh.EdgeColors==null?line??Vector4.Zero:mesh.EdgeColors[e/2];color=HologramEffectColor(effectState,color,(g.Points[g.Edges[e]]+g.Points[g.Edges[e+1]])/2,g.Triangles.Length/3+e/2);color.W*=opacity;if(color.W>0){int ia=g.Edges[e],ib=g.Edges[e+1];var n=normal;if(surfaceKind>=3){var delta=camera-(g.WorldPoints[ia]+g.WorldPoints[ib])*.5;if(delta.LengthSquared()>1e-20)n=Vector3D.Normalize(delta);}else if(surfaceKind!=0){var mid=(g.Points[ia]+g.Points[ib])*.5;if(surfaceKind==1)mid.Y=0;if(mid.LengthSquared()>1e-20)n=Vector3D.Normalize(Vector3D.TransformNormal(mid,matrix));}DrawPinnedLine(volume,g.WorldPoints[ia],g.WorldPoints[ib],n,Math.Max(.0001,thickness),color,emission,world,inverse,camera,parent,ref budget);}}
   }
-  static void ReleaseProjectedCache(ProjectedCache cache){var ui=cache.UiRaster;cache.UiRaster=null;cache.Mapped.Clear();ClearExternalBudgetView(cache);ReleaseRasterImage(ui);}
+  static void ReleaseProjectedCache(ProjectedCache cache){var ui=cache.UiRaster;cache.UiRaster=null;cache.Mapped.Clear();ReleaseSourceSlots(cache);ClearExternalBudgetView(cache);ReleaseRasterImage(ui);}
   void ClearProjectedCaches(){var detached=new List<ProjectedCache>(_projectedCaches.Values);_projectedCaches.Clear();_lastProjectedJob=null;_lastUiRasterJob=null;foreach(var cache in detached)ReleaseProjectedCache(cache);}
   void PruneProjectedCaches()
    {var remove=new List<string>();foreach(var pair in _projectedCaches){var c=pair.Value;Scene scene;var anchor=MyAPIGateway.Entities.GetEntityById(c.Anchor) as IMyTerminalBlock;if(!_scenes.TryGetValue(c.Anchor,out scene)||!scene.Screens.ContainsKey(Key(c.Caller,c.Id))||anchor==null||anchor.Closed||!anchor.IsWorking)remove.Add(pair.Key);}foreach(string key in remove){ProjectedCache cache;if(_projectedCaches.TryGetValue(key,out cache)){_projectedCaches.Remove(key);ReleaseProjectedCache(cache);}}}

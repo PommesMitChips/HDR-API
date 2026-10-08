@@ -82,6 +82,19 @@ namespace Hdr.Html
         public double Value, Minimum, Maximum, Step;
     }
 
+    // An attachment slot, not a resource/network declaration. Bounds retain the full
+    // content extent; clipping must crop that UV mapping rather than stretch it.
+    public sealed class HtmlSourceRegion
+    {
+        public string NodeId;
+        public HtmlRect Bounds, Clip;
+        public double Opacity;
+        // Insert before Operations[Order], after the element's own background/border.
+        // Equal indices follow SourceRegions list order (DOM preorder).
+        public int Order;
+        public bool Visible;
+    }
+
     public sealed class HtmlPaintFrame
     {
         public long Revision;
@@ -89,5 +102,6 @@ namespace Hdr.Html
         public string FontProfile;
         public readonly List<HtmlPaintOperation> Operations = new List<HtmlPaintOperation>();
         public readonly List<HtmlHitRegion> Hits = new List<HtmlHitRegion>();
+        public readonly List<HtmlSourceRegion> SourceRegions = new List<HtmlSourceRegion>();
     }
 }

@@ -54,6 +54,7 @@ namespace HoloMap
             return Pending&&UiDragWire.Valid(ack)&&ack.RequestId==_identity.RequestId&&ack.CallerId==_identity.CallerId
                 &&ack.TargetId==_identity.TargetId&&ack.ControlId==_identity.ControlId&&ack.DefinitionRevision==_identity.DefinitionRevision
                 &&ack.ViewerId==_identity.ViewerId&&ack.Sequence>=_lastAckSequence&&ack.Sequence<=_sequence&&_sentSequences.Contains(ack.Sequence)
+                &&ack.ScreenId==_identity.ScreenId&&ack.SurfaceGeneration==_identity.SurfaceGeneration
                 &&(LeaseId==0||ack.LeaseId==LeaseId);
         }
         public bool Pointer(UiPointerSample sample,int tick)

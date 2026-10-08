@@ -27,6 +27,10 @@ namespace HoloMap
         // Fixed clipping scratch belongs to the retained item, never to its immutable geometry.
         public readonly ModClientEffectVertex[] EffectClipA = new ModClientEffectVertex[8];
         public readonly ModClientEffectVertex[] EffectClipB = new ModClientEffectVertex[8];
+        internal SurfaceMesh SurfaceMesh;
+        internal MatrixD SurfaceTransform;
+        internal long SurfaceRevision;
+        internal bool SourceSlotItem;
     }
     public sealed class ModClientContext
     {
@@ -48,6 +52,11 @@ namespace HoloMap
         public readonly List<ModClientPoseUpdate> PendingPoses=new List<ModClientPoseUpdate>();
         public ModClientCapture Capture;
         public bool PointerBlockedUntilRelease;
+        // Client-local declarations only. They never enter Scene or the PB replication path.
+        public HoloProjectedScreenData Surface;
+        public long SurfaceRevision;
+        public double SurfaceSourceAspect;
+        public Sandbox.ModAPI.IMyTerminalBlock SourceAnchor;
     }
     public sealed class ModClientOwner
     {
@@ -56,6 +65,8 @@ namespace HoloMap
         public long ValueRevision, DeclarationRevision;
         public bool Released;
         public int DrawLimit = 4096;
+        // Zero means unlimited aggregate geometry; per-item and frame submission bounds still apply.
+        public int PointLimit,PrimitiveLimit;
         public readonly Dictionary<long, ModClientContext> Contexts = new Dictionary<long, ModClientContext>();
         public readonly List<ModClientContext> DrawContexts = new List<ModClientContext>();
     }
@@ -110,6 +121,8 @@ namespace HoloMap
     {
         public const int MaxOwners = 16, MaxContexts = 16, MaxItems = 64;
         public const int MaxOwnerPoints = 8192, MaxOwnerPrimitives = 8192, MaxEvents = 64;
+        public static bool FitsAllowance(ModClientOwner owner,int points,int primitives)
+        {return (owner.PointLimit==0||points<=owner.PointLimit)&&(owner.PrimitiveLimit==0||primitives<=owner.PrimitiveLimit);}
         public static string Id(string value)
         {
             if(string.IsNullOrWhiteSpace(value)||value.Length>64)throw new ArgumentException("IDs require 1–64 characters.");
@@ -161,7 +174,7 @@ namespace HoloMap
             int points=item.Geometry.Points.Length, primitives=item.Geometry.Triangles.Length/3+item.Geometry.Edges.Length/2;
             foreach(var c in owner.Contexts.Values)foreach(var i in c.Items.Values)
             {if(ReferenceEquals(c,context)&&i.Id==item.Id)continue;points+=i.Geometry.Points.Length;primitives+=i.Geometry.Triangles.Length/3+i.Geometry.Edges.Length/2;}
-            if(points>MaxOwnerPoints||primitives>MaxOwnerPrimitives)throw new ArgumentException("Consumer retained geometry limit reached.");
+            if(!FitsAllowance(owner,points,primitives))throw new ArgumentException("Consumer retained geometry allowance exceeded.");
         }
         public static void Bound(Vector4 rect)
         {if(!Geometry.Finite(rect.X)||!Geometry.Finite(rect.Y)||!Geometry.Finite(rect.Z)||!Geometry.Finite(rect.W)||rect.Z<=0||rect.W<=0||Math.Abs(rect.X)>1000000||Math.Abs(rect.Y)>1000000||rect.Z>1000000||rect.W>1000000)throw new ArgumentException("Bounds require finite x/y and positive width/height.");}

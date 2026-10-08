@@ -30,16 +30,17 @@ namespace HoloMap
             if(command=="rendering-enabled"){a.End();return ClientRenderingEnabled;}
             if(command=="measure-text")return MeasureTextCommand(a);
             if(command=="geometry-cost"){if(_modClientDrawing)throw new ArgumentException("Compile geometry outside HDR drawing.");return GeometryCostCommand(a);}
-            if(command=="capabilities"){a.End();return new[]{"client-local","hud-vector-postpp","world-vector-depth","text","svg","registered-material-uv","cooperative-pointer","event-poll","hologram-effects","procedural-particles","hologram-transitions","constrained-controls","values-cas","cooperative-drag"};}
+            if(command=="capabilities"){a.End();return new[]{"client-local","hud-vector-postpp","world-vector-depth","text","svg","registered-material-uv","cooperative-pointer","event-poll","hologram-effects","procedural-particles","hologram-transitions","constrained-controls","values-cas","cooperative-drag","projected-mod-surfaces","projected-mod-pointer","projected-mod-sources",ModClientNativeAvailable()?"native-local-mod-sources":"native-source-requires-plugin-0.9.14"};}
             if(command=="plugin-status"){string feature=a.Text();a.End();return LocalPluginStatus(feature);}
             if(command=="draw-budget"){if(_modClientDrawing)throw new ArgumentException("Configure budget outside Draw.");int limit=a.Integer(20000);a.End();if(limit<16||limit>131072)throw new ArgumentException("Shared mod draw budget requires 16–131072 triangles per frame.");_modClientDrawBudget=limit;return true;}
             if(command!="open")throw new ArgumentException("Unknown HDR mod service command.");
             if(_modClientDrawing)throw new ArgumentException("Open contexts outside HDR drawing.");
             string id=ModClientRules.Id(a.Text());a.End();ModClientOwner previous;
             if(!_modClientOwners.TryGetValue(id,out previous)&&_modClientOwners.Count>=ModClientRules.MaxOwners)throw new ArgumentException("Client consumer limit reached.");
-            if(previous!=null){foreach(var old in previous.Contexts.Values)ModClientCancel(old,"owner-replaced");previous.Released=true;previous.Contexts.Clear();previous.DrawContexts.Clear();}
             _modClientDrawOwners.Clear();
             var owner=new ModClientOwner{Id=id,Generation=++_modClientGeneration};_modClientOwners[id]=owner;
+            // Publish the new authority before retiring native leases; release callbacks may reopen this owner.
+            if(previous!=null){previous.Released=true;foreach(var old in new List<ModClientContext>(previous.Contexts.Values)){ModClientCancel(old,"owner-replaced");ModClientClearSourceSlots(old);}previous.Contexts.Clear();previous.DrawContexts.Clear();}
             return new Func<string,object[],object>((op,values)=>ModClientCommand(owner,op,values));
         }
         bool ModClientCurrent(ModClientOwner owner)
@@ -50,13 +51,22 @@ namespace HoloMap
             if(!ModClientCurrent(owner))throw new ArgumentException("HDR consumer endpoint has been revoked.");
             if(op=="rendering-enabled"){var stateArgs=new DrawArgs(values);stateArgs.End();return ClientRenderingEnabled;}
             if(op=="measure-text")return MeasureTextCommand(new DrawArgs(values));
-            if(_modClientDrawing)throw new ArgumentException("Mutate contexts on the client simulation thread outside Draw.");
+            if(op=="geometry-limit-settings"){var limitArgs=new DrawArgs(values);limitArgs.End();return new MyTuple<int,int>(owner.PointLimit,owner.PrimitiveLimit);}
+            if(_modClientDrawing&&op!="context-surface-ray")throw new ArgumentException("Mutate contexts on the client simulation thread outside Draw.");
             var a=new DrawArgs(values);
             if(op=="geometry-cost")return GeometryCostCommand(a);
             if(op=="context-valid"){long queried=a.Typed<long>();a.End();return owner.Contexts.ContainsKey(queried);}
             if(op=="geometry-usage"){a.End();return ModClientGeometryUsage(owner);}
+            if(op=="geometry-limit")
+            {
+                int pointLimit=a.Integer(0),primitiveLimit=a.Integer(0);a.End();if(pointLimit<0||primitiveLimit<0)throw new ArgumentException("Geometry allowances require nonnegative counts; zero is unlimited.");
+                var retained=ModClientGeometryUsage(owner);int points=0,primitives=0;
+                foreach(var context in owner.Contexts.Values)foreach(var artwork in context.Items.Values){var geometry=context.Surface==null?artwork.Geometry:ModClientPreparedSurface(context,artwork).Geometry;points+=geometry.Points.Length;primitives+=geometry.Triangles.Length/3+geometry.Edges.Length/2;}
+                if(pointLimit!=0&&(retained.Item1>pointLimit||points>pointLimit)||primitiveLimit!=0&&(retained.Item2>primitiveLimit||primitives>primitiveLimit))throw new ArgumentException("Existing retained artwork exceeds the requested geometry allowance.");
+                owner.PointLimit=pointLimit;owner.PrimitiveLimit=primitiveLimit;ModClientMaintainSourceSlots();return true;
+            }
             if(op=="plugin-status"){string feature=a.Text();a.End();return LocalPluginStatus(feature);}
-            if(op=="release"){a.End();foreach(var old in owner.Contexts.Values)ModClientCancel(old,"owner-released");owner.Released=true;owner.Contexts.Clear();owner.DrawContexts.Clear();_modClientDrawOwners.Clear();_modClientOwners.Remove(owner.Id);return true;}
+            if(op=="release"){a.End();owner.Released=true;foreach(var old in new List<ModClientContext>(owner.Contexts.Values)){ModClientCancel(old,"owner-released");ModClientClearSourceSlots(old);}owner.Contexts.Clear();owner.DrawContexts.Clear();_modClientDrawOwners.Clear();ModClientOwner current;if(_modClientOwners.TryGetValue(owner.Id,out current)&&ReferenceEquals(current,owner))_modClientOwners.Remove(owner.Id);return true;}
             if(op=="create-hud"||op=="create-world")
             {
                 int order=a.Integer(0);MatrixD pose=op=="create-world"?a.Typed<MatrixD>():MatrixD.Identity;a.End();ModClientRules.Transform(pose);
@@ -66,13 +76,21 @@ namespace HoloMap
             if(op=="draw-limit"){int limit=a.Integer(4096);a.End();if(limit<1||limit>8192)throw new ArgumentException("Draw limit requires 1–8192 primitives per client frame.");owner.DrawLimit=limit;return true;}
             if(op=="viewport"){a.End();var camera=MyAPIGateway.Session==null?null:MyAPIGateway.Session.Camera;return camera==null?Vector2.Zero:camera.ViewportSize;}
             long handle=a.Typed<long>();ModClientContext c;if(!owner.Contexts.TryGetValue(handle,out c))throw new ArgumentException("Context handle does not belong to this consumer.");
-            if(op=="destroy"){a.End();ModClientCancel(c,"context-destroyed");c.DrawItems.Clear();c.PendingPoses.Clear();owner.DrawContexts.Clear();owner.Contexts.Remove(handle);return true;}
-            if(op=="clear"){a.End();ModClientCancel(c,"context-cleared");c.Items.Clear();c.Controls.Clear();c.Values.Clear();c.ControlOrder.Clear();c.PendingPoses.Clear();c.DrawItems.Clear();c.Bounds.Clear();c.BoundsOrder.Clear();c.Events.Clear();c.Hover=null;c.Pressed=false;ModClientDeclare(owner,c);return true;}
-            if(op=="context-visible"){bool visible=a.Flag();a.End();if(!visible)ModClientCancel(c,"context-hidden");c.Visible=visible;if(!c.Visible){c.Events.Clear();c.Hover=null;c.Pressed=false;}return true;}
-            if(op=="context-pose"){var pose=a.Typed<MatrixD>();a.End();ModClientRules.Transform(pose);if(c.Hud)throw new ArgumentException("HUD context pose is determined by the viewer.");foreach(var old in c.Items.Values)ModClientRules.Placement(old.Geometry,old.Transform,pose,false);ModClientCancel(c,"context-pose");c.Pose=pose;return true;}
+            if(op=="context-surface-ray")
+            {
+                var origin=a.Point();var direction=a.Point();a.End();LocalRay ray;Vector3D hit=Vector3D.Zero;Vector2 canvas=Vector2.Zero;
+                if(!ModClientRules.SafePoint(origin)||!ModClientRay(origin,direction,MatrixD.Invert(c.Pose),out ray))throw new ArgumentException("Invalid finite world surface ray.");
+                bool found=ClientRenderingEnabled&&c.Visible&&!c.Hud&&c.Surface!=null&&ModClientSurfaceHit(c,ray,out hit,out canvas);
+                return new MyTuple<bool,Vector2,Vector3D>(found,canvas,found?Vector3D.Transform(hit,c.Pose):Vector3D.Zero);
+            }
+            object surfaceResult;if(ModClientSourceSlotCommand(owner,c,op,a,out surfaceResult)||ModClientSurfaceCommand(owner,c,op,a,out surfaceResult))return surfaceResult;
+            if(op=="destroy"){a.End();owner.Contexts.Remove(handle);ModClientCancel(c,"context-destroyed");c.DrawItems.Clear();c.PendingPoses.Clear();owner.DrawContexts.Clear();ModClientClearSourceSlots(c);return true;}
+            if(op=="clear"){a.End();ModClientCancel(c,"context-cleared");c.Items.Clear();c.Controls.Clear();c.Values.Clear();c.ControlOrder.Clear();c.PendingPoses.Clear();c.DrawItems.Clear();c.Bounds.Clear();c.BoundsOrder.Clear();c.Events.Clear();c.Hover=null;c.Pressed=false;ModClientDeclare(owner,c);ModClientClearSourceSlots(c);return true;}
+            if(op=="context-visible"){bool visible=a.Flag();a.End();c.Visible=visible;if(!visible){ModClientCancel(c,"context-hidden");c.Events.Clear();c.Hover=null;c.Pressed=false;ModClientInvalidateSourceSlots(c);}return true;}
+            if(op=="context-pose"){var pose=a.Typed<MatrixD>();a.End();ModClientRules.Transform(pose);if(c.Hud)throw new ArgumentException("HUD context pose is determined by the viewer.");foreach(var old in c.Items.Values){ModClientRules.Placement(old.Geometry,old.Transform,pose,false);if(c.Surface!=null)foreach(var p in ModClientPreparedSurface(c,old).Geometry.Points)if(!ModClientRules.SafePoint(Vector3D.Transform(p,pose)))throw new ArgumentException("Mapped surface placement exceeds client world bounds.");}ModClientCancel(c,"context-pose");c.Pose=pose;c.SurfaceRevision++;ModClientInvalidateSourceSlots(c);return true;}
             if(op=="pointer")
             {double x=a.Number(),y=a.Number();bool pressed=a.Flag();a.End();if(c.Controls.Count==0&&c.Capture==null){if(!ClientRenderingEnabled)ModClientCancel(c,"display-hidden");else ModClientRules.Pointer(c,x,y,pressed);return true;}LocalRay ray;if(!LocalRay.TryCreate(new Vector3D(x,y,c.Hud?1:1000),-Vector3D.UnitZ,out ray))throw new ArgumentException("Pointer coordinates exceed local bounds.");ModClientPointer(owner,c,ray,pressed);return true;}
-            if(op=="pointer-ray"){var origin=a.Point();var direction=a.Point();bool pressed=a.Flag();a.End();if(c.Hud)throw new ArgumentException("HUD pointer uses pixel coordinates.");LocalRay ray;if(!ModClientRules.SafePoint(origin)||!ModClientRay(origin,direction,MatrixD.Invert(c.Pose),out ray))throw new ArgumentException("Invalid finite world pointer ray.");ModClientPointer(owner,c,ray,pressed);return true;}
+            if(op=="pointer-ray"){var origin=a.Point();var direction=a.Point();bool pressed=a.Flag();a.End();if(c.Hud)throw new ArgumentException("HUD pointer uses pixel coordinates.");LocalRay ray;if(!ModClientRules.SafePoint(origin)||!ModClientRay(origin,direction,MatrixD.Invert(c.Pose),out ray))throw new ArgumentException("Invalid finite world pointer ray.");LocalRay source;if(ModClientSurfaceRay(c,ray,out source))ModClientPointer(owner,c,source,pressed);else ModClientSurfacePointerMiss(c,pressed);return true;}
             if(op=="pointer-cancel"){a.End();ModClientCancel(c,"consumer-focus-loss");ModClientRules.PointerHit(c,null,false);return true;}
             if(op=="poll-value-events"){a.End();var result=c.ValueEvents.ToArray();c.ValueEvents.Clear();return result;}
             if(op=="poll-events"){a.End();var result=c.Events.ToArray();c.Events.Clear();return result;}
@@ -105,7 +123,7 @@ namespace HoloMap
                 ModClientEffectBounds(found);return true;
             }
             if(op=="visible"||op=="transform")
-            {ModClientItem found;if(!c.Items.TryGetValue(id,out found))throw new ArgumentException("Unknown context item.");if(op=="visible"){bool visible=a.Flag();a.End();if(!visible)ModClientCancelArtwork(c,id,"artwork-hidden");found.Visible=visible;}else{var pose=a.Typed<MatrixD>();a.End();ModClientRules.Placement(found.Geometry,pose,c.Pose,c.Hud);found.Transform=pose;ModClientRebaseControls(owner,c,found);}return true;}
+            {ModClientItem found;if(!c.Items.TryGetValue(id,out found))throw new ArgumentException("Unknown context item.");if(op=="visible"){bool visible=a.Flag();a.End();if(!visible)ModClientCancelArtwork(c,id,"artwork-hidden");found.Visible=visible;}else{var pose=a.Typed<MatrixD>();a.End();ModClientSurfacePlacement(owner,c,found,pose);found.Transform=pose;ModClientRebaseControls(owner,c,found);}return true;}
             ModClientItem item;
             if(op=="mesh")
             {var points=a.Typed<Vector3D[]>();var triangles=a.Typed<int[]>();var color=a.Paint("white");var uv=a.Has?a.Nullable<Vector2[]>():null;string material=a.Has?a.Nullable<string>():null;a.End();item=ModClientRules.Mesh(id,points,triangles,color,uv,material);if(material!=null)ModClientMaterial(material);}
@@ -118,6 +136,7 @@ namespace HoloMap
             else throw new ArgumentException("Unknown HDR client command: "+op);
             ModClientRules.Placement(item.Geometry,item.Transform,c.Pose,c.Hud);
             ModClientRules.Admit(owner,c,item);
+            ModClientSurfacePlacement(owner,c,item,item.Transform);
             ModClientItem prior;if(c.Items.TryGetValue(id,out prior)){item.Effects=prior.Effects;item.EffectStart=prior.EffectStart;item.EffectEntering=prior.EffectEntering;item.EffectBeamFan=prior.EffectBeamFan;}
             ModClientRemoveItemControls(c,id);ModClientEffectBounds(item);item.Order=++owner.NextOrder;c.DrawItems.Clear();c.Items[id]=item;return true;
         }
@@ -126,7 +145,7 @@ namespace HoloMap
         void UnloadModClientApi()
         {
             if(_modClientActive&&MyAPIGateway.Utilities!=null)MyAPIGateway.Utilities.UnregisterMessageHandler(ModClientRequest,ReceiveModClientRequest);
-            CancelModClientInteractions("world-unload");_modClientActive=false;foreach(var owner in _modClientOwners.Values){owner.Released=true;owner.Contexts.Clear();owner.DrawContexts.Clear();}_modClientOwners.Clear();_modClientDrawOwners.Clear();_modClientEffectNow=_modClientEffectLastTime=0;_modClientService=null;
+            CancelModClientInteractions("world-unload");_modClientActive=false;ModClientStopSourceProviders();foreach(var owner in _modClientOwners.Values){foreach(var c in owner.Contexts.Values)ModClientClearSourceSlots(c);owner.Released=true;owner.Contexts.Clear();owner.DrawContexts.Clear();}_modClientOwners.Clear();_modClientDrawOwners.Clear();_modClientEffectNow=_modClientEffectLastTime=0;_modClientService=null;
         }
     }
 }

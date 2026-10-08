@@ -7,22 +7,25 @@
   {
     "Fixture": "Layout/LayoutTests.cs",
     "Original": "artifacts/html-prototype/layout/LayoutTests.cs",
-    "SHA256": "F5CADD98A93DA24238C97E4E10F0C86E8B4B236D4C67C8211CA208CF85C1C06D"
+    "SHA256": "8066A47AF07242ADADD37F2FFFAE286BA11A9E0ADCBC0507B7AB9C030518F9F6",
+    "Commission": "Composition layout/source-region delta preserving original829"
   },
   {
     "Fixture": "Retained/RendererChecks.cs",
     "Original": "artifacts/html-prototype/renderers/RendererChecks.cs",
-    "SHA256": "986EDAC4A4E674971A31B9E2B33EE50F91315964E7861CD373263C467608C7CE"
+    "SHA256": "8AAB2587B34760A49E8C4C76578DA7FC59A8934EE1826A30DC041EE34C637216"
   },
   {
     "Fixture": "NativeLcd/NativeLcdChecks.cs",
     "Original": "artifacts/html-prototype/renderers/lcd/NativeLcdChecks.cs",
-    "SHA256": "5460F211A485993C2A952E612F4CA04DBDCB122D3C393EE6217E6DF9FEC81B51"
+    "SHA256": "E7584B5972021BCC6430FD86640AC2CF16011D3D3E492A7174C66A457452B62B",
+    "Commission": "Composition source-region metadata cache preservation"
   },
   {
     "Fixture": "Host/HostTests.cs",
-    "Original": "artifacts/html-prototype/host/HostTests.cs",
-    "SHA256": "C669DA1C4D9E9E0EA76429FBF885297FA8DBB1A3EA47BA6D449B933C4941214A"
+    "Original": "Tools/HtmlChecks/Host/HostTests.cs",
+    "SHA256": "EF30EA03A0A7EF243FEC889745C9DDF2FA759AFEAF7454071E519139FA74F4F6",
+    "Commission": "Composition local frontend host delta preserving original407"
   },
   {
     "Fixture": "CoreSeams/CoreSeamTests.cs",
@@ -43,7 +46,7 @@
     "Fixture": "Pb/PbTests.cs",
     "Original": "Tools/HtmlChecks/Pb/PbTests.cs",
     "Commission": "PB HTML adapter delta",
-    "SHA256": "A6F918608AA112209B457B29AAD2394F85D7AC3870B1BCC9DABD68F60AD7A446"
+    "SHA256": "86EE44659F93E190E15CCB27CE4D59C749888534D232222A86620A3F53472E3A"
   },
   {
     "Fixture": "Pb/PbFixture.cs",
@@ -62,5 +65,29 @@
     "Original": "Tools/HtmlChecks/Pb/PbNativeTests.cs",
     "Commission": "PB native sprite and world relay delta",
     "SHA256": "36ABBF46EDB214C9391610BB9262723138E8B61865FBA221D579B4511C24D025"
+  },
+  {
+    "Fixture": "Composition/CompositionTests.cs",
+    "Original": "Tools/HtmlChecks/Composition/CompositionTests.cs",
+    "Commission": "Composition integration delta",
+    "SHA256": "744187C798D6F32321AE87DA66563F2BEF7BF3DF5FBABFA867EFD6E0F0E46321"
+  },
+  {
+    "Fixture": "Composition/CompositionFixture.cs",
+    "Original": "Tools/HtmlChecks/Composition/CompositionFixture.cs",
+    "Commission": "Composition integration delta",
+    "SHA256": "8817EA074D4DFFE8E5ADDEA5C764F6E35BBA1F9DF10AD4248B1E8A036190FE0C"
+  },
+  {
+    "Fixture": "Composition/CompositionTests.csproj",
+    "Original": "Tools/HtmlChecks/Composition/CompositionTests.csproj",
+    "Commission": "Composition integration delta",
+    "SHA256": "3A23718210DA28A4FC0FF5E13C0C5DEDC48A1686460FD5722CC1670D4701323C"
+  },
+  {
+    "Fixture": "Host/HostSurfaceTests.cs",
+    "Original": "Tools/HtmlChecks/Host/HostSurfaceTests.cs",
+    "Commission": "Composition local frontend host delta",
+    "SHA256": "5095854DB6C7A445EAB9DD8C54ACE4FC878AF69331ADFADE81A354697634930B"
   }
 ]

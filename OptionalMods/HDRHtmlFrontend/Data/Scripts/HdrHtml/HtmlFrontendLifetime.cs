@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using VRage;
+using VRageMath;
 
 namespace Hdr.Html
 {
@@ -22,6 +23,8 @@ namespace Hdr.Html
         internal readonly HashSet<string> BindingKeys = new HashSet<string>(StringComparer.Ordinal);
         readonly Dictionary<string,string> pendingText=new Dictionary<string,string>(StringComparer.Ordinal);
         readonly Dictionary<string,string> pendingData=new Dictionary<string,string>(StringComparer.Ordinal);
+        readonly Dictionary<string,HtmlPbSourceAttachment> sources=new Dictionary<string,HtmlPbSourceAttachment>(StringComparer.Ordinal);
+        int nextSource;
         bool pendingResize;double pendingWidth,pendingHeight;
         readonly List<MyTuple<string,string,string,MyTuple<double,long>>> events = new List<MyTuple<string,string,string,MyTuple<double,long>>>();
         HtmlHitRegion pressed;
@@ -47,6 +50,36 @@ namespace Hdr.Html
         {bool changed=Controller.SetText(node,text);if(changed)pendingText[node]=text;else if(Controller.LastError!=null)LastError=Controller.LastError;return changed;}
         internal bool Resize(double width,double height)
         {bool changed=Controller.Resize(width,height);if(changed){pendingResize=true;pendingWidth=width;pendingHeight=height;}else if(Controller.LastError!=null)LastError=Controller.LastError;return changed;}
+        internal bool AttachSource(string node,string provider,string source,MyTuple<string,object[]>[] settings,int tick)
+        {
+            var surface=Painter as HtmlSurfacePainter;if(surface==null)throw new ArgumentException("Unsupported: physical native LCD cannot embed external engine textures. Local source attachments require a retained HUD/world/surface document with an actual source anchor.");
+            if(Controller.Document==null||string.IsNullOrEmpty(node)||!Controller.Document.ById.ContainsKey(node))throw new ArgumentException("Source attachment requires an existing explicit HTML node ID.");
+            var options=HtmlPbSourceOptions.Copy(settings);surface.ValidateSource(provider,source);
+            HtmlPbSourceAttachment previous;sources.TryGetValue(node,out previous);
+            if(previous==null&&sources.Count>=16)throw new ArgumentException("HTML source attachment limit reached (16).");
+            string slot=previous==null?"hs"+(checked(nextSource++)).ToString("x",CultureInfo.InvariantCulture):previous.Slot;
+            sources[node]=new HtmlPbSourceAttachment{Node=node,Provider=provider,Source=source,Slot=slot,Settings=options};surface.Sources=sources.Values;
+            PendingPaint=true;NextAttempt=0;Update(tick,true);if(!PendingPaint)return true;
+            if(previous==null)sources.Remove(node);else sources[node]=previous;return false;
+        }
+        internal bool DetachSource(string node,int tick)
+        {
+            HtmlPbSourceAttachment previous;if(!sources.TryGetValue(node,out previous))return false;
+            sources.Remove(node);PendingPaint=true;NextAttempt=0;Update(tick,true);if(!PendingPaint)return true;sources[node]=previous;return false;
+        }
+        internal MyTuple<bool,string> SourceStatus(string node)
+        {HtmlPbSourceAttachment source;if(!sources.TryGetValue(node,out source))return new MyTuple<bool,string>(false,"Detached");var surface=Painter as HtmlSurfacePainter;return surface==null?new MyTuple<bool,string>(false,"Unsupported renderer."):surface.SourceStatus(source);}
+        internal string[] SourceCapabilities()
+        {var surface=Painter as HtmlSurfacePainter;return surface==null?new[]{"Unsupported: this renderer has no local source consumer context. Use CreateSurface."}:surface.SourceCapabilities();}
+        internal void PointerRay(Vector3D origin,Vector3D direction,bool pressed)
+        {
+            if(!Finite(origin.X)||!Finite(origin.Y)||!Finite(origin.Z)||!Finite(direction.X)||!Finite(direction.Y)||!Finite(direction.Z)||direction.LengthSquared()<1e-12||!Finite(direction.LengthSquared()))throw new ArgumentException("Pointer ray must use finite origin and nonzero finite direction.");
+            var surface=Painter as HtmlSurfacePainter;if(surface==null)throw new ArgumentException("PointerRay requires a mapped CreateSurface document.");
+            if(VisibleFrame==null||!InputEnabled){CancelPointer();Pointer(-1,-1,pressed);return;}
+            var hit=surface.Ray(origin,direction);
+            if(!hit.Item1){CancelPointer();Pointer(-1,-1,pressed);return;}
+            Pointer(hit.Item2.X/surface.Units+VisibleFrame.Width*.5,VisibleFrame.Height*.5-hit.Item2.Y/surface.Units,pressed);
+        }
 
         internal void Update(int tick,bool rendererReady)
         {
@@ -162,6 +195,6 @@ namespace Hdr.Html
         internal MyTuple<string,long,long,MyTuple<bool,bool,string>,long> Status(bool rendererReady)
         {return new MyTuple<string,long,long,MyTuple<bool,bool,string>,long>(Backend,Controller.Revision,VisibleFrame==null?0:VisibleFrame.Revision,new MyTuple<bool,bool,string>(!RequiresHdr||rendererReady,PendingPaint,LastError??""),Controller.LayoutBuildCount);}
         internal static bool Finite(double value){return !double.IsNaN(value)&&!double.IsInfinity(value);}
-        public void Dispose(){if(disposed)return;disposed=true;CancelPointer();events.Clear();VisibleFrame=null;try{Painter.Dispose();}catch{}TextEdits.Clear();BindingKeys.Clear();pendingText.Clear();pendingData.Clear();}
+        public void Dispose(){if(disposed)return;disposed=true;CancelPointer();events.Clear();VisibleFrame=null;try{Painter.Dispose();}catch{}TextEdits.Clear();BindingKeys.Clear();pendingText.Clear();pendingData.Clear();sources.Clear();}
     }
 }

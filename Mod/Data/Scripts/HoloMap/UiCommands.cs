@@ -30,8 +30,10 @@ namespace HoloMap
         bool HasVisibleUiWidget(UiDisplay d,UiWidget w,bool allowHiddenBundle=false)
         {
             if(d==null||w==null||!w.Visible)return false;bool found=false,visible=false;foreach(var b in d.Bundles)if(b.Id==w.Bundle){found=true;visible=b.Visible;break;}if(!found||!visible&&!allowHiddenBundle)return false;
-            Scene scene;if(!_scenes.TryGetValue(d.TargetId,out scene))return false;Layer layer;if(scene.Layers.TryGetValue(Key(d.CallerId,"ui-"+w.Bundle),out layer)&&(layer.Opacity<=0||!layer.Visible&&!allowHiddenBundle))return false;
-            Item item;if(scene.Items.TryGetValue(Key(d.CallerId,UiObjectId(w.Bundle)),out item)&&(!item.Visible||item.Opacity<=0))return false;return true;
+            Scene scene;if(!_scenes.TryGetValue(d.TargetId,out scene))return false;
+            if(w.ScreenId!=null){HoloProjectedScreenData data;if(!UiProjectedScreen(d,w,out scene,out data))return false;}
+            Layer layer;if(scene.Layers.TryGetValue(Key(d.CallerId,UiRenderLayer(w.ScreenId,w.Bundle)),out layer)&&(layer.Opacity<=0||!layer.Visible&&!allowHiddenBundle))return false;
+            Item item;if(scene.Items.TryGetValue(Key(d.CallerId,UiRenderId(w.ScreenId,UiObjectId(w.Bundle))),out item)&&(!item.Visible||item.Opacity<=0))return false;return true;
         }
         List<UiDisplay> CaptureUiDisplays()
         {var result=new List<UiDisplay>();foreach(var d in _uiDisplays.Values)result.Add(UiRules.Copy(d));return result;}
@@ -54,13 +56,16 @@ namespace HoloMap
         static string UiObjectId(string bundle){return "ui_"+bundle;}
         static string UiCaptionId(string widget){return "ui_b_"+widget;}
         object UiCommand(DrawContext context,string command,object[] values)
+        {string op=command==null?null:command.ToLowerInvariant();return op=="target"||op=="screen"||op=="version"||op=="capabilities"?UiCommandCore(context,command,values):WithProjectedUiWrite(context,()=>UiCommandCore(context,command,values));}
+        object UiCommandCore(DrawContext context,string command,object[] values)
         {
             if(!MyAPIGateway.Multiplayer.IsServer||context.Caller==null||context.Caller.Closed||!ReferenceEquals(MyAPIGateway.Entities.GetEntityById(context.Caller.EntityId),context.Caller))throw new ArgumentException("UI commands require a live server PB.");
             if(string.IsNullOrWhiteSpace(command)||command.Length>64)throw new ArgumentException("UI command requires 1–64 characters.");
             string op=command.ToLowerInvariant();var a=new DrawArgs(values);
             if(op=="version"){a.End();return "HDR.UI/1";}
-            if(op=="capabilities"){a.End();return "native-use;pb;toggle;menu;focus=look-and-use;values=1;constraints=line,path,rotation;mouse=client-provider;viewer=persistent-bundle;pointer=HDR.Pointer/1";}
+            if(op=="capabilities"){a.End();return "native-use;pb;toggle;menu;focus=look-and-use;values=1;constraints=line,path,rotation;mouse=client-provider;viewer=persistent-bundle;pointer=HDR.Pointer/1;screens=plane,cylinder,sphere,ellipsoid,mesh";}
             if(op=="target")return DrawCommand(context,command,values);
+            if(op=="screen"){string screen=a.Text();a.End();return DrawCommand(context,"screen-target",new object[]{screen});}
             if(context.Target==null)throw new ArgumentException("Select a UI target first.");
             var target=op=="get-value"?AuthorizeAccess(context.Caller,context.Target):Authorize(context.Caller,context.Target);object valueResult;if(TryUiValueCommand(context,op,a,out valueResult))return valueResult;long caller=context.Caller.EntityId;var old=GetUiDisplay(caller,target.EntityId);var next=old==null?new UiDisplay{CallerId=caller,TargetId=target.EntityId}:UiRules.Copy(old);
             string changedBundle=null,removedBundle=null;bool changed=false;
@@ -72,7 +77,7 @@ namespace HoloMap
                 }
                 case "button":case "hit":
                 {
-                    var w=new UiWidget{Id=UiRules.Id(a.Text()),Bundle=UiRules.Id(a.Text()),X=a.Number(),Y=a.Number(),Width=a.Number(),Height=a.Number()};w.Label=op=="button"?a.Text():null;w.ActionKind=a.Text();w.Argument=a.Text("");a.End();UiRules.Widget(w);
+                    var w=new UiWidget{Id=UiRules.Id(a.Text()),Bundle=UiRules.Id(a.Text()),X=a.Number(),Y=a.Number(),Width=a.Number(),Height=a.Number(),ScreenId=context.ScreenId};w.Label=op=="button"?a.Text():null;w.ActionKind=a.Text();w.Argument=a.Text("");a.End();UiRules.Widget(w);
                     if(!next.Bundles.Exists(v=>v.Id==w.Bundle))throw new ArgumentException("Declare the UI bundle first.");var existing=next.Widgets.Find(v=>v.Id==w.Id);if(existing!=null&&existing.Bundle!=w.Bundle)throw new ArgumentException("Remove a widget before moving it to another bundle.");if(existing!=null)next.Widgets.Remove(existing);next.Widgets.Add(w);changedBundle=w.Bundle;changed=true;break;
                 }
                 case "bind":case "action":
@@ -104,21 +109,30 @@ namespace HoloMap
             return true;
         }
         void RemoveUiRendering(DrawContext c,string bundle)
+        {UiForBundleScopes(c,GetUiDisplay(c.Caller.EntityId,c.Target.EntityId),bundle,()=>RemoveUiRenderingScope(c,bundle));}
+        void UiForBundleScopes(DrawContext c,UiDisplay d,string bundle,Action action)
         {
-            Scene s;if(!_scenes.TryGetValue(c.Target.EntityId,out s))return;if(s.Items.ContainsKey(Key(c.Caller.EntityId,UiObjectId(bundle))))DrawCheck(Remove(c.Caller,c.Target,UiObjectId(bundle)));
-            var old=GetUiDisplay(c.Caller.EntityId,c.Target.EntityId);if(old!=null)foreach(var widget in old.Widgets)if(widget.Bundle==bundle)s.Labels.Remove(Key(c.Caller.EntityId,UiCaptionId(widget.Id)));
-            string layer="ui-"+bundle;bool used=false;foreach(var item in s.Items.Values)if(item.CallerId==c.Caller.EntityId&&item.Layer==layer){used=true;break;}if(!used)foreach(var label in s.Labels.Values)if(label.CallerId==c.Caller.EntityId&&label.Layer==layer){used=true;break;}if(!used)s.Layers.Remove(Key(c.Caller.EntityId,layer));
+            string selected=c.ScreenId;var scopes=new HashSet<string>();scopes.Add(selected??"");if(d!=null)foreach(var w in d.Widgets)if(w.Bundle==bundle)scopes.Add(w.ScreenId??"");var prior=GetUiDisplay(c.Caller.EntityId,c.Target.EntityId);if(prior!=null)foreach(var w in prior.Widgets)if(w.Bundle==bundle)scopes.Add(w.ScreenId??"");
+            try{foreach(string scope in scopes){c.ScreenId=scope==""?null:scope;Scene scene;if(c.ScreenId!=null&&(!_scenes.TryGetValue(c.Target.EntityId,out scene)||!scene.Screens.ContainsKey(Key(c.Caller.EntityId,c.ScreenId))))continue;WithProjectedUiWrite(c,()=>{action();return true;});}}finally{c.ScreenId=selected;}
+        }
+        void RemoveUiRenderingScope(DrawContext c,string bundle)
+        {
+            Scene s;if(!_scenes.TryGetValue(c.Target.EntityId,out s))return;string objectId=UiRenderId(c.ScreenId,UiObjectId(bundle));if(s.Items.ContainsKey(Key(c.Caller.EntityId,objectId)))DrawCheck(Remove(c.Caller,c.Target,objectId));
+            var old=GetUiDisplay(c.Caller.EntityId,c.Target.EntityId);if(old!=null)foreach(var widget in old.Widgets)if(widget.Bundle==bundle&&widget.ScreenId==c.ScreenId)s.Labels.Remove(Key(c.Caller.EntityId,UiRenderId(c.ScreenId,UiCaptionId(widget.Id))));
+            string layer=UiRenderLayer(c.ScreenId,bundle);bool used=false;foreach(var item in s.Items.Values)if(item.CallerId==c.Caller.EntityId&&item.Layer==layer){used=true;break;}if(!used)foreach(var label in s.Labels.Values)if(label.CallerId==c.Caller.EntityId&&label.Layer==layer){used=true;break;}if(!used)s.Layers.Remove(Key(c.Caller.EntityId,layer));
         }
         void RenderUiBundle(DrawContext c,UiDisplay d,string bundle)
+        {UiForBundleScopes(c,d,bundle,()=>RenderUiBundleScope(c,d,bundle));}
+        void RenderUiBundleScope(DrawContext c,UiDisplay d,string bundle)
         {
-            var b=d.Bundles.Find(v=>v.Id==bundle);if(b==null)return;var scene=GetScene(c.Target.EntityId);if(!scene.Layers.ContainsKey(Key(c.Caller.EntityId,"ui-"+bundle))&&scene.Layers.Count>=32)throw new ArgumentException("UI layer budget reached.");
-            var captionKeys=new HashSet<string>();var prior=GetUiDisplay(c.Caller.EntityId,c.Target.EntityId);if(prior!=null)foreach(var w in prior.Widgets)if(w.Bundle==bundle)captionKeys.Add(Key(c.Caller.EntityId,UiCaptionId(w.Id)));
+            var b=d.Bundles.Find(v=>v.Id==bundle);if(b==null)return;var scene=GetScene(c.Target.EntityId);string renderLayer=UiRenderLayer(c.ScreenId,bundle);if(!scene.Layers.ContainsKey(Key(c.Caller.EntityId,renderLayer))&&scene.Layers.Count>=32)throw new ArgumentException("UI layer budget reached.");
+            var captionKeys=new HashSet<string>();var prior=GetUiDisplay(c.Caller.EntityId,c.Target.EntityId);if(prior!=null)foreach(var w in prior.Widgets)if(w.Bundle==bundle&&w.ScreenId==c.ScreenId)captionKeys.Add(Key(c.Caller.EntityId,UiRenderId(c.ScreenId,UiCaptionId(w.Id))));
             int labels=0,characters=0;foreach(var pair in scene.Labels)if(!captionKeys.Contains(pair.Key)){labels++;characters+=pair.Value.Text.Length;}
-            foreach(var w in d.Widgets)if(w.Bundle==bundle&&w.Visible&&!string.IsNullOrEmpty(w.Label)){string key=Key(c.Caller.EntityId,UiCaptionId(w.Id));if(scene.Labels.ContainsKey(key)&&!captionKeys.Contains(key))throw new ArgumentException("UI caption id conflicts with existing artwork.");labels++;characters+=w.Label.Length;UiCaptionHeight(w);}
+            foreach(var w in d.Widgets)if(w.Bundle==bundle&&w.ScreenId==c.ScreenId&&w.Visible&&!string.IsNullOrEmpty(w.Label)){string key=Key(c.Caller.EntityId,UiRenderId(c.ScreenId,UiCaptionId(w.Id)));if(scene.Labels.ContainsKey(key)&&!captionKeys.Contains(key))throw new ArgumentException("UI caption id conflicts with existing artwork.");labels++;characters+=w.Label.Length;UiCaptionHeight(w);}
             if(labels>16||characters>256)throw new ArgumentException("UI captions share the display budget of 16 labels and 256 characters; use hit areas for larger custom menus.");
             long savedLcdCaller=scene.LcdCallerId,savedLcdSource=scene.LcdSourceId;var savedItems=new Dictionary<string,Item>(scene.Items);var savedLabels=new Dictionary<string,Label>(scene.Labels);var savedLayers=new Dictionary<string,Layer>();foreach(var pair in scene.Layers){var l=pair.Value;savedLayers.Add(pair.Key,new Layer{CallerId=l.CallerId,Name=l.Name,Visible=l.Visible,Opacity=l.Opacity,Order=l.Order});}
             var svg=new StringBuilder("<svg viewBox='-2500 -2500 5000 5000' xmlns='http://www.w3.org/2000/svg'>");bool any=false;
-            foreach(var w in d.Widgets)if(w.Bundle==bundle&&w.Visible&&w.Label!=null)
+            foreach(var w in d.Widgets)if(w.Bundle==bundle&&w.ScreenId==c.ScreenId&&w.Visible&&w.Label!=null)
             {
                 any=true;double x=(w.X-w.Width/2)*100,y=(-w.Y-w.Height/2)*100;
                 svg.Append("<rect x='").Append(UiNumber(x)).Append("' y='").Append(UiNumber(y)).Append("' width='").Append(UiNumber(w.Width*100)).Append("' height='").Append(UiNumber(w.Height*100)).Append("' fill='#12303c' stroke='#44ddee' stroke-width='0.8'/>");
@@ -127,9 +141,9 @@ namespace HoloMap
             try
             {
                 foreach(string key in captionKeys)scene.Labels.Remove(key);
-                if(any){DrawCheck(PutSvg(c.Caller,c.Target,UiObjectId(bundle),svg.ToString(),new MyTuple<MatrixD,int>(MatrixD.CreateScale(0.01),4)));DrawCheck(SetObjectLayer(c.Caller,c.Target,UiObjectId(bundle),"ui-"+bundle));}else RemoveUiRendering(c,bundle);
-                foreach(var w in d.Widgets)if(w.Bundle==bundle&&w.Visible&&!string.IsNullOrEmpty(w.Label)){string id=UiCaptionId(w.Id);DrawCheck(PutLabel(c.Caller,c.Target,id,new Vector3D(w.X,w.Y,0),w.Label,Vector4.One,UiCaptionHeight(w)));DrawCheck(SetObjectLayer(c.Caller,c.Target,id,"ui-"+bundle));}
-                DrawCheck(SetLayerVisible(c.Caller,c.Target,"ui-"+bundle,b.Visible));
+                if(any){string id=UiRenderId(c.ScreenId,UiObjectId(bundle));DrawCheck(PutSvg(c.Caller,c.Target,id,svg.ToString(),new MyTuple<MatrixD,int>(MatrixD.CreateScale(0.01),4)));DrawCheck(SetObjectLayer(c.Caller,c.Target,id,renderLayer));}else RemoveUiRenderingScope(c,bundle);
+                foreach(var w in d.Widgets)if(w.Bundle==bundle&&w.ScreenId==c.ScreenId&&w.Visible&&!string.IsNullOrEmpty(w.Label)){string id=UiRenderId(c.ScreenId,UiCaptionId(w.Id));DrawCheck(PutLabel(c.Caller,c.Target,id,new Vector3D(w.X,w.Y,0),w.Label,Vector4.One,UiCaptionHeight(w)));DrawCheck(SetObjectLayer(c.Caller,c.Target,id,renderLayer));}
+                DrawCheck(SetLayerVisible(c.Caller,c.Target,renderLayer,b.Visible));
             }
             catch
             {

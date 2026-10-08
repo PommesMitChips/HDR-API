@@ -30,6 +30,7 @@ GUIDES = [
     ("Cameras-and-Portals", "Cameras and visual portals"),
     ("Mod-Integration", "Integrating other mods"),
     ("Composition-Recipes", "Composition recipes"),
+    ("Composition", "Combining content, surfaces and input"),
     ("Api-Reference", "API reference"),
     ("Performance-and-Troubleshooting", "Performance and troubleshooting"),
 ]

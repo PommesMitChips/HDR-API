@@ -1,8 +1,27 @@
 # Composition recipes
 
-These recipes separate **content**, **surface mapping**, **input**, and **data ownership**. PB snippets use the `H` helper from [Programmable blocks](Programmable-Blocks.md#bind-the-short-endpoint); they belong inside `Main` or a setup method. Define retained artwork once and update named items when values change.
+These recipes separate **content**, **layout**, **surface mapping**, **input**, **effects** and **data ownership**. See [Composition](Composition.md) for the layer contracts, actual backend limits and the complete camera-in-HTML ellipsoid demo. PB snippets use the `H` helper from [Programmable blocks](Programmable-Blocks.md#bind-the-short-endpoint); they belong inside `Main` or a setup method. Define retained artwork once and update named items when values change.
 
 ![One composition presented on different surfaces](diagrams/composition-surfaces.svg)
+
+## Camera in an HTML container on an ellipsoid
+
+Use the complete [`HtmlCameraEllipsoidDemo.cs`](../../OptionalMods/HDRHtmlFrontend/Examples/HtmlCameraEllipsoidDemo.cs), requiring **core 0.9.11 / scene 20 and HTML frontend 0.2.0**. Name a dedicated Console/Projector **`HTML Display`**, and two working physical cameras **`HDR Camera 1`** and **`HDR Camera 2`** on the PB's construct. Each viewer needs the **Client Renderer 0.9.13+** for camera capture; the interacting viewer needs it for automatic persistent pointer input.
+
+The script creates a bounded ellipsoid patch, binds a centred 640×360 HTML canvas and attaches `camera-panorama` to `<div id='pov'></div>`. Its **Previous** and **Next** HTML buttons emit clicks; the `Update10` poll calls `attach-source` with the selected camera's positive entity ID. The handle, document, layout and controls remain in place. `demo`, `previous`, `next`, `status` and `clear` are terminal commands; status reports actual provider reasons and server publication, with no viewer/GPU acknowledgement.
+
+```csharp
+// Existing owned screen; shape and mapping were configured with HDR.Draw.
+long doc = (long)Html("bind-screen", anchor, "htmlcamera",
+    html, css, 640.0, 360.0, MatrixD.Identity, .005);
+Html("attach-source", doc, "pov", "camera-panorama", firstCameraId);
+// On a polled "click" for the Next HTML button:
+Html("attach-source", doc, "pov", "camera-panorama", nextCameraId);
+```
+
+`Html` is the raw forwarding helper in the complete script and [PB API](../../OptionalMods/HDRHtmlFrontend/Docs/PB-API.md). Its projected pose locates the document centre, unlike ordinary `bind`'s top-left convention. A source region retains its content bounds and effective rectangular clip, so partial `overflow:hidden` crops provider UVs rather than stretching the remaining image. Physical camera positions supply the capture viewpoints; `screen-camera` does not invent an arbitrary native POV. Live rendering/input acceptance remains unverified.
+
+For a native Debug sprite document, use `bind-sprites-screen` with an explicitly owned physical SCRIPT/NONE source LCD and an existing owned screen. The same five surface types can map its real native texture, but opaque RGB backing rejects partial source alpha and source overlap with later visible HTML artwork/controls. Use the [backend constraints](Composition.md#choose-a-backend-that-can-represent-the-composition) when selecting that alternative.
 
 ## An SVG status panel on an LCD
 

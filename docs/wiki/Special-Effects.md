@@ -10,7 +10,7 @@ Use [HologramEffectsDemo.cs](../../Examples/HologramEffectsDemo.cs), generated a
 
 If no matching Console/Projector exists, the example accepts a physical LCD with that name. Select **HDR API** as its Content. This variant omits depth and projector rays and presents the remaining effects on its flat canvas. A Console/Projector takes precedence over a same-named LCD. `off` hides the retained demo, `on` shows it, and `clear` removes its owned content and effect state. Re-run `demo` after a world load or script retirement.
 
-The demo uses a dedicated anchor and changes its drawing view, envelope and shared render budget. Give it its own block rather than sharing an anchor whose placement/envelope another PB manages. It requests the existing defaults of 4,096 points, 8,192 source primitives and 20,000 drawing work units; these are ceilings, not a promise that every viewer spends them.
+The demo uses a dedicated anchor and changes its drawing view, envelope and shared render budget. Give it its own block rather than sharing an anchor whose placement/envelope another PB manages. It requests geometry `0`/`0` = unlimited with a separate 20,000 drawing-work preset. Explicit positive geometry settings are finite example presets, not defaults. Drawing allowances do not promise that every viewer spends them.
 
 ## Supported presentation paths
 
@@ -112,11 +112,13 @@ Effects do not mutate the retained SVG or source mesh and do not accumulate a tr
 The original artwork has priority. Optional drawing is bounded best effort: the ordinary world path first spends work on its clipped refresh-bar overlay, then plans depth copies, particles and beams. Other presentation paths use their own admission/submission costs. The per-object effect ceiling, remaining display/context work and viewer's global HDR work controls all apply. Clipping can add work and trim a depth layer partway through; requested layers are not guaranteed complete. The renderer keeps a deterministic bounded prefix when not all requested extras fit. Setting an effect allowance below source cost suppresses extras rather than removing the canonical source drawing. Effects can still make the source transparent intentionally through flicker/scan/transition.
 
 ```csharp
-H("budget", 4096, 8192, 20000);  // point / source-primitive / drawing-work ceilings
+H("budget", 0, 0, 20000);       // unlimited aggregate geometry; finite work preset
 H("effect", "status", "budget", 4096);
 ```
 
-Depth copies multiply source cost. A complex SVG with eight copies can be more expensive than a few dozen particles. A particle/beam quad contains two geometric triangles, but geometry counts are not interchangeable with drawing-work units: the ordinary world path charges four units for admission plus submission, the mod path normally charges two triangle units, and a native LCD particle sprite charges one sprite unit. Clipping/tessellation and refresh-band overlays can consume additional work. Raise shared/per-object budgets deliberately and inspect the viewer's `/hdr status` when detail is reduced. Requested counts are not guarantees of visible detail or frame rate. Native LCD refresh rate remains a separate setting.
+Each geometry zero removes only its aggregate point/primitive allowance; it does not remove the separate per-object effect-planning ceiling or per-frame drawing work. A call such as `H("budget", 4096, 8192, 20000)` remains an explicit finite preset if you choose one.
+
+Depth copies multiply source cost. A complex SVG with eight copies can be more expensive than a few dozen particles. A particle/beam quad contains two geometric triangles, but geometry counts are not interchangeable with drawing-work units: the ordinary world path charges four units for admission plus submission, the mod path normally charges two triangle units, and a native LCD particle sprite charges one sprite unit. Clipping/tessellation and refresh-band overlays can consume additional work. Adjust configured shared/per-object budgets deliberately and inspect the viewer's `/hdr status` when detail is reduced. Requested counts are not guarantees of visible detail or frame rate. Native LCD refresh rate remains a separate setting.
 
 | Setting | Accepted range |
 |---|---|

@@ -170,7 +170,7 @@ namespace Hdr.Html
                         sprite.Position = new Vector2((float)operation.Bounds.X, (float)operation.Bounds.Y) + offset;
                         prepared.Add(sprite); prepared.Add(MySprite.CreateClearClipRect()); triangles += operation.Text.Length * 2;
                     }
-                    if (prepared.Count > _maxPrimitives) throw new ArgumentException("Native LCD sprite limit exceeded.");
+                    if (_maxPrimitives > 0 && prepared.Count > _maxPrimitives) throw new ArgumentException("Native LCD sprite limit exceeded.");
                 }
                 report.PreparedOperations = prepared.Count; report.EstimatedTriangles = triangles; report.EstimatedPoints = triangles * 2;
                 HtmlPaintFrame admittedFrame = SnapshotPaint(frame);
@@ -279,6 +279,12 @@ namespace Hdr.Html
                     StrokeWidth = p.StrokeWidth, Radius = p.Radius, FontSize = p.FontSize, LineHeight = p.LineHeight
                 });
             }
+            foreach (var source in frame.SourceRegions)
+                copy.SourceRegions.Add(new HtmlSourceRegion
+                {
+                    NodeId = source.NodeId, Bounds = source.Bounds, Clip = source.Clip,
+                    Opacity = source.Opacity, Order = source.Order, Visible = source.Visible
+                });
             return copy;
         }
 

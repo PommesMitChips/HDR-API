@@ -45,12 +45,21 @@ internal static class RenderBudgetSettingsTests
         Reject(()=>draw("budget-settings",new object[0]),"query requires selected anchor");
         Reject(()=>draw("budget",new object[]{8192,16384,40000}),"configuration requires selected anchor");
         draw("target",new[]{target});
-        Check(Values(Settings(draw),4096,8192,20000),"default shared anchor budgets");
+        Check(Values(Settings(draw),0,0,20000),"default aggregate geometry is unlimited while draw work stays finite");
+        Check((int)Field(Scene(session),"PointBudget")==int.MaxValue&&(int)Field(Scene(session),"PrimitiveBudget")==int.MaxValue,"unlimited public allowances have safe internal admission values");
+        draw("budget",new object[]{4096});Check(Values(Settings(draw),4096,0,20000),"omitted primitive allowance defaults to unlimited");
+        draw("budget",new object[]{0,8192});Check(Values(Settings(draw),0,8192,20000),"each geometry allowance can independently be unlimited");
         Check((bool)draw("budget",new object[]{8192,16384,40000}),"budget command reports success");
         Check(Values(Settings(draw),8192,16384,40000),"configured values are queryable through SDK tuple");
         Check((int)Field(session,"ClientDrawWorkCap")==20000,"anchor budget cannot override a viewer's local draw cap");
         draw("render-budget",new object[]{65536,131072,200000});
-        Check(Values(Settings(draw),65536,131072,200000),"upper bounds and command alias accepted");
+        Check(Values(Settings(draw),65536,131072,200000),"previous finite ceilings and command alias accepted");
+        draw("budget",new object[]{65537,131073,20000});
+        Check(Values(Settings(draw),65537,131073,20000),"finite geometry allowances above former arbitrary ceilings are accepted");
+        draw("budget",new object[]{int.MaxValue,int.MaxValue,20000});
+        Check(Values(Settings(draw),0,0,20000),"largest integer geometry allowances canonicalize to unlimited");
+        draw("budget",new object[]{1,1,1000});
+        Check(Values(Settings(draw),1,1,1000),"small positive finite allowances are valid for an empty scene");
         draw("budget",new object[]{256,256,1000});
         Check(Values(Settings(draw),256,256,1000),"lower bounds accepted");
         void Invalid(object[] args,string name)
@@ -59,8 +68,9 @@ internal static class RenderBudgetSettingsTests
             Check(Values(Settings(draw),prior.Item1,prior.Item2,prior.Item3)&&(bool)Field(session,"_dirty")==dirty,name+" is atomic");
         }
         Set(session,"_dirty",false);
-        Invalid(new object[]{255,8192,20000},"point lower bound");Invalid(new object[]{65537,8192,20000},"point upper bound");
-        Invalid(new object[]{4096,255,20000},"primitive lower bound");Invalid(new object[]{4096,131073,20000},"primitive upper bound");
+        Invalid(new object[]{(long)int.MaxValue+1,8192,20000},"point allowance outside integer representation");
+        Invalid(new object[]{4096,(long)int.MaxValue+1,20000},"primitive allowance outside integer representation");
+        Invalid(new object[]{-1,0,20000},"negative point allowance");Invalid(new object[]{0,-1,20000},"negative primitive allowance");
         Invalid(new object[]{4096,8192,999},"draw work lower bound");Invalid(new object[]{4096,8192,200001},"draw work upper bound");
         Invalid(new object[]{4096.5,8192,20000},"fractional budget rejected");Invalid(new object[]{double.NaN,8192,20000},"nonfinite budget rejected");
         Invalid(new object[]{4096,8192,20000,"extra"},"extra arguments rejected");
@@ -72,22 +82,28 @@ internal static class RenderBudgetSettingsTests
         sameConstruct=false;Reject(()=>draw("budget",new object[]{4096,8192,20000}),"unrelated construct rejected");sameConstruct=true;
         registered.Remove(10);Reject(()=>draw("budget",new object[]{4096,8192,20000}),"unregistered caller rejected");registered[10]=caller;
         Check(Values(Settings(draw),256,256,1000),"authorization failures preserve current configuration");
-        draw("budget",new object[0]);Check(Values(Settings(draw),4096,8192,20000),"no-argument budget restores defaults");
+        draw("budget",new object[0]);Check(Values(Settings(draw),0,0,20000),"no-argument budget restores unlimited geometry defaults");
         var large=Points(2048);var line=new[]{new Vector2I(0,1)};
         draw("wires",new object[]{"first",large,line,"cyan"});draw("wires",new object[]{"second",large,line,"cyan"});
         var items=(IDictionary)Field(Scene(session),"Items");
-        Reject(()=>draw("wires",new object[]{"third",large,line,"cyan"}),"default pooled points still enforced");
-        Check(items.Count==2&&!items.Contains("10:third"),"point rejection preserves existing objects");
-        draw("budget",new object[]{8192,16384,40000});draw("wires",new object[]{"third",large,line,"cyan"});
-        Check(items.Count==3,"raised anchor point budget allows more separately bounded objects");
+        draw("wires",new object[]{"third",large,line,"cyan"});
+        Check(items.Count==3,"default aggregate admission accepts geometry above the former 4096 point allowance");
+        var dense=Edges(4096);for(int i=0;i<3;i++)draw("wires",new object[]{"dense"+i,Points(128),dense,"cyan"});
+        Check(items.Count==6&&Values(Settings(draw),0,0,20000),"default aggregate admission accepts geometry above the former 8192 primitive allowance");
+        draw("budget",new object[]{8192,16384,40000});
+        Check(Values(Settings(draw),8192,16384,40000),"finite allowances can be configured for existing bounded geometry");
         Invalid(new object[]{4096,16384,40000},"cannot lower point budget below declared geometry");
+        Reject(()=>draw("wires",new object[]{"fourth",large,line,"cyan"}),"configured aggregate point allowance enforced");
+        Check(items.Count==6&&!items.Contains("10:fourth"),"finite point rejection preserves existing objects");
+        Reject(()=>draw("wires",new object[]{"dense3",Points(128),dense,"cyan"}),"configured aggregate primitive allowance enforced");
+        Check(items.Count==6&&!items.Contains("10:dense3"),"finite primitive rejection preserves existing objects");
         Reject(()=>draw("wires",new object[]{"too-many-points",Points(2049),line,"cyan"}),"anchor setting cannot raise hard per-object point cap");
         Reject(()=>draw("wires",new object[]{"too-many-edges",Points(128),Enumerable.Repeat(new Vector2I(0,1),4097).ToArray(),"cyan"}),"anchor setting cannot raise hard per-object primitive cap");
-        var dense=Edges(4096);for(int i=0;i<3;i++)draw("wires",new object[]{"dense"+i,Points(128),dense,"cyan"});
         Invalid(new object[]{8192,8192,40000},"cannot lower primitive budget below declared geometry");
         Check(Values(Settings(draw),8192,16384,40000),"hard object caps remain independent of pooled anchor settings");
         draw("clear",new object[0]);draw("budget",new object[0]);
         CacheInvalidation(session,draw);
+        CompositionBudgetInvalidation(session,draw);
         Replication(gateway);
         LocalViewerBudget();
         return _checks;
@@ -112,7 +128,7 @@ internal static class RenderBudgetSettingsTests
         ((IDictionary)Field(session,"_lcdNativeSamples"))[20L]=NewNested("NativeLcdSample");
         Set(session,"_dirty",false);draw("budget",new object[0]);
         Check(ReferenceEquals(cache["20:10:cached"],own)&&!(bool)Field(session,"_dirty"),"unchanged budgets preserve compiled caches and dirty state");
-        Reject(()=>draw("budget",new object[]{255,8192,20000}),"invalid settings do not reach cache invalidation");
+        Reject(()=>draw("budget",new object[]{-1,8192,20000}),"invalid settings do not reach cache invalidation");
         Check(ReferenceEquals(cache["20:10:cached"],own)&&Field(projected,"View")!=null,"invalid configuration preserves rendering caches");
         draw("budget",new object[]{8192,16384,40000});
         Check(!cache.Contains("20:10:cached")&&ReferenceEquals(cache["21:10:cached"],other),"budget change invalidates only matching anchor geometry");
@@ -124,10 +140,56 @@ internal static class RenderBudgetSettingsTests
         Check(((IDictionary)Field(session,"_lcdNativeSamples")).Count==0,"budget changes invalidate native LCD sampling baselines");
         Check(Field(unrelated,"View")!=null&&((IList)Field(unrelated,"Items")).Count==1,"other anchor presentation retained");
     }
+    static void CompositionBudgetInvalidation(HoloMapSession session,Func<string,object[],object> draw)
+    {
+        draw("budget",new object[0]);
+        draw("screen",new object[]{"comp",MatrixD.Identity,2d,1d,2d,1d});
+        draw("screen-slot",new object[]{"video","sample","source",new Vector4(-1,-.5f,2,1),new Vector4(-1,-.5f,2,1),new Vector4(0,0,1,1),0});
+        draw("screen-target",new object[]{""});
+        var screen=((IDictionary)Field(Scene(session),"Screens"))["10:comp"];
+        var data=(HoloProjectedScreenData)Field(screen,"Data");var declaration=data.SourceSlots[0];
+        var providerReleased=new List<object>();var rasterReleased=new List<object>();
+        Func<string,object[],object> provider=(op,args)=>{if(op=="release")providerReleased.Add(args[0]);return true;};
+        Func<string,object[],object> backend=(op,args)=>{if(op=="release")rasterReleased.Add(args[0]);return true;};
+        object Raster(object lease)
+        {
+            var image=NewNested("RasterImage");Set(image,"Lease",lease);Set(image,"Backend",backend);return image;
+        }
+        object Seed(long anchor,out object slot,out object chunk,out object proof,out object videoLease,out object uiLease)
+        {
+            var parent=NewNested("ProjectedCache");Set(parent,"Anchor",anchor);Set(parent,"Caller",10L);Set(parent,"Id","comp");Set(parent,"Data",data);
+            slot=Call(session,"EnsureSourceSlotCache",parent,declaration);Set(slot,"Declaration",declaration);
+            var source=Field(slot,"Source");var mesh=MeshEffects.Solid(Geometry.Wires(Points(512),new[]{new Vector2I(0,1)}),Vector4.One,Vector4.One);
+            Set(slot,"Raw",mesh);Set(slot,"Canvas",mesh);Set(source,"View",mesh);Set(source,"NextCapture",1000d);
+            proof=new object();Set(source,"SourceProtocol",2);Set(source,"SourceEndpoint",provider);Set(source,"SourceEvidence",proof);Static("RetainProjectedProviderEvidence",provider,proof,source);
+            videoLease=new object();Set(source,"SourceRaster",Raster(videoLease));
+            chunk=NewNested("ProjectedCache");Set(chunk,"Anchor",anchor);uiLease=new object();Set(chunk,"UiRaster",Raster(uiLease));Set(chunk,"UiRasterMesh",mesh);
+            ((IDictionary)Field(parent,"UiChunks"))["chunk:0"]=chunk;
+            ((IDictionary)Field(parent,"Mapped"))["slot:video"]=NewNested("MappedScreenMesh");
+            ((IDictionary)Field(parent,"Mapped"))["chunk:0"]=NewNested("MappedScreenMesh");
+            ((IDictionary)Field(session,"_projectedCaches"))[anchor+":10:comp"]=parent;return parent;
+        }
+        object slot,chunk,proof,videoLease,uiLease;var parent=Seed(20,out slot,out chunk,out proof,out videoLease,out uiLease);
+        object otherSlot,otherChunk,otherProof,otherVideo,otherUi;var other=Seed(21,out otherSlot,out otherChunk,out otherProof,out otherVideo,out otherUi);
+        Set(session,"_dirty",false);draw("budget",new object[0]);
+        Check(ReferenceEquals(((IDictionary)Field(parent,"Slots"))["video"],slot)&&rasterReleased.Count==0&&providerReleased.Count==0&&!(bool)Field(session,"_dirty"),"unchanged unlimited budget preserves composition caches and provider/raster leases");
+        Reject(()=>draw("budget",new object[]{1,1,20000}),"finite allowance below declared screen/slot geometry rejects before composition invalidation");
+        Check(ReferenceEquals(((IDictionary)Field(parent,"Slots"))["video"],slot)&&((IDictionary)Field(parent,"UiChunks")).Count==1&&((IDictionary)Field(parent,"Mapped")).Count==2&&rasterReleased.Count==0&&providerReleased.Count==0&&!(bool)Field(session,"_dirty"),"rejected finite allowance preserves slots, artwork chunks, mapped payloads and all leases atomically");
+        draw("budget",new object[]{16,16,40000});
+        Check(Values(Settings(draw),16,16,40000),"finite allowance fitting declared geometry can replace unlimited presentation allowance");
+        Check(((IDictionary)Field(parent,"Slots")).Count==0&&((IDictionary)Field(parent,"UiChunks")).Count==0&&((IDictionary)Field(parent,"Mapped")).Count==0,"accepted budget change removes oversized composition canvases, artwork chunks and mapped meshes before another draw");
+        var sourceCache=Field(slot,"Source");
+        Check(Field(sourceCache,"View")==null&&Field(sourceCache,"SourceEvidence")==null&&Field(sourceCache,"SourceRaster")==null&&Field(chunk,"UiRaster")==null,"accepted budget change detaches all owned source and UI raster resources");
+        Check(providerReleased.Count==1&&ReferenceEquals(providerReleased[0],proof)&&rasterReleased.Count==2&&rasterReleased.Count(x=>ReferenceEquals(x,videoLease))==1&&rasterReleased.Count(x=>ReferenceEquals(x,uiLease))==1,"composition invalidation releases source proof and each distinct raster lease exactly once");
+        Check(((IDictionary)Field(other,"Slots")).Count==1&&((IDictionary)Field(other,"UiChunks")).Count==1&&Field(otherSlot,"Canvas")!=null&&Field(otherChunk,"UiRaster")!=null&&!providerReleased.Contains(otherProof)&&!rasterReleased.Contains(otherVideo)&&!rasterReleased.Contains(otherUi),"another anchor retains its composition canvases, chunks and leases");
+        var fresh=Call(session,"EnsureSourceSlotCache",parent,declaration);
+        Check(!ReferenceEquals(fresh,slot)&&Field(fresh,"Canvas")==null&&(double)Field(Field(fresh,"Source"),"NextCapture")==-1,"next composition preparation creates a fresh source without the old delayed capture deadline");
+        Static("ReleaseSourceSlots",other);Static("ReleaseSourceSlots",parent);
+    }
     static void Replication(ClientReplicationTests.GatewayScope gateway)
     {
         var legacy=RoundTrip(ClientReplicationTests.Snapshot());var client=new HoloMapSession();Call(client,"ApplySnapshot",legacy);
-        Check((int)Field(Scene(client),"PointBudget")==4096&&(int)Field(Scene(client),"PrimitiveBudget")==8192&&(int)Field(Scene(client),"DrawWorkBudget")==20000,"missing budget declaration preserves defaults");
+        Check((int)Field(Scene(client),"PointBudget")==int.MaxValue&&(int)Field(Scene(client),"PrimitiveBudget")==int.MaxValue&&(int)Field(Scene(client),"DrawWorkBudget")==20000,"absent serialized budget imports unlimited geometry defaults");
         var full=ClientReplicationTests.Snapshot();full.Scenes[0].Budget=new HoloRenderBudgetData{Points=8192,Primitives=16384,DrawWork=50000};
         full=RoundTrip(full);Call(client,"ApplySnapshot",full);
         Check((int)Field(Scene(client),"PointBudget")==8192&&(int)Field(Scene(client),"PrimitiveBudget")==16384&&(int)Field(Scene(client),"DrawWorkBudget")==50000,"full protobuf transports configured budgets");
@@ -145,11 +207,9 @@ internal static class RenderBudgetSettingsTests
             Reject(()=>Call(client,"ApplySnapshot",RoundTrip(bad)),name);
             Check(ReferenceEquals(prior,Scene(client))&&Field(rendered,"View")!=null,name+" preserves scene and cache atomically");
         }
-        Invalid(s=>s.Budget.Points=255,"malformed replicated point minimum");Invalid(s=>s.Budget.Points=65537,"malformed replicated point maximum");
-        Invalid(s=>s.Budget.Primitives=255,"malformed replicated primitive minimum");Invalid(s=>s.Budget.Primitives=131073,"malformed replicated primitive maximum");
         Invalid(s=>s.Budget.DrawWork=999,"malformed replicated draw-work minimum");Invalid(s=>s.Budget.DrawWork=200001,"malformed replicated draw-work maximum");
-        Invalid(s=>s.Budget.Points=0,"protobuf zero point budget remains invalid");
-        Invalid(s=>s.Budget.Primitives=0,"protobuf zero primitive budget remains invalid");
+        Invalid(s=>s.Budget.Points=-1,"protobuf negative point allowance rejected");
+        Invalid(s=>s.Budget.Primitives=-1,"protobuf negative primitive allowance rejected");
         Invalid(s=>s.Budget.DrawWork=0,"protobuf zero draw-work budget remains invalid");
         Invalid(s=>s.Budget=new HoloRenderBudgetData{Points=4096},"present incomplete protobuf budget cannot acquire constructor defaults");
         Invalid(s=>s.Budget=new HoloRenderBudgetData(),"present empty protobuf budget rejected");
@@ -158,6 +218,38 @@ internal static class RenderBudgetSettingsTests
         Invalid(s=>{s.Budget.Primitives=131072;s.Items[0].Edges=new int[4097*2];},"replicated hard per-object primitive cap retained");
         int protocol=(int)typeof(HoloMapSession).GetField("NetworkProtocol",BindingFlags.NonPublic|BindingFlags.Static).GetRawConstantValue();
         Check(protocol>=8,"budget scene schema uses an updated explicit protocol");
+        UnlimitedReplication(client,merged);
+    }
+    static void UnlimitedReplication(HoloMapSession client,HoloSnapshot finite)
+    {
+        var unlimited=RoundTrip(finite);unlimited.Scenes[0].Budget=new HoloRenderBudgetData{Points=0,Primitives=0,DrawWork=20000};
+        var original=RoundTrip(unlimited.Scenes[0].Items[0]);unlimited.Scenes[0].Items.Clear();
+        for(int i=0;i<3;i++)
+        {
+            var item=RoundTrip(original);item.Id="large"+i;item.Points=Points(2048).SelectMany(p=>new[]{p.X,p.Y,p.Z}).ToArray();
+            item.Edges=Enumerable.Repeat(new[]{0,1},4096).SelectMany(e=>e).ToArray();item.Triangles=new int[0];
+            unlimited.Scenes[0].Items.Add(item);
+        }
+        unlimited=RoundTrip(unlimited);Call(client,"ApplySnapshot",unlimited);
+        Check((int)Field(Scene(client),"PointBudget")==int.MaxValue&&(int)Field(Scene(client),"PrimitiveBudget")==int.MaxValue,"full protobuf zero allowances import as unlimited");
+        Check(((IDictionary)Field(Scene(client),"Items")).Count==3,"full replication accepts aggregate geometry above both former defaults");
+        var exported=(HoloRenderBudgetData)Static("ExportRenderBudget",Scene(client));
+        Check(exported.Points==0&&exported.Primitives==0&&exported.DrawWork==20000,"unlimited internal allowances export the public zero sentinel");
+        var tags=typeof(HoloRenderBudgetData).GetFields().Select(f=>f.GetCustomAttribute<ProtoBuf.ProtoMemberAttribute>().Tag).ToArray();
+        Check(tags.SequenceEqual(new[]{1,2,3}),"budget protobuf tags retain their original field identities");
+        var minimal=RoundTrip(new HoloRenderBudgetData{DrawWork=20000});
+        Check(minimal.Points==0&&minimal.Primitives==0&&minimal.DrawWork==20000,"omitted protobuf geometry fields retain the zero unlimited defaults");
+        var largest=RoundTrip(unlimited);largest.Scenes[0].Budget=new HoloRenderBudgetData{Points=int.MaxValue,Primitives=int.MaxValue,DrawWork=20000};Call(client,"ApplySnapshot",RoundTrip(largest));
+        var canonical=RoundTrip((HoloRenderBudgetData)Static("ExportRenderBudget",Scene(client)));
+        Check(canonical.Points==0&&canonical.Primitives==0&&canonical.DrawWork==20000,"largest integer geometry declarations import and export canonical zero unlimited fields");
+        var largeFinite=RoundTrip(unlimited);largeFinite.Scenes[0].Budget=new HoloRenderBudgetData{Points=65537,Primitives=131073,DrawWork=20000};Call(client,"ApplySnapshot",largeFinite);
+        Check((int)Field(Scene(client),"PointBudget")==65537&&(int)Field(Scene(client),"PrimitiveBudget")==131073,"full protobuf preserves positive finite allowances above former ceilings");
+        var finiteAgain=RoundTrip(unlimited);finiteAgain.Scenes[0].Budget=new HoloRenderBudgetData{Points=8192,Primitives=16384,DrawWork=40000};
+        var delta=(HoloSnapshot)Static("BuildDelta",unlimited,finiteAgain,1L);var merged=(HoloSnapshot)Static("MergeDelta",unlimited,RoundTrip(delta),1L);Call(client,"ApplySnapshot",merged);
+        Check(delta.Scenes.Count==1&&delta.Scenes[0].Items.Count==0&&(int)Field(Scene(client),"PointBudget")==8192,"unlimited to finite metadata delta preserves geometry and finite settings");
+        var toUnlimited=(HoloSnapshot)Static("BuildDelta",finiteAgain,unlimited,2L);var final=(HoloSnapshot)Static("MergeDelta",finiteAgain,RoundTrip(toUnlimited),2L);Call(client,"ApplySnapshot",final);
+        Check(toUnlimited.Scenes.Count==1&&toUnlimited.Scenes[0].Items.Count==0&&(int)Field(Scene(client),"PrimitiveBudget")==int.MaxValue,"finite to unlimited metadata delta preserves zero allowance semantics");
+        Check(((IDictionary)Field(Scene(client),"Items")).Count==3,"budget-only deltas preserve all admitted geometry");
     }
     static void LocalViewerBudget()
     {

@@ -63,15 +63,15 @@ namespace Hdr.Html
         object Execute(Owner owner,string op,Args a)
         {
             if(op=="version"){a.End();return Protocol;}
-            if(op=="capabilities"){a.End();return new[]{HtmlDocument.Profile,"server-layout","core-replicated-svg","lcd-console-projector","native-lcd-sprites","native-sprites-texture-relay","native-cooperative-pointer","owned-prefix-cleanup","filtered-ui-events","input-requires-client-renderer-0.9.13","relay-requires-client-renderer-0.9.13","no-javascript","no-hud","no-curved-pb-html"};}
+            if(op=="capabilities"){a.End();return new[]{HtmlDocument.Profile,"server-layout","core-replicated-svg","owned-projected-screen-binding","generic-node-source-slots","ordered-source-artwork","lcd-console-projector","native-lcd-sprites","native-sprites-texture-relay","native-cooperative-pointer","owned-prefix-cleanup","filtered-ui-events","input-requires-client-renderer-0.9.13","relay-requires-client-renderer-0.9.13","no-javascript","no-hud"};}
             if(op=="clear-owned"){a.End();foreach(var doc in owner.Documents.Values)Cleanup(doc);owner.Documents.Clear();owner.Targets.Clear();return true;}
-            if(op=="bind-sprites")
+            if(op=="bind-sprites"||op=="bind-sprites-screen")
             {
-                var anchor=a.Target();var source=a.Target() as IMyTextPanel;string html=a.Text(),css=a.Text();MatrixD pose=a.Pose();double scale=a.Has?a.Number():.005;int index=a.Has?a.Integer():0;bool owns=a.Has?a.Flag():false;a.End();
+                var anchor=a.Target();string screenId=op=="bind-sprites-screen"?a.Text():null;var source=a.Target() as IMyTextPanel;string html=a.Text(),css=a.Text();MatrixD pose=a.Pose();double scale=a.Has?a.Number():.005;int index=a.Has?a.Integer():0;bool owns=a.Has?a.Flag():false;a.End();
                 if(index!=0)throw new ArgumentException("PB native sprite sources are physical LCD surface 0 only.");
                 if(owner.Documents.Count>=4)throw new ArgumentException("PB HTML document budget reached (4 per PB).");
                 int total=0;foreach(var value in owners.Values)total+=value.Documents.Count;if(total>=16)throw new ArgumentException("PB HTML shared document budget reached (16).");
-                var port=new HtmlPbBridge(owner.Caller,anchor,true);
+                var port=new HtmlPbBridge(owner.Caller,anchor,true,screenId);
                 var capabilities=(MyTuple<string,string,int>)port.Draw("capabilities",(PbBlock)anchor);
                 if(capabilities.Item1!="HDR.DisplayCapabilities/1"||(capabilities.Item3&1)==0)throw new ArgumentException("Native sprites require an authorized LCD, Console or Projector anchor.");
                 long nativeHandle=++nextHandle;var painter=new HtmlPbNativePainter(nativeHandle,port,owner.Caller,anchor,source,pose,scale,owns);
@@ -86,12 +86,12 @@ namespace Hdr.Html
                 }
                 catch{if(doc!=null)doc.Dispose();else painter.Dispose();throw;}
             }
-            if(op=="bind")
+            if(op=="bind"||op=="bind-screen")
             {
-                var target=a.Target();string html=a.Text(),css=a.Text();double width=a.Number(),height=a.Number();MatrixD pose=a.Pose();double scale=a.Has?a.Number():.005;a.End();
+                var target=a.Target();string screenId=op=="bind-screen"?a.Text():null;string html=a.Text(),css=a.Text();double width=a.Number(),height=a.Number();MatrixD pose=a.Pose();double scale=a.Has?a.Number():.005;a.End();
                 if(owner.Documents.Count>=4)throw new ArgumentException("PB HTML document budget reached (4 per PB).");
                 int total=0;foreach(var value in owners.Values)total+=value.Documents.Count;if(total>=16)throw new ArgumentException("PB HTML shared document budget reached (16).");
-                var port=new HtmlPbBridge(owner.Caller,target);
+                var port=new HtmlPbBridge(owner.Caller,target,false,screenId);
                 var capabilities=(MyTuple<string,string,int>)port.Draw("capabilities",(PbBlock)target);
                 if(capabilities.Item1!="HDR.DisplayCapabilities/1"||(capabilities.Item3&1)==0||(capabilities.Item3&64)==0)throw new ArgumentException("PB HTML needs an authorized LCD, Console or Projector UI target.");
                 var doc=new HtmlPbDocument(++nextHandle,port,pose,scale){TargetKind=capabilities.Item2};
@@ -106,6 +106,10 @@ namespace Hdr.Html
             if(op=="destroy"){a.End();Cleanup(document);owner.Documents.Remove(handle);owner.Targets.Remove(handle);return true;}
             if(op=="status"){a.End();return document.Status();}
             if(op=="backend"){a.End();return document.Backend();}
+            if(op=="source-capabilities"){a.End();return document.SourceCapabilities();}
+            if(op=="source-status"){string node=a.Text();a.End();return document.SourceStatus(node);}
+            if(op=="attach-source"){string node=a.Text(),provider=a.Text(),source=a.Text();var settings=a.Has?a.SourceSettings():null;a.End();return document.AttachSource(node,provider,source,settings,tick);}
+            if(op=="detach-source"){string node=a.Text();a.End();return document.DetachSource(node,tick);}
             if(op=="pointer"){double x=a.Number(),y=a.Number();bool held=a.Flag();a.End();document.Pointer(x,y,held);return true;}
             if(op=="pointer-cancel"){a.End();document.CancelPointer();return true;}
             if(op=="poll-events"){a.End();return document.PollEvents();}
@@ -152,6 +156,7 @@ namespace Hdr.Html
             internal MatrixD Pose(){object value=Next();if(!(value is MatrixD))throw new ArgumentException("PB HTML pose requires MatrixD.");return (MatrixD)value;}
             internal int Integer(){object value=Next();if(!(value is int))throw new ArgumentException("Native sprite surface index requires Int32.");return (int)value;}
             internal bool Flag(){object value=Next();if(!(value is bool))throw new ArgumentException("Native sprite ownership/pointer arguments require Boolean.");return (bool)value;}
+            internal MyTuple<string,object[]>[] SourceSettings(){var value=Next() as MyTuple<string,object[]>[];if(value==null)throw new ArgumentException("Source settings require MyTuple<string,object[]>[].");return value;}
             internal IMyTerminalBlock Target(){var target=Next() as IMyTerminalBlock;if(target==null)throw new ArgumentException("PB HTML requires an actual LCD, Console or Projector block.");return target;}
             internal void End(){if(Has)throw new ArgumentException("Unexpected PB HTML argument.");}
         }

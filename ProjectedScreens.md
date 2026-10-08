@@ -71,6 +71,6 @@ Limits remain shared with the anchor: 16 objects (including screen slots), defau
 
 The anchor's transform follows every render frame. Sampled animation, sprite preparation and perspective acquisition have separate clocks; moving the anchor does not recapture the synthetic view. Power loss drops local caches, and removal/access revocation removes child declarations/content. `/hdr off` clears local caches; `/hdr on` permits rebuilding. `/hdr lcd-rate` also caps projected-screen sampling locally.
 
-Screen declarations use public HDR scene replication, protocol **11**. All peers need **0.7.1**. External-source declarations carry provider and source IDs, not observed geometry, camera policies or evidence. Prepared provider frames remain local to the viewer.
+The original 0.7.1 milestone used scene protocol **11**. Current HDR API **0.9.11** uses scene protocol **20**; all peers must use the matching protocol. External-source declarations carry provider and source IDs, not observed geometry or frame evidence. Prepared provider frames remain local to the viewer. Current ordered source slots and input mapping are documented in the [composition guide](docs/wiki/Composition.md).
 
 Offline checks cover screen namespaces/lifecycle, actual Protobuf full/delta updates, malformed admission, moving transforms, perspective clipping/depth/unknown masks, sprite compositing and bounds. Compilation against the installed game assemblies is verified. In-game placement, visual layering, world occlusion and frame-time measurements remain acceptance checks for this prototype.

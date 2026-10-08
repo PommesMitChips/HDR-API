@@ -1,6 +1,7 @@
 using System;
 using Hdr.Mods;
 using Sandbox.ModAPI.Ingame;
+using IMyTerminalBlock=Sandbox.ModAPI.Ingame.IMyTerminalBlock;
 using IMyTextSurface=Sandbox.ModAPI.Ingame.IMyTextSurface;
 using VRage;
 using VRageMath;
@@ -14,7 +15,7 @@ namespace Hdr.Html
             if(!active)throw new ArgumentException("HDR HTML frontend is stopped.");
             var a=new HtmlArguments(values);
             if(op=="version"){a.End();return Protocol;}
-            if(op=="capabilities"){a.End();return new[]{HtmlDocument.Profile,"client-local","hud-vector","world-plane-vector","grouped-svg","owned-native-lcd","cooperative-pointer","click-change-events","no-javascript","no-network-fetch","no-pb-html-terminal-property"};}
+            if(op=="capabilities"){a.End();return new[]{HtmlDocument.Profile,"client-local","hud-vector","world-plane-vector","mapped-world-surfaces","local-node-source-slots","cooperative-pointer-ray","grouped-svg","owned-native-lcd","cooperative-pointer","click-change-events","no-javascript","no-network-fetch","no-pb-html-terminal-property"};}
             if(op!="open")throw new ArgumentException("Unknown HDR HTML service command: "+op);
             RequireIdle();string id=a.Text();a.End();ValidateOwner(id);
             HtmlFrontendOwner prior;
@@ -43,14 +44,23 @@ namespace Hdr.Html
             if(!Current(owner))throw new ArgumentException("HDR HTML owner endpoint has been revoked.");
             if(op=="release"){a.End();owner.Dispose();RetireNativeLeases(owner);owners.Remove(owner.Id);return true;}
             if(op=="clear-owned"){a.End();foreach(var document in owner.Documents.Values)document.Dispose();owner.Documents.Clear();RetireNativeLeases(owner);return true;}
+            if(op=="geometry-limit-settings"){a.End();if(!owner.Core.Ready)throw new ArgumentException("Requires mod: HDR API for hosted owner geometry settings.");return owner.Core.Call("geometry-limit-settings");}
+            if(op=="geometry-limit"){int points=a.Has?a.Integer():0,primitives=a.Has?a.Integer():0;a.End();if(!owner.Core.Ready)throw new ArgumentException("Requires mod: HDR API for hosted owner geometry settings.");return owner.Core.Call("geometry-limit",points,primitives);}
             if(op=="create-hud"||op=="create-world"||op=="create-lcd")return CreateDocument(owner,op,a);
+            if(op=="create-surface")return CreateSurfaceDocument(owner,a);
             long handle=a.Long();HtmlFrontendDocument doc;
             if(!owner.Documents.TryGetValue(handle,out doc))throw new ArgumentException("Document does not belong to this HTML owner.");
             if(op=="destroy"){a.End();doc.Dispose();owner.Documents.Remove(handle);RetireNativeLeases(owner,handle);return true;}
             if(op=="status"){a.End();return doc.Status(owner.Core.Ready);}
+            if(op=="source-capabilities"){a.End();return doc.SourceCapabilities();}
+            if(op=="source-anchor"){var anchor=a.Block();a.End();var surface=doc.Painter as HtmlSurfacePainter;if(surface==null)throw new ArgumentException("Unsupported: this renderer has no local source consumer context.");surface.SetSourceAnchor(anchor);return true;}
+            if(op=="source-status"){string node=a.Text();a.End();return doc.SourceStatus(node);}
+            if(op=="attach-source"){string node=a.Text(),provider=a.Text(),source=a.Text();var settings=a.Has?a.Settings():null;a.End();return doc.AttachSource(node,provider,source,settings,tick);}
+            if(op=="detach-source"){string node=a.Text();a.End();return doc.DetachSource(node,tick);}
             if(op=="poll-events"){a.End();doc.SetInputEnabled(InputCurrent(owner,doc));return doc.PollEvents();}
             if(op=="pointer"){double x=a.Number(),y=a.Number();bool pressed=a.Flag();a.End();doc.SetInputEnabled(InputCurrent(owner,doc));doc.Pointer(x,y,pressed);return true;}
             if(op=="pointer-cancel"){a.End();doc.CancelPointer();return true;}
+            if(op=="pointer-ray"){Vector3D origin=a.Point(),direction=a.Point();bool pressed=a.Flag();a.End();doc.SetInputEnabled(InputCurrent(owner,doc));doc.PointerRay(origin,direction,pressed);return true;}
             if(op=="replace"){string html=a.Text(),css=a.Text();double w=a.Number(),h=a.Number();a.End();return doc.Load(html,css,w,h);}
             if(op=="data"){string key=a.Text(),value=a.Text();a.End();return doc.SetData(key,value);}
             if(op=="text")
@@ -95,7 +105,7 @@ namespace Hdr.Html
             object nativeToken=hdr?null:new object();
             if(!hdr&&!HtmlPbNativeSurfaceClaims.TryClaim(surface,nativeToken))throw new ArgumentException("The source LCD surface was claimed during HTML admission.");
             IHtmlPainter painter;
-            try{painter=hdr?(backend=="vector"?(IHtmlPainter)new HtmlVectorPainter(owner.Core,hud,pose,scale,order):new HtmlSvgPainter(owner.Core,hud,pose,scale,order)):new HtmlNativeLcdPainter(surface,true,null,()=>HtmlPbNativeSurfaceClaims.Owns(surface,nativeToken));}
+            try{painter=hdr?(IHtmlPainter)new HtmlSurfacePainter(owner.Core,pose,hud?1:scale,hud?"hud":"plane",null,null,backend,order,!hud):new HtmlNativeLcdPainter(surface,true,null,()=>HtmlPbNativeSurfaceClaims.Owns(surface,nativeToken));}
             catch{if(!hdr)HtmlPbNativeSurfaceClaims.Release(surface,nativeToken);throw;}
             var document=new HtmlFrontendDocument(++nextDocument,backend,controller,painter,hdr){Markup=html,Stylesheet=css,PendingPaint=true};
             // Initial paint is part of admission; failed documents never leave invisible handles or input behind.
@@ -104,6 +114,18 @@ namespace Hdr.Html
             owner.Documents.Add(document.Handle,document);
             if(!hdr)nativeLeases.Add(new HtmlNativeLease{Surface=surface,Owner=owner,Document=document.Handle,Token=nativeToken});
             return document.Handle;
+        }
+        object CreateSurfaceDocument(HtmlFrontendOwner owner,HtmlArguments a)
+        {
+            if(owner.Documents.Count>=MaxDocuments)throw new ArgumentException("HTML documents per owner limit reached (4).");
+            string html=a.Text(),css=a.Text();double width=a.Number(),height=a.Number();MatrixD pose=a.Pose();double units=a.Number();string kind=a.Text();object[] parameters=a.Parameters();var settings=a.Has?a.Settings():null;string backend=a.Has?a.Text():"svg";int order=a.Has?a.Integer():0;a.End();ValidatePose(pose);
+            if(!owner.Core.Ready)throw new ArgumentException("Requires mod: HDR API local surface context.");
+            var controller=new HtmlDocumentController(new HtmlHdrTextMetrics(owner.Core),new HtmlLimits());
+            if(!controller.TryLoad(html,css,width,height))throw new ArgumentException(controller.LastError);
+            var painter=new HtmlSurfacePainter(owner.Core,pose,units,kind,parameters,settings,backend,order);
+            var document=new HtmlFrontendDocument(++nextDocument,"surface-"+backend,controller,painter,true){Markup=html,Stylesheet=css,PendingPaint=true};
+            document.Update(tick,true);if(document.VisibleFrame==null){string reason=document.LastError;document.Dispose();throw new ArgumentException(reason??"Initial local surface HTML paint failed.");}
+            owner.Documents.Add(document.Handle,document);return document.Handle;
         }
         static void ValidateOwner(string id)
         {
@@ -128,6 +150,10 @@ namespace Hdr.Html
             internal bool Flag(){var value=Next();if(!(value is bool))throw new ArgumentException("HTML argument requires Boolean.");return (bool)value;}
             internal double Number(){var value=Next();double result;if(value is double)result=(double)value;else if(value is int)result=(int)value;else if(value is float)result=(float)value;else throw new ArgumentException("HTML argument requires a finite number.");if(!HtmlFrontendDocument.Finite(result))throw new ArgumentException("HTML argument requires a finite number.");return result;}
             internal MatrixD Pose(){var value=Next();if(!(value is MatrixD))throw new ArgumentException("World pose requires MatrixD.");return (MatrixD)value;}
+            internal Vector3D Point(){var value=Next();if(!(value is Vector3D))throw new ArgumentException("Pointer ray requires Vector3D.");return (Vector3D)value;}
+            internal object[] Parameters(){var value=Next() as object[];if(value==null)throw new ArgumentException("Surface parameters require object[].");return value;}
+            internal IMyTerminalBlock Block(){var value=Next() as IMyTerminalBlock;if(value==null)throw new ArgumentException("Source anchor requires an actual terminal block.");return value;}
+            internal MyTuple<string,object[]>[] Settings(){var value=Next() as MyTuple<string,object[]>[];if(value==null)throw new ArgumentException("Settings require MyTuple<string,object[]>[].");return value;}
             internal IMyTextSurface Surface(){var value=Next() as IMyTextSurface;if(value==null)throw new ArgumentException("Native LCD requires an explicit IMyTextSurface.");return value;}
             internal void End(){if(Has)throw new ArgumentException("Unexpected HTML command argument.");}
         }

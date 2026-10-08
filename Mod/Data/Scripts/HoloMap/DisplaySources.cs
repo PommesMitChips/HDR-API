@@ -17,10 +17,12 @@ namespace HoloMap
    if(provider==null&&source==null)return;int limit=provider=="camera-panorama"?256:64;if(string.IsNullOrEmpty(provider)||provider.Length>32||string.IsNullOrWhiteSpace(source)||source.Length>limit)throw new ArgumentException("Display source requires a provider ID up to 32 characters and a bounded source ID.");
    foreach(char c in provider)if(!(c>='a'&&c<='z'||c>='0'&&c<='9'||c=='-'))throw new ArgumentException("Provider IDs use lowercase letters, digits and hyphens.");foreach(char c in source)if(char.IsControl(c))throw new ArgumentException("Invalid display source ID.");
    if(provider=="camera-panorama"){var ids=source.Split(',');if(ids.Length<1||ids.Length>6)throw new ArgumentException("Camera panoramas support one to six camera IDs.");var seen=new HashSet<long>();foreach(string value in ids){foreach(char c in value)if(c<'0'||c>'9')throw new ArgumentException("Camera source IDs are positive decimal entity IDs.");long id;if(value.Length==0||!long.TryParse(value,out id)||id<=0||!seen.Add(id))throw new ArgumentException("Camera source IDs must be positive, unique and bounded.");}}
+   if(provider=="lcd-texture"){var parts=source.Split(':');long entity;int index;if(parts.Length!=2||!long.TryParse(parts[0],out entity)||entity<=0||!int.TryParse(parts[1],out index)||index<0||index>=32)throw new ArgumentException("LCD texture source requires a positive entity ID and surface index 0–31.");foreach(char c in source)if(c!=':'&&(c<'0'||c>'9'))throw new ArgumentException("LCD texture source uses decimal entity and surface IDs.");}
+   if(provider=="native-portal")ScreenId(source);
   }
   void RegisterDisplaySources()
   {
-   if(_displaySourceRegistered)return;_displaySourceService=DisplaySourceService;MyAPIGateway.Utilities.RegisterMessageHandler(DisplaySourceRegistration,ReceiveDisplaySource);_displaySourceRegistered=true;
+   if(_displaySourceRegistered)return;ModClientStartSourceProviders();_displaySourceService=DisplaySourceService;MyAPIGateway.Utilities.RegisterMessageHandler(DisplaySourceRegistration,ReceiveDisplaySource);_displaySourceRegistered=true;
    DiscoverDisplaySources();
   }
   void DiscoverDisplaySources()
@@ -28,7 +30,7 @@ namespace HoloMap
   void ReceiveDisplaySource(object message)
   {
    if(!_displaySourceRegistered||!(message is MyTuple<string,int,Func<string,object[],object>>))return;var m=(MyTuple<string,int,Func<string,object[],object>>)message;
-   try{ValidateDisplaySource(m.Item1,"1");if(m.Item2!=1&&m.Item2!=2||m.Item3==null)return;DisplayProvider old;if(_displayProviders.TryGetValue(m.Item1,out old)&&ReferenceEquals(old.Endpoint,m.Item3)&&old.Protocol==m.Item2)return;if(old==null&&_displayProviders.Count>=8)return;
+   try{ValidateDisplaySource(m.Item1,m.Item1=="lcd-texture"?"1:0":"1");if(m.Item2!=1&&m.Item2!=2||m.Item3==null)return;DisplayProvider old;if(_displayProviders.TryGetValue(m.Item1,out old)&&ReferenceEquals(old.Endpoint,m.Item3)&&old.Protocol==m.Item2)return;if(old==null&&_displayProviders.Count>=8)return;
     _displayProviders[m.Item1]=new DisplayProvider{Name=m.Item1,Endpoint=m.Item3,Generation=++_displayProviderGeneration,Protocol=m.Item2};PluginComponentRegistered(m.Item1);FlushDisplayProvider(m.Item1);
     // Install first: a newer registration issued by the old provider's end callback must win.
     if(old!=null&&old.Began){old.Began=false;try{old.Endpoint("end",new object[0]);}catch{}}DiscoverDisplaySources();
@@ -36,7 +38,9 @@ namespace HoloMap
   }
   object DisplaySourceService(string command,object[] args)
   {
-   if(!_displaySourceRegistered)return false;if(command=="source-state"||command=="source-demand")
+   if(!_displaySourceRegistered)return false;
+   if(command=="local-mod-native-consumers")return ModClientNativeConsumerService(args);
+   if(command=="source-state"||command=="source-demand")
    {
     if(args==null||args.Length!=4||!(args[0] is string)||!(args[1] is long)||!(args[2] is long)||!(args[3] is string))return false;
     var demand=DisplaySourceDemand((string)args[0],(long)args[1],(long)args[2],(string)args[3]);return command=="source-state"?(object)demand.Item4:demand;
@@ -48,7 +52,7 @@ namespace HoloMap
     if(args==null||args.Length!=4||!(args[0] is string)||(string)args[0]!="camera-panorama"||!(args[1] is long)||!(args[2] is long)||!(args[3] is string))return false;
     Scene scene;if(!_scenes.TryGetValue((long)args[1],out scene))return false;
     HoloProjectedScreenData found=null;
-    foreach(var screen in scene.Screens.Values){var d=screen.Data;if(d.CallerId!=(long)args[2]||d.SourceProvider!=(string)args[0]||d.SourceId!=(string)args[3])continue;if(found!=null&&!SameCameraSourceSettings(found,d))return false;found=d;}
+    foreach(var screen in scene.Screens.Values)foreach(var d in ScreenSourceSettings(screen.Data)){if(d.CallerId!=(long)args[2]||d.SourceProvider!=(string)args[0]||d.SourceId!=(string)args[3])continue;if(found!=null&&!SameCameraSourceSettings(found,d))return false;found=d;}
     if(found==null)return false;
     if(command=="source-renderprofile")return found.SourceCaptureProfile;
     return new MyTuple<double,double,double,int>(found.SourceFov,found.SourceFeather,found.SourceSaturation,found.SourceCaptureResolution);
@@ -71,7 +75,7 @@ namespace HoloMap
    return DisplaySourceDemand(name,anchorId,caller,source).Item4;
   }
   void FlushDisplayProvider(string name)
-  {foreach(var c in _projectedCaches.Values)if(c.SourceProvider==name||c.Data!=null&&c.Data.SourceProvider==name){ClearExternalBudgetView(c);c.NextCapture=-1;c.Error=null;}}
+  {ModClientFlushSourceProvider(name);foreach(var c in _projectedCaches.Values){FlushSourceSlotProvider(c,name);if(c.SourceProvider==name||c.Data!=null&&c.Data.SourceProvider==name){ClearExternalBudgetView(c);c.NextCapture=-1;c.Error=null;}}}
   void BeginDisplaySourceDraw()
   {
    BeginDisplaySourceOcclusionDraw();_displaySourceDrawing=true;var providers=new List<DisplayProvider>(_displayProviders.Values);
@@ -105,7 +109,7 @@ namespace HoloMap
    // A provider can offer the already retained lease while a replacement is pending.
    // Failure to admit that offer does not retire the cache's current lease.
    if(ReferenceEquals(cache.SourceEndpoint,endpoint)&&ReferenceEquals(cache.SourceEvidence,evidence))return;
-   ReleaseProviderEvidence(endpoint,evidence);
+   ReleaseUnownedProviderEvidence(endpoint,evidence);
   }
   SurfaceMesh BuildExternalSource(Scene scene,HoloProjectedScreenData d,ProjectedCache cache,int pointBudget,int primitiveBudget)
   {
@@ -114,7 +118,7 @@ namespace HoloMap
    if(_displaySourceDrawing&&!provider.Began)return null;
    var endpoint=provider.Endpoint;long generation=provider.Generation;
    var request=new object[]{scene.ConsoleId,d.CallerId,d.SourceId,d.Id,pointBudget,primitiveBudget,d.CanvasWidth,d.CanvasHeight,(double[])d.Camera.Clone(),d.RasterWidth,d.RasterHeight,d.OrbitSpeed,(double)d.OrbitStartTick,(double)AnimationNow};
-   if(provider.Protocol==2){var size=ScreenRasterSize(d,cache);if(size.X==0||size.Y==0)return null;var extended=new object[16];Array.Copy(request,extended,14);extended[14]=size.X;extended[15]=size.Y;request=extended;}
+   if(provider.Protocol==2){var size=ScreenRasterSize(d,cache);if(d.SourceProvider=="camera-panorama"||cache.ConsumerSuffix!=null){var demand=DisplaySourceDemand(d.SourceProvider,scene.ConsoleId,d.CallerId,d.SourceId);if(demand.Item4)size=new Vector2I(demand.Item1,demand.Item2);}if(size.X==0||size.Y==0)return null;var extended=new object[16];Array.Copy(request,extended,14);extended[14]=size.X;extended[15]=size.Y;request=extended;}
    object returned=endpoint("frame",request);
    if(returned==null)return null;
    if(provider.Protocol==2)
@@ -135,6 +139,7 @@ namespace HoloMap
   {
    ClearDisplaySourceOcclusion();
    _cameraDemandCaches.Clear();_cameraDensityNextTick=0;
+   ModClientStopSourceProviders();
    if(!_displaySourceRegistered)return;EndDisplaySourceDraw();if(MyAPIGateway.Utilities!=null)MyAPIGateway.Utilities.UnregisterMessageHandler(DisplaySourceRegistration,ReceiveDisplaySource);_displaySourceRegistered=false;_displayProviders.Clear();_displaySourceService=null;
   }
  }

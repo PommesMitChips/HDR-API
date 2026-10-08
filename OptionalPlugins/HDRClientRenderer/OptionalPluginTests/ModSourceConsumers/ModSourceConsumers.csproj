@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <UseAppHost>false</UseAppHost>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DefineConstants>$(DefineConstants);MOD_SOURCE_CONSUMER_POLICY_TESTS</DefineConstants>
+    <GameBin Condition="'$(GameBin)' == ''">C:/Program Files (x86)/Steam/steamapps/common/SpaceEngineers/Bin64</GameBin>
+    <HarmonyPath Condition="'$(HarmonyPath)' == ''">$(APPDATA)/Pulsar/Libraries/Interim/0Harmony.dll</HarmonyPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../HDRClientRenderer.Net10.csproj" ReferenceOutputAssembly="false" />
+    <Compile Include="../../Source/ModSourceConsumers.cs" Link="ModSourceConsumers.cs" />
+    <Reference Include="VRage.Library" HintPath="$(GameBin)/VRage.Library.dll" />
+    <Reference Include="0Harmony" HintPath="$(HarmonyPath)" />
+  </ItemGroup>
+</Project>

@@ -64,18 +64,18 @@ namespace HoloMap
    if(_sourceOcclusionDrawing==null)return;
    // A moving grid's interpolated render transform cannot be certified from the
    // game-update API. It deliberately remains an unknown consumer.
-   bool needed=false;foreach(var screen in scene.Screens.Values)if(screen.Data.SourceProvider=="camera-panorama"){needed=true;break;}
+   bool needed=false;foreach(var screen in scene.Screens.Values)if(ScreenHasProvider(screen.Data,"camera-panorama")){needed=true;break;}
    if(!needed||anchor.CubeGrid==null||!anchor.CubeGrid.IsStatic)return;
    foreach(var screen in scene.Screens.Values)
    {
-    var d=screen.Data;if(d.SourceProvider!="camera-panorama"||string.IsNullOrEmpty(d.SourceId))continue;
-    string key=PackedKey(d.CallerId,scene.ConsoleId,d.Id);if(key.Length>128)continue;
+    var parent=screen.Data;foreach(var d in ScreenSourceSettings(parent)){if(d.SourceProvider!="camera-panorama"||string.IsNullOrEmpty(d.SourceId))continue;
+    string key=PackedKey(d.CallerId,scene.ConsoleId,d.Id)+(d.CompositionSlotId==null?"":":slot:"+d.CompositionSlotId);if(key.Length>128)continue;
     double[] triangles;try{triangles=SourceOcclusionTriangles(d,world);}catch{continue;}
     if(triangles==null)continue;
     SourceOcclusionConsumer previous=null;
     if(_sourceOcclusionPrevious!=null)_sourceOcclusionPrevious.Consumers.TryGetValue(key,out previous);
     var identity=previous!=null&&previous.Source==d.SourceId&&previous.World==world&&SameArray(previous.Triangles,triangles)?previous.Identity:new object();
-    _sourceOcclusionDrawing[key]=new SourceOcclusionConsumer{Key=key,Source=d.SourceId,Anchor=scene.ConsoleId,World=world,Identity=identity,Triangles=triangles};
+    _sourceOcclusionDrawing[key]=new SourceOcclusionConsumer{Key=key,Source=d.SourceId,Anchor=scene.ConsoleId,World=world,Identity=identity,Triangles=triangles};}
    }
   }
   // A closed enclosure is intentionally larger than the rendered source. It
@@ -129,14 +129,14 @@ namespace HoloMap
     // Missing, dynamic, LCD and arbitrary-mesh consumers invalidate ALL proof.
     foreach(var scene in _scenes.Values)foreach(var screen in scene.Screens.Values)
     {
-     var d=screen.Data;if(d.SourceProvider!="camera-panorama"||!SourceOcclusionUsesCamera(d.SourceId,camera))continue;
-     string key=PackedKey(d.CallerId,scene.ConsoleId,d.Id);SourceOcclusionConsumer saved;
+     var parent=screen.Data;foreach(var d in ScreenSourceSettings(parent)){if(d.SourceProvider!="camera-panorama"||!SourceOcclusionUsesCamera(d.SourceId,camera))continue;
+     string key=PackedKey(d.CallerId,scene.ConsoleId,d.Id)+(d.CompositionSlotId==null?"":":slot:"+d.CompositionSlotId);SourceOcclusionConsumer saved;
      if(consumers.Count>=MaxProjectedScreens||!published.Consumers.TryGetValue(key,out saved)||saved.Source!=d.SourceId)return false;
      var anchor=MyAPIGateway.Entities.GetEntityById(scene.ConsoleId) as IMyProjector;
      if(anchor==null||anchor.Closed||!anchor.IsWorking||anchor.CubeGrid==null||!anchor.CubeGrid.IsStatic)return false;
      var world=anchor.WorldMatrix;if(world!=saved.World)return false;
      var triangles=SourceOcclusionTriangles(d,world);if(triangles==null||!SameArray(triangles,saved.Triangles))return false;
-     consumers.Add(saved);
+     consumers.Add(saved);}
     }
    }
    catch{return false;}

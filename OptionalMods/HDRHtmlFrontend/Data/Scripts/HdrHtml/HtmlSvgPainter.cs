@@ -9,6 +9,7 @@ namespace Hdr.Html
     /// <summary>Bounded contiguous SVG chunks reduce retained item count; a changed chunk recompiles all its members.</summary>
     public sealed class HtmlSvgPainter : HtmlRetainedPainter
     {
+        internal bool BreakAtSourceRegions;
         public HtmlSvgPainter(HdrModApi api,bool hud,MatrixD worldPose,double unitsPerPixel=1,int contextOrder=0,HtmlPainterLimits limits=null) : this(new HtmlHdrDrawApi(api),hud,worldPose,unitsPerPixel,contextOrder,limits) { }
         public HtmlSvgPainter(IHtmlDrawApi api,bool hud,MatrixD worldPose,double unitsPerPixel=1,int contextOrder=0,HtmlPainterLimits limits=null) : base(api,hud,worldPose,unitsPerPixel,contextOrder,limits) { }
         public override string Backend { get { return IsHud?"HDR grouped SVG HUD":"HDR grouped SVG world plane"; } }
@@ -17,6 +18,7 @@ namespace Hdr.Html
             var result=new List<HtmlPreparedItem>();var chunk=new List<HtmlPaintOperation>();
             foreach(var op in frame.Operations)
             {
+                if(BreakAtSourceRegions&&chunk.Count>0&&frame.SourceRegions.Exists(s=>s.Order==op.Order))Flush(frame,chunk,result);
                 if(!VisiblePaint(op)||op.Bounds.Empty||op.HasClip&&op.Clip.Empty)continue;
                 if(op.Kind=="image")
                 {

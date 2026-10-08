@@ -125,9 +125,12 @@ namespace HoloMap
    int width=0,height=0;double rate=0;
    foreach(var screen in scene.Screens.Values)
    {
-    var d=screen.Data;if(d.CallerId!=caller||!ExternalBudgetScreenVisible(d)||d.SourceProvider!=name||d.SourceId!=source||!ScreenSurfaceVisible(d,anchor.WorldMatrix,MyAPIGateway.Session.Camera.Position))continue;
+    var d=screen.Data;if(d.CallerId!=caller||!ExternalBudgetScreenVisible(d)||!ScreenSurfaceVisible(d,anchor.WorldMatrix,MyAPIGateway.Session.Camera.Position))continue;
     string key=PackedKey(d.CallerId,anchorId,d.Id);ProjectedCache cache;if(!_projectedCaches.TryGetValue(key,out cache)){cache=new ProjectedCache{Anchor=anchorId,Caller=caller,Id=d.Id};_projectedCaches.Add(key,cache);}
-    var lod=ScreenLod(d,anchor,cache);if(!lod.Visible)continue;width=Math.Max(width,lod.Resolution.X);height=Math.Max(height,lod.Resolution.Y);rate=Math.Max(rate,SourceRefreshLimit(d));
+    var lod=ScreenLod(d,anchor,cache);if(!lod.Visible)continue;
+    if(d.SourceProvider==name&&d.SourceId==source){width=Math.Max(width,lod.Resolution.X);height=Math.Max(height,lod.Resolution.Y);rate=Math.Max(rate,SourceRefreshLimit(d));}
+    if(d.SourceSlots!=null)foreach(var slot in d.SourceSlots)
+    {if(slot.Provider!=name||slot.SourceId!=source||!SourceSlotVisible(scene,d,slot))continue;var requested=SourceSlotDemandSize(d,slot,lod.Resolution);width=Math.Max(width,requested.X);height=Math.Max(height,requested.Y);rate=Math.Max(rate,SourceRefreshLimit(SourceSlotSettings(d,slot)));}
    }
    if(width==0||height==0)return empty;var bounded=DisplayLod.MaximumVisible(new Vector2I(width,height),WideSourceRaster(name)).Resolution;return new MyTuple<int,int,double,bool>(bounded.X,bounded.Y,rate,true);
   }
@@ -138,7 +141,7 @@ namespace HoloMap
    {
     var owners=new System.Collections.Generic.HashSet<long>();
     foreach(var screen in scene.Screens.Values)
-    {var d=screen.Data;if(d.SourceProvider!=name||d.SourceId!=source||!owners.Add(d.CallerId))continue;var demand=DisplaySourceDemand(name,scene.ConsoleId,d.CallerId,source);if(!demand.Item4)continue;width=Math.Max(width,demand.Item1);height=Math.Max(height,demand.Item2);rate=Math.Max(rate,demand.Item3);}
+    {var d=screen.Data;bool matches=d.SourceProvider==name&&d.SourceId==source;if(d.SourceSlots!=null)foreach(var slot in d.SourceSlots)if(slot.Provider==name&&slot.SourceId==source)matches=true;if(!matches||!owners.Add(d.CallerId))continue;var demand=DisplaySourceDemand(name,scene.ConsoleId,d.CallerId,source);if(!demand.Item4)continue;width=Math.Max(width,demand.Item1);height=Math.Max(height,demand.Item2);rate=Math.Max(rate,demand.Item3);}
    }
    return new MyTuple<int,int,double,bool>(width,height,rate,width>0&&height>0);
   }

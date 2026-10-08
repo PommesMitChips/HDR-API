@@ -1,6 +1,6 @@
 # HDR.HTML/Profile1
 
-**ALPHA, frontend 0.1.1.** Profile1 is a bounded mod-native HTML/CSS authoring format for local UI. Acceptance is defined by the parser and layout shipped in [`Data/Scripts/HdrHtml`](../Data/Scripts/HdrHtml), followed by the selected painter's admission. Browser-valid HTML/CSS can still be rejected. No JavaScript, browser DOM, Canvas, WebGL, network fetch, iframe or event-handler execution is implemented.
+**ALPHA, frontend 0.2.0.** Profile1 is a bounded mod-native HTML/CSS authoring format for local UI. Acceptance is defined by the parser and layout shipped in [`Data/Scripts/HdrHtml`](../Data/Scripts/HdrHtml), followed by the selected painter's admission. Browser-valid HTML/CSS can still be rejected. No JavaScript, browser DOM, Canvas, WebGL, network fetch, iframe or event-handler execution is implemented.
 
 ## Markup
 
@@ -80,4 +80,4 @@ Consumers supply cooperative logical pointer coordinates and poll `click`/`chang
 
 Default limits are 131072 combined HTML/CSS characters, 512 nodes, depth 32, 256 CSS rules, 2048 expanded declarations, 16384 decoded/expanded text characters, 512 paint operations and 64 hit regions. The root layout node and generated work also consume bounded layout budgets. The local service admits eight owners, four documents per owner, 128 binding keys and 128 queued events per document.
 
-The HDR painter additionally admits at most 64 retained items, 8192 points and 8192 primitives per document, subject to the core owner's shared geometry grant across its contexts. A single source must fit the core compiler's limits too. Unsupported features or budget exhaustion produce status errors instead of a hidden reduction in quality. Native LCD adds its [rectangle/text/scissor restrictions](Rendering.md). Parsing/layout success alone is not proof that a replacement is visible; inspect desired and visible revisions through the API.
+The HDR painter admits at most 64 retained items. Its aggregate `MaxPoints` and `MaxPrimitives` defaults are **0 = unlimited**, independently. Each accepts a nonnegative Int32; positive values impose finite allowances with no fixed 8192 aggregate maximum. Exact-cost preflight also queries the actual core owner's `geometry-limit-settings` rather than substituting a fixed frontend grant. A configured finite painter/owner allowance is checked before publication, preserving prior accepted output when the candidate exceeds it. Single-item compiler limits, source/payload structure and per-frame drawing work remain separate. Native LCD adds its [rectangle/text/scissor restrictions](Rendering.md) and actual sprite behavior. Parsing/layout success alone is not proof that a replacement is visible; inspect desired and visible revisions through the API.

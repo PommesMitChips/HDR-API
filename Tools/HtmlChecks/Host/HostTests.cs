@@ -19,7 +19,7 @@ public class HtmlHostProxy : DispatchProxy
     protected override object Invoke(MethodInfo method, object[] args) { return Handler(method, args); }
 }
 
-static class HostTests
+static partial class HostTests
 {
     static int assertions, cases, failures;
     const string ButtonMarkup = "<button id='button' data-action='activate'>Go</button>";
@@ -72,6 +72,12 @@ static class HostTests
         Run("failed queued data rebuild retains committed text and status error", FailedQueuedDataRebuild);
         Run("pending hosted resize survives renderer rebuild", PendingResizeRebuild);
         Run("actual service unload revokes owners and unregisters handlers", SessionUnload);
+        Run("local mapped HTML surfaces preserve centered coordinates and ray input", SurfaceCreationAndRayInput);
+        Run("local HTML source changes preserve layout, controls and rollback", LocalSourcesAndRollback);
+        Run("HUD HTML source attachments preserve pixel canvas and input", HudSourcesAndPixels);
+        Run("legacy world HTML preserves top-left pose through source attachment and resize", LegacyWorldSourcesAndPose);
+        Run("local source capability and hidden-node fences precede declarations", LocalSourceCapabilityFences);
+        Run("hosted geometry allowance forwards unlimited sentinel and finite preflight", HostedGeometryForwarding);
         Console.WriteLine("HTML host tests: " + cases + " cases, " + assertions + " assertions, " + failures + " failures; C#6 production glob and consumer helpers compiled against real SE assemblies.");
         return failures == 0 ? 0 : 1;
     }
@@ -494,8 +500,9 @@ static class HostTests
             throw new ArgumentException("Unexpected fake service command: " + command);
         };
     }
-    sealed class Core
+    sealed partial class Core
     {
+        internal int GeometryPoints,GeometryPrimitives;
         internal bool Rendering = true;
         internal readonly Func<string, object[], object> Service;
         long nextContext;
@@ -511,6 +518,7 @@ static class HostTests
         }
         object Endpoint(string command, object[] args)
         {
+            object surfaceResult;if(TrySurfaceCommand(command,args,out surfaceResult))return surfaceResult;
             if (command == "valid") return true;
             if (command == "release") return true;
             if (command == "rendering-enabled") return Rendering;
@@ -521,10 +529,12 @@ static class HostTests
             }
             if (command == "geometry-cost") return new MyTuple<int, int>(4, 2);
             if (command == "geometry-usage") return new MyTuple<int, int>(0, 0);
+            if (command == "geometry-limit-settings") return new MyTuple<int, int>(GeometryPoints, GeometryPrimitives);
+            if (command == "geometry-limit") {int points=(int)args[0],primitives=(int)args[1];if(points<0||primitives<0)throw new ArgumentException("Geometry allowances cannot be negative.");GeometryPoints=points;GeometryPrimitives=primitives;return true;}
             if (command == "create-hud" || command == "create-world") { long context = ++nextContext; contexts.Add(context); return context; }
             if (command == "context-valid") return contexts.Contains((long)args[0]);
             if (command == "destroy") return contexts.Remove((long)args[0]);
-            if (command == "mesh" || command == "text" || command == "svg" || command == "item-order" || command == "remove") return true;
+            if (command == "mesh" || command == "text" || command == "svg" || command == "item-order" || command == "remove") {RecordArtwork(command,args);return true;}
             throw new Exception("Unexpected fake core endpoint command: " + command);
         }
     }

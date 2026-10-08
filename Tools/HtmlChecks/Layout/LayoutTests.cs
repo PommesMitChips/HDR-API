@@ -116,6 +116,17 @@ internal static class LayoutTests
         Run("height auto casing and subnormal range step", HeightAutoAndSubnormalStep);
         Run("selected font backend admission", SelectedFontBackendAdmission);
         Run("range handle authored radius", RangeHandleAuthoredRadius);
+        Run("source content rectangles", SourceContentRectangles);
+        Run("source visible clips preserve UV extent", SourceVisibleClips);
+        Run("source nested overflow clips", SourceNestedOverflowClips);
+        Run("source flex resize", SourceFlexResize);
+        Run("source insertion ordering", SourceInsertionOrdering);
+        Run("source suppression and transparent slots", SourceSuppression);
+        Run("source pure no-op", SourcePureNoOp);
+        Run("source bounded admission", SourceBoundedAdmission);
+#if HTML_SOURCE_REGIONS
+        Run("source snapshots and exact diff", SourceSnapshotsAndDiff);
+#endif
         Console.WriteLine("HTML pure layout: " + _assertions + " assertions; " + _failures + " failed groups.");
         if (_failures > 0) Environment.ExitCode = 1;
     }
@@ -597,4 +608,179 @@ internal static class LayoutTests
         frame = Build("<input id='range' type='range' style='width:100px;height:20px;border-radius:6px'/>", 200, 100);
         Near(6, RangeHandle(frame).Radius, "Explicit six-pixel range handle radius is preserved");
     }
+
+    private static HtmlSourceRegion Source(HtmlPaintFrame frame, string nodeId)
+    {
+        HtmlSourceRegion found = null;
+        foreach (var source in frame.SourceRegions)
+            if (source.NodeId == nodeId)
+            {
+                True(found == null, "Source id " + nodeId + " appears only once");
+                found = source;
+            }
+        True(found != null, "Source region for author id " + nodeId);
+        return found;
+    }
+
+    private static void SourceContentRectangles()
+    {
+        var frame = Build("<div id='slot' style='width:80px;height:30px;padding:10px;border:2px solid #ffffff;margin:3px;background:#222222'></div>", 200, 100);
+        var slot = Source(frame, "slot");
+        Rect(slot.Bounds, 15, 15, 80, 30, "Source uses content box, excludes margin/padding/border");
+        Rect(slot.Clip, 15, 15, 80, 30, "Visible source clip is content bounds even without overflow hidden");
+        Near(1, slot.Opacity, "Unmodified source opacity");
+        True(slot.Visible && frame.SourceRegions.Count == 1, "Only explicitly identified content box produces a visible source");
+        True(slot.Order == 5, "Source inserted after background and all four border operations");
+    }
+
+    private static void SourceVisibleClips()
+    {
+        var frame = Build("<div id='wide' style='margin-left:40px;width:120px;height:20px'></div>", 100, 100);
+        var wide = Source(frame, "wide");
+        Rect(wide.Bounds, 40, 0, 120, 20, "Viewport clipping keeps full source extent");
+        Rect(wide.Clip, 40, 0, 60, 20, "Viewport clipping retains exactly visible half");
+        Near(0, (wide.Clip.X - wide.Bounds.X) / wide.Bounds.Width, "Clipped source left UV stays zero");
+        Near(.5, (wide.Clip.X + wide.Clip.Width - wide.Bounds.X) / wide.Bounds.Width, "Clipped source right UV stays half rather than stretching full image");
+
+        frame = Build("<div style='width:50px;height:15px;overflow:hidden'><div id='inside' style='margin-left:10px;margin-top:5px;width:100px;height:40px'></div></div>", 200, 100);
+        var inside = Source(frame, "inside");
+        Rect(inside.Bounds, 10, 5, 100, 40, "Ancestor clipping does not rewrite source full extent");
+        Rect(inside.Clip, 10, 5, 40, 10, "Ancestor clip intersects the actual content region");
+        Near(.4, inside.Clip.Width / inside.Bounds.Width, "Ancestor-clipped source retains forty percent U extent");
+        Near(.25, inside.Clip.Height / inside.Bounds.Height, "Ancestor-clipped source retains quarter V extent");
+    }
+
+    private static void SourceNestedOverflowClips()
+    {
+        var frame = Build("<div id='outer' style='width:80px;height:30px;overflow:hidden'><div id='middle' style='margin-left:10px;margin-top:5px;width:100px;height:50px;overflow:hidden'><div id='inner' style='margin-left:20px;margin-top:10px;width:160px;height:80px'></div></div></div>", 200, 150);
+        Rect(Source(frame, "outer").Clip, 0, 0, 80, 30, "Outer visible source");
+        var middle = Source(frame, "middle");
+        Rect(middle.Bounds, 10, 5, 100, 50, "Middle full content rectangle");
+        Rect(middle.Clip, 10, 5, 70, 25, "Middle clips against ancestor and own overflow");
+        var inner = Source(frame, "inner");
+        Rect(inner.Bounds, 30, 15, 160, 80, "Inner full content rectangle remains uncut");
+        Rect(inner.Clip, 30, 15, 50, 15, "Inner inherits intersection of every ancestor overflow clip");
+        True(frame.SourceRegions[0].NodeId == "outer" && frame.SourceRegions[1].NodeId == "middle" && frame.SourceRegions[2].NodeId == "inner", "Equal insertion positions preserve DOM preorder");
+    }
+
+    private static void SourceFlexResize()
+    {
+        const string markup = "<div id='row' style='display:flex;width:100%;height:30px;gap:10px'><div id='a' style='width:20px;flex-grow:1'></div><div id='b' style='width:20px;flex-grow:3'></div></div>";
+        var controller = new HtmlDocumentController(new ExactFixtureMetrics(), new HtmlLimits());
+        True(controller.TryLoad(markup, "", 200, 100), "Source flex document loads");
+        Rect(Source(controller.Frame, "row").Bounds, 0, 0, 200, 30, "Percent source width follows initial viewport");
+        Rect(Source(controller.Frame, "a").Bounds, 0, 0, 57.5, 30, "Source A follows resolved flex allocation");
+        Rect(Source(controller.Frame, "b").Bounds, 67.5, 0, 132.5, 30, "Source B includes resolved flex gap");
+        var old = controller.Frame;
+        True(controller.Resize(300, 100) && controller.Update(), "Source flex viewport update commits");
+        True(!ReferenceEquals(old, controller.Frame), "Resize publishes a new source-region frame");
+        Rect(Source(controller.Frame, "row").Bounds, 0, 0, 300, 30, "Percent source width updates");
+        Rect(Source(controller.Frame, "a").Bounds, 0, 0, 82.5, 30, "Source A recomputes flex allocation after resize");
+        Rect(Source(controller.Frame, "b").Bounds, 92.5, 0, 207.5, 30, "Source B recomputes gap placement after resize");
+        Rect(Source(old, "row").Bounds, 0, 0, 200, 30, "Previous frame remains independent of resize");
+    }
+
+    private static void SourceInsertionOrdering()
+    {
+        var frame = Build("<div id='panel' style='width:100px;height:40px;border:2px solid #ffffff;background:#222222'><button id='action' style='width:50px;height:20px;background:#ff0000;font-size:10px'>W</button></div>", 200, 100);
+        var panel = Source(frame, "panel");
+        var action = Source(frame, "action");
+        True(panel.Order == 5, "Parent source comes after its own background and borders");
+        True(First(frame, "action", "rect").Order == panel.Order, "Parent source insertion precedes child background at the same operation index");
+        True(action.Order == 6, "Child source comes after child background");
+        True(First(frame, "action", "text").Order >= action.Order, "Child source precedes descendant text");
+        True(frame.Hits.Count == 1 && frame.Hits[0].NodeId == "action", "Source slots do not manufacture or duplicate button hits");
+        True(frame.Operations.Count == 7, "Source slots are retained metadata, not extra paint operations");
+        True(frame.SourceRegions[0].NodeId == "panel" && frame.SourceRegions[1].NodeId == "action", "Source order remains DOM preorder");
+    }
+
+    private static void SourceSuppression()
+    {
+        var frame = Build("<div style='width:100px;height:200px'><div id='none' style='display:none;width:20px;height:10px'></div><div id='zero' style='opacity:0;width:20px;height:10px'></div><div id='outside' style='margin-left:200px;width:20px;height:10px'></div><div id='zero-width' style='width:0;height:10px'></div><div id='zero-height' style='width:20px;height:0'></div><div id='plain' style='width:20px;height:10px'></div><div id='flex' style='display:flex;width:20px;height:10px'></div><div id='alpha' style='width:20px;height:10px;opacity:.4'></div><span id='inline'>W</span></div>", 100, 200);
+        True(frame.SourceRegions.Count == 3, "Hidden, opacity-zero, offscreen, zero-content and inline nodes emit no source regions");
+        True(frame.SourceRegions[0].NodeId == "plain" && frame.SourceRegions[1].NodeId == "flex" && frame.SourceRegions[2].NodeId == "alpha", "Empty transparent block and flex slots stay available in stable order");
+        True(Source(frame, "plain").Visible && Source(frame, "flex").Visible, "Transparent empty slots are visibly addressable");
+        Near(.4, Source(frame, "alpha").Opacity, "Source retains explicitly permitted leaf opacity");
+        foreach (var region in frame.SourceRegions) True(region.NodeId.IndexOf("node-", StringComparison.Ordinal) != 0, "Source identity is author id, not generated layout identity");
+        frame = Build("<div style='width:20px;height:10px;overflow:hidden'><div id='clipped' style='margin-top:20px;width:10px;height:10px'></div></div>", 100, 100);
+        True(frame.SourceRegions.Count == 0, "Fully ancestor-clipped source is suppressed");
+    }
+
+    private static void SourcePureNoOp()
+    {
+        var metrics = new ExactFixtureMetrics();
+        var controller = new HtmlDocumentController(metrics, new HtmlLimits());
+        True(controller.TryLoad("<div id='slot' style='width:80px;height:20px'>W</div>", "", 100, 100), "Source no-op document loads");
+        var frame = controller.Frame;
+        var source = Source(frame, "slot");
+        long builds = controller.LayoutBuildCount, revision = controller.Revision;
+        int calls = metrics.Calls;
+        True(!controller.Update() && !controller.Resize(100, 100) && !controller.SetText("slot", "W"), "Unchanged source frame requests no update");
+        True(!controller.IsDirty && ReferenceEquals(frame, controller.Frame) && ReferenceEquals(source, controller.Frame.SourceRegions[0]), "No-op retains source frame and source record objects");
+        True(controller.LayoutBuildCount == builds && controller.Revision == revision && metrics.Calls == calls, "No-op performs no layout or metric work");
+        True(controller.Resize(120, 100) && controller.Resize(100, 100) && !controller.Update(), "Reverted resize is source no-op");
+        True(ReferenceEquals(frame, controller.Frame) && controller.LayoutBuildCount == builds, "Reverted source resize retains original frame without work");
+    }
+
+    private static HtmlPaintFrame ValidSourceFrame()
+    {
+        var frame = new HtmlPaintFrame { Width = 100, Height = 100, FontProfile = "fixture" };
+        frame.SourceRegions.Add(new HtmlSourceRegion { NodeId = "slot", Bounds = new HtmlRect(10, 10, 80, 80), Clip = new HtmlRect(10, 10, 80, 80), Opacity = 1, Order = 0, Visible = true });
+        return frame;
+    }
+
+    private static void SourceBoundedAdmission()
+    {
+        HtmlPaintValidation.Validate(ValidSourceFrame(), new HtmlLimits());
+        True(true, "Valid transparent source-only frame is admitted");
+        Action<HtmlSourceRegion>[] mutations = {
+            s => s.NodeId = "", s => s.Visible = false, s => s.Order = -1, s => s.Order = 1,
+            s => s.Opacity = 0, s => s.Opacity = 1.1, s => s.Opacity = double.NaN,
+            s => s.Bounds = new HtmlRect(10, 10, 0, 80), s => s.Clip = new HtmlRect(10, 10, 80, 0),
+            s => s.Clip = new HtmlRect(0, 10, 80, 80), s => s.Clip = new HtmlRect(10, 10, 91, 80),
+            s => s.Bounds = new HtmlRect(double.PositiveInfinity, 10, 80, 80)
+        };
+        foreach (var mutate in mutations)
+        {
+            var frame = ValidSourceFrame(); mutate(frame.SourceRegions[0]);
+            Reject(delegate { HtmlPaintValidation.Validate(frame, new HtmlLimits()); }, "Malformed source record is rejected before renderer publication");
+        }
+        var duplicate = ValidSourceFrame(); duplicate.SourceRegions.Add(new HtmlSourceRegion { NodeId = "slot", Bounds = new HtmlRect(10, 10, 10, 10), Clip = new HtmlRect(10, 10, 10, 10), Opacity = 1, Visible = true });
+        Reject(delegate { HtmlPaintValidation.Validate(duplicate, new HtmlLimits()); }, "Duplicate source author id rejected");
+        var missing = ValidSourceFrame(); missing.SourceRegions[0] = null;
+        Reject(delegate { HtmlPaintValidation.Validate(missing, new HtmlLimits()); }, "Null source record rejected");
+        var many = new HtmlPaintFrame { Width = 100, Height = 100, FontProfile = "fixture" };
+        for (int i = 0; i < 512; i++) many.SourceRegions.Add(new HtmlSourceRegion { NodeId = "slot-" + i, Bounds = new HtmlRect(0, 0, 1, 1), Clip = new HtmlRect(0, 0, 1, 1), Opacity = 1, Visible = true });
+        HtmlPaintValidation.Validate(many, new HtmlLimits());
+        True(true, "Exact hard ceiling of 512 valid source records is admitted");
+        Reject(delegate { HtmlPaintValidation.Validate(many, new HtmlLimits { MaxNodes = 511 }); }, "Lower authored node limit also bounds source records");
+        many.SourceRegions.Add(new HtmlSourceRegion { NodeId = "slot-512", Bounds = new HtmlRect(0, 0, 1, 1), Clip = new HtmlRect(0, 0, 1, 1), Opacity = 1, Visible = true });
+        Reject(delegate { HtmlPaintValidation.Validate(many, new HtmlLimits()); }, "513th source record exceeds hard ceiling");
+    }
+
+#if HTML_SOURCE_REGIONS
+    private static void SourceSnapshotsAndDiff()
+    {
+        var frame = Build("<div id='slot' style='width:80px;height:20px'></div>", 100, 100);
+        var copy = HtmlPaintDiff.Snapshot(frame);
+        True(HtmlPaintDiff.Equal(frame, copy), "Deep source snapshot initially compares equal");
+        True(!ReferenceEquals(frame.SourceRegions, copy.SourceRegions) && !ReferenceEquals(frame.SourceRegions[0], copy.SourceRegions[0]), "Snapshot owns a separate source collection and each source record");
+        Action<HtmlSourceRegion>[] mutations = {
+            s => s.NodeId = "changed", s => s.Bounds = new HtmlRect(1, 0, 80, 20),
+            s => s.Clip = new HtmlRect(0, 0, 40, 20), s => s.Opacity = .5,
+            s => s.Order = 1, s => s.Visible = false
+        };
+        foreach (var mutate in mutations)
+        {
+            copy = HtmlPaintDiff.Snapshot(frame); mutate(copy.SourceRegions[0]);
+            True(!HtmlPaintDiff.Equal(frame, copy), "Source-only metadata change invalidates exact paint diff");
+            True(frame.SourceRegions[0].NodeId == "slot" && frame.SourceRegions[0].Bounds.X == 0 && frame.SourceRegions[0].Clip.Width == 80 && frame.SourceRegions[0].Opacity == 1 && frame.SourceRegions[0].Order == 0 && frame.SourceRegions[0].Visible, "Mutated snapshot cannot alter original source record");
+        }
+        copy = HtmlPaintDiff.Snapshot(frame); copy.SourceRegions.Clear();
+        True(!HtmlPaintDiff.Equal(frame, copy) && frame.SourceRegions.Count == 1, "Source removal invalidates diff and does not mutate original frame");
+        copy = HtmlPaintDiff.Snapshot(frame); copy.Revision++;
+        True(HtmlPaintDiff.Equal(frame, copy), "Revision-only change does not pretend source pixels changed");
+        True(HtmlPaintDiff.Equal(null, null) && !HtmlPaintDiff.Equal(frame, null) && HtmlPaintDiff.Snapshot(null) == null, "Source-aware diff retains null frame behavior");
+    }
+#endif
 }

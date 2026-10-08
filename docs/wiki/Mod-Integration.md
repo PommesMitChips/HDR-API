@@ -2,6 +2,8 @@
 
 HDR offers three different mod boundaries: **consume rendering**, **supply display data**, or **implement a raster backend**. Use the first for a HUD/menu or custom world-space drawing; use the second for data that a PB can attach to a block-bound screen. Neither interface grants a PB access to arbitrary client delegates or native GPU resources.
 
+Core 0.9.11 also makes these paths [composable](Composition.md): retained artwork and source windows share ordered HUD/world contexts, while world canvases can map onto all five supported surface kinds. The HTML frontend can supply layout and cooperative document input over the same contexts. Client-local native camera/LCD/declared-portal sources require Client Renderer 0.9.14 and a real accessible anchor; custom providers explicitly negotiate the local-consumer extension.
+
 Retained HUD/world items can use [hologram effects](Special-Effects.md), including flicker, refresh bars, procedural particles and reveal transitions. World contexts also support layered depth and projection rays. The effects use the consumer's existing local context and do not require a renderer plugin.
 
 [Interactive artwork controls](Interactive-Controls.md) add numeric values and constrained retained poses for PBs and client mods in HDR API **0.9.9 / scene 19**. Optional HDR Client Renderer **0.9.13** is required on the viewer for native mouse focus; live-input behavior remains unverified. Cooperative mod input uses the consumer's existing input route and needs no renderer plugin.

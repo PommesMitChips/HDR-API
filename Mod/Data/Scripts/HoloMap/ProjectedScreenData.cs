@@ -61,8 +61,12 @@ namespace HoloMap
   [ProtoMember(61)] public float[] SurfaceMeshUV;
   [ProtoMember(62)] public int SourceCaptureProfile;
   [ProtoMember(63)] public HoloPortalData Portal;
+  // Source slots are local canvas consumers. Tags 25–35 remain reserved.
+  [ProtoMember(64)] public List<HoloProjectedSourceSlotData> SourceSlots;
+  [ProtoMember(65)] public long UiSurfaceGeneration;
   internal Vector3D[] SurfacePointCache;internal double[] SurfacePointCacheSource;
   internal Vector2[] SurfaceUvCache;internal float[] SurfaceUvCacheSource;
+  internal string CompositionSlotId;
  }
  [ProtoContract] public sealed class HoloProjectedSpriteData
  {
@@ -92,7 +96,7 @@ namespace HoloMap
   static void ValidateScreenData(HoloProjectedScreenData d)
   {
 
-   if(d==null||d.CallerId==0)throw new ArgumentException("Invalid screen owner.");ScreenId(d.Id);ValidateDisplaySource(d.SourceProvider,d.SourceId);var pose=ReadMatrix(d.Pose);ValidateTransform(pose);
+   if(d==null||d.CallerId==0||d.UiSurfaceGeneration<0)throw new ArgumentException("Invalid screen owner or UI surface generation.");ScreenId(d.Id);ValidateDisplaySource(d.SourceProvider,d.SourceId);var pose=ReadMatrix(d.Pose);ValidateTransform(pose);
    if(d.SourceCaptureProfile<0||d.SourceCaptureProfile>1)throw new ArgumentException("Camera quality profile is normal or lite.");
    if(!Geometry.Finite(d.SourceFov)||d.SourceFov<60||d.SourceFov>120||!Geometry.Finite(d.SourceFeather)||d.SourceFeather<0||d.SourceFeather>25||!Geometry.Finite(d.SourceSaturation)||d.SourceSaturation<0||d.SourceSaturation>2||d.SourceCaptureResolution!=256&&d.SourceCaptureResolution!=512&&d.SourceCaptureResolution!=1024&&d.SourceCaptureResolution!=2048)throw new ArgumentException("Panorama settings require FOV 60–120, feather 0–25, saturation 0–2 and capture size 256, 512, 1024 or 2048.");
    if(Math.Abs(pose.Right.LengthSquared()-1)>1e-8||Math.Abs(pose.Up.LengthSquared()-1)>1e-8||Math.Abs(pose.Backward.LengthSquared()-1)>1e-8||Math.Abs(Vector3D.Dot(pose.Right,pose.Up))>1e-8||Math.Abs(Vector3D.Dot(pose.Right,pose.Backward))>1e-8||Math.Abs(Vector3D.Dot(pose.Up,pose.Backward))>1e-8||pose.Determinant()<.999999)throw new ArgumentException("Screen pose must be a rigid, right-handed transform.");
@@ -103,7 +107,7 @@ namespace HoloMap
    if(d.Camera==null||d.Camera.Length!=12)throw new ArgumentException("Invalid screen camera.");foreach(double n in d.Camera)if(!Geometry.Finite(n)||Math.Abs(n)>1000000)throw new ArgumentException("Nonfinite/unbounded screen camera.");
    var eye=new Vector3D(d.Camera[0],d.Camera[1],d.Camera[2]);var forward=new Vector3D(d.Camera[3],d.Camera[4],d.Camera[5])-eye;var up=new Vector3D(d.Camera[6],d.Camera[7],d.Camera[8]);if(eye.LengthSquared()>1e12||forward.LengthSquared()<1e-12||Vector3D.Cross(forward,up).LengthSquared()<1e-12||d.Camera[9]<.1||d.Camera[9]>2.8||d.Camera[10]<.01||d.Camera[11]<=d.Camera[10]||d.Camera[11]>1000000)throw new ArgumentException("Invalid perspective camera bounds/basis.");
    ValidateScreenSurface(d,pose);
-   ValidatePortalSource(d);
+   ValidatePortalSource(d);ValidateSourceSlots(d);
    if(d.SurfaceClip!=null){if(d.SurfaceClip.Length%4!=0||d.SurfaceClip.Length>32)throw new ArgumentException("Screen crop supports up to eight planes.");for(int i=0;i<d.SurfaceClip.Length;i+=4){for(int j=0;j<4;j++)if(!Geometry.Finite(d.SurfaceClip[i+j]))throw new ArgumentException("Nonfinite screen crop plane.");double length=new Vector3D(d.SurfaceClip[i],d.SurfaceClip[i+1],d.SurfaceClip[i+2]).Length();if(!Geometry.Finite(length)||length<1e-8||Math.Abs(d.SurfaceClip[i+3])/length>50)throw new ArgumentException("Invalid screen crop plane.");}}
    if(d.PanoramaGroup!=null){ScreenId(d.PanoramaGroup);if((d.SurfaceKind!=2&&d.SurfaceKind!=3)||d.SurfaceMapping!=2)throw new ArgumentException("Joined camera screens require a pinhole sphere.");}
    if(d.RasterWidth<8||d.RasterWidth>128||d.RasterHeight<8||d.RasterHeight>72||!Geometry.Finite(d.OrbitSpeed)||Math.Abs(d.OrbitSpeed)>2||d.OrbitStartTick<0||d.OrbitStartTick>int.MaxValue)throw new ArgumentException("Invalid screen capture policy.");
@@ -131,10 +135,10 @@ namespace HoloMap
    var sources=new Dictionary<string,HoloProjectedScreenData>();
    foreach(var screen in scene.Screens.Values)
    {
-    var d=screen.Data;if(d.SourceProvider!="camera-panorama")continue;
+    foreach(var d in ScreenSourceSettings(screen.Data)){if(d.SourceProvider!="camera-panorama")continue;
     string key=Key(d.CallerId,d.SourceId);HoloProjectedScreenData previous;
     if(sources.TryGetValue(key,out previous)&&!SameCameraSourceSettings(previous,d))throw new ArgumentException("Screens sharing a camera source for this PB require the same panorama settings.");
-    sources[key]=d;
+    sources[key]=d;}
    }
   }
   static void ValidateProjectedReferences(Scene scene)
@@ -147,14 +151,14 @@ namespace HoloMap
   {if(!IsProjectedId(id)||string.IsNullOrEmpty(layer))return;int end=id.IndexOf('!',3);string sid=id.Substring(3,end-3);if(!layer.StartsWith("s_"+sid+"__",StringComparison.Ordinal))throw new ArgumentException("Projected object layer belongs to another namespace.");}
   static void ValidateProjectedReference(Scene scene,long caller,string id)
   {if(!IsProjectedId(id))return;int end=id.IndexOf('!',3);if(end<4||end>=id.Length-1)throw new ArgumentException("Malformed projected content ID.");string sid=ScreenId(id.Substring(3,end-3));if(!scene.Screens.ContainsKey(Key(caller,sid)))throw new ArgumentException("Orphan projected content.");}
-  static int ProjectedSourceBytes(Scene scene){int result=0;foreach(var s in scene.Screens.Values){var d=s.Data;result+=1024+(d.SourceProvider==null?0:d.SourceProvider.Length*3)+(d.SourceId==null?0:d.SourceId.Length*3);if(d.Portal!=null){result+=512;if(d.Portal.ExitPoints!=null)result+=d.Portal.ExitPoints.Length*8+d.Portal.ExitTriangles.Length*4+d.Portal.ExitUV.Length*8;}if(d.SurfaceMeshPoints!=null)result+=d.SurfaceMeshPoints.Length*8+d.SurfaceMeshTriangles.Length*4+d.SurfaceMeshUV.Length*4;if(d.SourcePoints!=null)result+=d.SourcePoints.Length*8+d.SourceTriangles.Length*4+d.SourceColors.Length*4;if(d.Sprites!=null)foreach(var sprite in d.Sprites)result+=128+(sprite.Data==null?0:sprite.Data.Length*3);}return result;}
+  static int ProjectedSourceBytes(Scene scene){int result=0;foreach(var s in scene.Screens.Values){var d=s.Data;result+=SourceSlotBytes(d)+1024+(d.SourceProvider==null?0:d.SourceProvider.Length*3)+(d.SourceId==null?0:d.SourceId.Length*3);if(d.Portal!=null){result+=512;if(d.Portal.ExitPoints!=null)result+=d.Portal.ExitPoints.Length*8+d.Portal.ExitTriangles.Length*4+d.Portal.ExitUV.Length*8;}if(d.SurfaceMeshPoints!=null)result+=d.SurfaceMeshPoints.Length*8+d.SurfaceMeshTriangles.Length*4+d.SurfaceMeshUV.Length*4;if(d.SourcePoints!=null)result+=d.SourcePoints.Length*8+d.SourceTriangles.Length*4+d.SourceColors.Length*4;if(d.Sprites!=null)foreach(var sprite in d.Sprites)result+=128+(sprite.Data==null?0:sprite.Data.Length*3);}return result;}
   static void ProjectedSourceCounts(Scene scene,out int points,out int primitives){points=0;primitives=scene.Screens.Count*2;foreach(var s in scene.Screens.Values){if(s.Data.SurfaceMeshPoints!=null){points+=s.Data.SurfaceMeshPoints.Length/3;primitives+=s.Data.SurfaceMeshTriangles.Length/3;}if(s.Source!=null){points+=s.Source.Points.Length;primitives+=s.Source.Triangles.Length/3;}}}
   static HoloProjectedScreenData CloneScreen(HoloProjectedScreenData d,bool deep=false)
   {
    var c=new HoloProjectedScreenData{CallerId=d.CallerId,Id=d.Id,Pose=d.Pose,Width=d.Width,Height=d.Height,CanvasWidth=d.CanvasWidth,CanvasHeight=d.CanvasHeight,RefreshHz=d.RefreshHz,Background=d.Background,Opacity=d.Opacity,Visible=d.Visible,Aspect=d.Aspect,View=d.View,Sprites=d.Sprites,SpriteWidth=d.SpriteWidth,SpriteHeight=d.SpriteHeight,SourcePoints=d.SourcePoints,SourceTriangles=d.SourceTriangles,SourceColors=d.SourceColors,Camera=d.Camera,RasterWidth=d.RasterWidth,RasterHeight=d.RasterHeight,OrbitSpeed=d.OrbitSpeed,OrbitStartTick=d.OrbitStartTick,SourceProvider=d.SourceProvider,SourceId=d.SourceId,SurfaceKind=d.SurfaceKind,SurfaceMapping=d.SurfaceMapping,SurfaceRadius=d.SurfaceRadius,SurfaceHorizontal=d.SurfaceHorizontal,SurfaceVertical=d.SurfaceVertical,SurfaceSide=d.SurfaceSide,SurfaceError=d.SurfaceError,ContentRenderer=d.ContentRenderer,UiRasterWidth=d.UiRasterWidth,UiRasterHeight=d.UiRasterHeight,UiRasterSamples=d.UiRasterSamples,TwoSided=d.TwoSided,FrontOpacity=d.FrontOpacity,BackOpacity=d.BackOpacity,PanoramaGroup=d.PanoramaGroup,SurfaceClip=d.SurfaceClip};
    c.SurfaceRadii=d.SurfaceRadii;c.SurfaceMeshPoints=d.SurfaceMeshPoints;c.SurfaceMeshTriangles=d.SurfaceMeshTriangles;c.SurfaceMeshUV=d.SurfaceMeshUV;c.SurfacePointCache=d.SurfacePointCache;c.SurfacePointCacheSource=d.SurfacePointCacheSource;c.SurfaceUvCache=d.SurfaceUvCache;c.SurfaceUvCacheSource=d.SurfaceUvCacheSource;
    c.SourceFov=d.SourceFov;c.SourceFeather=d.SourceFeather;c.SourceSaturation=d.SourceSaturation;c.SourceCaptureResolution=d.SourceCaptureResolution;c.SourceCaptureProfile=d.SourceCaptureProfile;
-   c.Portal=ClonePortal(d.Portal,deep);
+   c.Portal=ClonePortal(d.Portal,deep);c.SourceSlots=CloneSourceSlots(d.SourceSlots);c.UiSurfaceGeneration=d.UiSurfaceGeneration;
    if(deep){if(d.SurfaceRadii!=null)c.SurfaceRadii=(double[])d.SurfaceRadii.Clone();if(d.SurfaceMeshPoints!=null){c.SurfaceMeshPoints=(double[])d.SurfaceMeshPoints.Clone();c.SurfaceMeshTriangles=(int[])d.SurfaceMeshTriangles.Clone();c.SurfaceMeshUV=(float[])d.SurfaceMeshUV.Clone();c.SurfacePointCache=null;c.SurfacePointCacheSource=null;c.SurfaceUvCache=null;c.SurfaceUvCacheSource=null;}if(d.SurfaceClip!=null)c.SurfaceClip=(double[])d.SurfaceClip.Clone();c.Pose=(double[])d.Pose.Clone();c.Background=(float[])d.Background.Clone();c.View=(double[])d.View.Clone();c.Camera=(double[])d.Camera.Clone();if(d.SourcePoints!=null){c.SourcePoints=(double[])d.SourcePoints.Clone();c.SourceTriangles=(int[])d.SourceTriangles.Clone();c.SourceColors=(float[])d.SourceColors.Clone();}if(d.Sprites!=null){c.Sprites=new List<HoloProjectedSpriteData>();foreach(var s in d.Sprites)c.Sprites.Add(new HoloProjectedSpriteData{Type=s.Type,Data=s.Data,Font=s.Font,Alignment=s.Alignment,Rotation=s.Rotation,Position=s.Position==null?null:(float[])s.Position.Clone(),Size=s.Size==null?null:(float[])s.Size.Clone(),Color=s.Color==null?null:(float[])s.Color.Clone()});}}return c;
   }
   static MySprite[] ScreenSprites(List<HoloProjectedSpriteData> data)

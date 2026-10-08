@@ -66,8 +66,8 @@ namespace HoloMap
             if(op=="lcdgroup"){string name=a.Text();int columns=a.Integer(1),rows=a.Integer(1);double width=a.Number(2*columns),height=a.Number(2*rows);a.End();ConfigureLcdGroup(context,name,columns,rows,width,height);return true;}
             if(context.Target==null)throw new ArgumentException("Select a target first: H(\"target\", \"Holo Map\").");
             var targetBlock=Authorize(caller,context.Target);string id;
-            if(op=="budget"||op=="render-budget"){int points=a.Integer(4096),primitives=a.Integer(8192),work=a.Integer(20000);a.End();SetRenderBudget(caller,targetBlock,points,primitives,work);return true;}
-            if(op=="budget-settings"){a.End();var current=GetScene(targetBlock.EntityId);return new MyTuple<int,int,int>(current.PointBudget,current.PrimitiveBudget,current.DrawWorkBudget);}
+            if(op=="budget"||op=="render-budget"){int points=a.Integer(0),primitives=a.Integer(0),work=a.Integer(20000);a.End();SetRenderBudget(caller,targetBlock,points,primitives,work);return true;}
+            if(op=="budget-settings"){a.End();var current=GetScene(targetBlock.EntityId);return new MyTuple<int,int,int>(PublicGeometryAllowance(current.PointBudget),PublicGeometryAllowance(current.PrimitiveBudget),current.DrawWorkBudget);}
             if(op=="lcd"){double width=a.Number(2),height=a.Number(2);a.End();ConfigureLcd(caller,targetBlock,width,height,1,1,0,0);return true;}
             if(op=="lcd-background"){var color=a.Paint();int surface=a.Integer(0);a.End();SetLcdBackground(caller,targetBlock,color,surface);return true;}
             if(op=="lcd-renderer"){string renderer=a.Text().ToLowerInvariant();a.End();SetLcdRenderer(caller,targetBlock,renderer);return true;}
@@ -86,6 +86,7 @@ namespace HoloMap
                 case "volume": case "table-volume":
                 {bool enabled=a.Flag(true);double height=a.Number(2),lowerX=a.Number(1),lowerZ=a.Number(0.75),upperX=a.Number(1.8),upperZ=a.Number(1.35),bottom=a.Number(0.1);a.End();DrawCheck(SetTableVolume(caller,targetBlock,enabled,height,lowerX,lowerZ,upperX,upperZ,bottom));return true;}
                 case "layer-order": {string name=a.Text();int order=a.Integer(0);a.End();DrawCheck(SetLayerOrder(caller,targetBlock,name,order));return true;}
+                case "layer-remove": {string name=a.Text();a.End();DrawCheck(RemoveLayer(caller,targetBlock,name));return true;}
                 case "lcd-release": a.End();ReleaseLcd(caller,targetBlock);return true;
                 case "clear": a.End();DrawCheck(Clear(caller,targetBlock));ClearDrawAnimations(caller.EntityId,targetBlock.EntityId);return true;
                 case "remove": id=a.Text();a.End();DrawCheck(Remove(caller,targetBlock,id));RemoveDrawAnimation(caller.EntityId,targetBlock.EntityId,id);return true;

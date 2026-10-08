@@ -30,7 +30,7 @@ internal static class RendererChecks
         public object Call(string command,params object[] arguments)
         {
             Calls++;if(command=="geometry-cost")CostCalls++;
-            if(command!="context-valid"&&command!="geometry-usage"&&command!="geometry-cost"&&command!="measure-text")Mutations++;
+            if(command!="context-valid"&&command!="geometry-usage"&&command!="geometry-cost"&&command!="measure-text"&&command!="geometry-limit-settings")Mutations++;
             if(command==FailCommand){FailCommand=null;throw new ArgumentException("injected transient "+command);}
             return endpoint(command,arguments);
         }
@@ -70,6 +70,7 @@ internal static class RendererChecks
     static void Run(string output)
     {
         bool limitsRejected=false;try{new HtmlVectorPainter(new Endpoint(),true,MatrixD.Identity,limits:new HtmlPainterLimits {MaxOperations=0});}catch(ArgumentException){limitsRejected=true;}Check(limitsRejected,"zero operation grant rejected at construction");
+        UnlimitedGeometry();
         Directory.CreateDirectory(output);var api=new Endpoint();var frame=Frame(api,5);HtmlPaintReport report;
         using(var hud=new HtmlVectorPainter(api,true,MatrixD.Identity))using(var world=new HtmlVectorPainter(api,false,MatrixD.Identity,.01))
         {
@@ -100,6 +101,36 @@ internal static class RendererChecks
         var stats=new StringBuilder("# CPU preparation and retained update comparison\n\nReal HDR packaged glyph and SVG compilers run against installed game references. No GPU, live game, or native draw-thread timings are claimed. Cost preflight compiles text/SVG; a successful source upsert compiles again.\n\n|Frame|Backend|Initial ms|Prepared items|Actual points|Actual triangles|Mutating calls|1000 no-op ms|No-op mutations|Dirty calls|\n|---|---|---:|---:|---:|---:|---:|---:|---:|---:|\n");
         Benchmark(stats,5,false);Benchmark(stats,5,true);Benchmark(stats,20,false);Benchmark(stats,20,true);File.WriteAllText(Path.Combine(output,"BENCHMARK.md"),stats.ToString());
         Console.WriteLine("Renderer assertions: "+checks);
+    }
+    static HtmlPaintFrame LargeGeometryFrame(Endpoint api)
+    {
+        var frame=new HtmlPaintFrame{Width=800,Height=800,FontProfile=HtmlHdrTextMetrics.MetricSchema,Revision=1};var metrics=new HtmlHdrTextMetrics(api);string text=new string('A',64);var measured=metrics.Measure(text,8,1.3);
+        for(int i=0;i<32;i++)frame.Operations.Add(new HtmlPaintOperation{Key="dense-text-"+i,Order=i,Kind="text",Text=text,Bounds=new HtmlRect(5,10+i*20,measured.Advance,8),FontSize=8,LineHeight=1.3,Color=new HtmlColor(1,1,1,1)});
+        return frame;
+    }
+    static void UnlimitedGeometry()
+    {
+        var defaults=new HtmlPainterLimits();Check(defaults.MaxPoints==0&&defaults.MaxPrimitives==0,"aggregate painter geometry defaults are explicitly unlimited");
+        var api=new Endpoint();var frame=LargeGeometryFrame(api);HtmlPaintReport report;int points,primitives;
+        using(var painter=new HtmlVectorPainter(api,true,MatrixD.Identity))
+        {
+            Check(painter.TryPaint(frame,out report),"unlimited painter plus actual Core accepts dense real font geometry: "+report.Error);
+            points=report.EstimatedPoints;primitives=report.EstimatedTriangles;Check(points>8192&&primitives>8192,"actual retained geometry exceeds both former aggregate allowances");
+            var usage=(MyTuple<int,int>)api.Call("geometry-usage");Check(usage.Item1==points&&usage.Item2==primitives,"actual Core owns every accepted point and primitive");
+        }
+        api=new Endpoint();frame=LargeGeometryFrame(api);api.Call("geometry-limit",8192,8192);
+        using(var painter=new HtmlVectorPainter(api,true,MatrixD.Identity))
+        {int before=api.Mutations;Check(!painter.TryPaint(frame,out report)&&api.Mutations==before&&report.MutatingCalls==0,"explicit finite owner allowance rejects before retained mutation");Check(painter.Context==0,"finite owner rejection allocates no hidden context");}
+        api=new Endpoint();frame=LargeGeometryFrame(api);
+        using(var painter=new HtmlVectorPainter(api,true,MatrixD.Identity,limits:new HtmlPainterLimits{MaxPoints=8192,MaxPrimitives=8192}))
+        {int before=api.Mutations;Check(!painter.TryPaint(frame,out report)&&api.Mutations==before&&report.MutatingCalls==0,"explicit finite painter allowance preserves the earlier overflow gate");}
+        api=new Endpoint();frame=LargeGeometryFrame(api);api.Call("geometry-limit",points+1,primitives+1);
+        using(var painter=new HtmlVectorPainter(api,true,MatrixD.Identity,limits:new HtmlPainterLimits{MaxPoints=points+1,MaxPrimitives=primitives+1}))
+        {Check(painter.TryPaint(frame,out report),"finite allowances above the former maximum are configurable: "+report.Error);}
+        api=new Endpoint();frame=LargeGeometryFrame(api);
+        using(var painter=new HtmlVectorPainter(api,true,MatrixD.Identity,limits:new HtmlPainterLimits{MaxPoints=0,MaxPrimitives=primitives+1}))
+        {Check(painter.TryPaint(frame,out report),"zero point allowance remains unlimited beside a finite primitive allowance: "+report.Error);}
+        bool rejected=false;try{new HtmlVectorPainter(api,true,MatrixD.Identity,limits:new HtmlPainterLimits{MaxPoints=-1});}catch(ArgumentException){rejected=true;}Check(rejected,"negative geometry allowances are rejected rather than normalized to unlimited");
     }
     static void Benchmark(StringBuilder stats,int rows,bool svg)
     {

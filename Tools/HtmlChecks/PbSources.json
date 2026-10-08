@@ -10,6 +10,11 @@
       "Source": "OptionalMods/HDRHtmlFrontend/Examples/HtmlPbSpritesDemo.cs",
       "Wrapper": "SpritesDemoProgram.cs",
       "PasteArtifact": "HtmlPbSpritesDemo.pb.cs"
+    },
+    {
+      "Source": "OptionalMods/HDRHtmlFrontend/Examples/HtmlCameraEllipsoidDemo.cs",
+      "Wrapper": "CameraEllipsoidProgram.cs",
+      "PasteArtifact": "HtmlCameraEllipsoidDemo.pb.cs"
     }
   ]
 }

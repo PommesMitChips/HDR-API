@@ -1,8 +1,8 @@
 # Local HTML frontend API
 
-**ALPHA.** `HDR.Html/0.1` is a client-local source frontend for `HDR.HTML/Profile1`. It is not a browser engine: it has no JavaScript, browser DOM, network loading, iframe, canvas, WebGL or arbitrary HTML event handlers. Unsupported markup, CSS and paint features are reported.
+**ALPHA — frontend 0.2.0, core 0.9.11 / scene 20.** `HDR.Html/0.1` is a client-local source frontend for `HDR.HTML/Profile1`. It is not a browser engine: it has no JavaScript, browser DOM, network loading, iframe, canvas, WebGL or arbitrary HTML event handlers. Unsupported markup, CSS and paint features are reported.
 
-Copy [`HdrHtmlApi.cs`](../../../Api/Mods/HdrHtmlApi.cs) into the consumer mod. The optional frontend itself needs the HDR API world mod for its vector/SVG backends. No client plugin is needed for those paths. Native LCD sprites are an explicitly selected alternative with their own measured font and feature limits.
+Copy [`HdrHtmlApi.cs`](../../../Api/Mods/HdrHtmlApi.cs) into the consumer mod. Vector/SVG geometry needs the core world mod and no client plugin. Native source attachments require actual block authority and explicit local-consumer provider negotiation; camera/LCD/portal sources use **Client Renderer 0.9.14**. The separate PB camera/persistent pointer route remains compatible with **0.9.13+**. Native LCD sprites are an explicitly selected alternative with their own measured font and feature limits.
 
 Call discovery and document methods on the client simulation thread outside rendering callbacks. The service uses local message channels **481770150** (discovery) and **481770151** (request), with `Func<string, object[], object>` endpoints. Only standard CLR values, game types and `VRage.MyTuple` values cross the delegate boundary; consumers do not exchange frontend-specific CLR classes.
 
@@ -24,7 +24,10 @@ The SDK wraps these exact endpoint calls:
 | --- | --- | --- |
 | `create-hud` | HTML string, CSS string, width, height, `vector` or `svg`, optional integer order | `long` handle |
 | `create-world` | HTML string, CSS string, width, height, `MatrixD` pose, metres per pixel, `vector` or `svg`, optional integer order | `long` handle |
+| `create-surface` | HTML string, CSS string, width, height, `MatrixD` world pose, metres per pixel, surface kind, `object[]` surface parameters, `MyTuple<string,object[]>[]` settings, `vector` or `svg`, integer order | `long` handle |
 | `create-lcd` | HTML string, CSS string, `Sandbox.ModAPI.Ingame.IMyTextSurface`, `bool callerOwnsSurface` | `long` handle |
+| `geometry-limit` | Optional point and primitive Int32 counts, each default `0`; no document handle | `true`; SDK `GeometryLimit` returns void |
+| `geometry-limit-settings` | None; no document handle | `MyTuple<int,int>` owner point/primitive allowances |
 | `replace` | handle, HTML string, CSS string, width, height | `bool` accepted layout |
 | `data` | handle, binding key, plain string | `bool` queued change |
 | `text` | handle, node ID, plain string | `bool` queued change |
@@ -32,14 +35,40 @@ The SDK wraps these exact endpoint calls:
 | `status` | handle | status tuple below |
 | `destroy` | handle | `true` |
 | `pointer` | handle, logical X, logical Y, held Boolean | `true` |
+| `pointer-ray` | handle, world-space `Vector3D` origin, direction, held Boolean | `true`; cooperative input on the committed world plane/surface |
 | `pointer-cancel` | handle | `true` |
+| `source-anchor` | handle, actual `Sandbox.ModAPI.Ingame.IMyTerminalBlock` anchor | `true`; SDK `SetSourceAnchor` returns void |
+| `attach-source` | handle, explicit block node ID, provider, source ID, optional `MyTuple<string,object[]>[]` settings | Boolean accepted source publication |
+| `detach-source` | handle, node ID | Boolean accepted removal |
+| `source-status` | handle, node ID | `MyTuple<bool,string>` readiness and actual reason |
+| `source-capabilities` | handle | Detached `string[]` of actual supported capabilities/reasons |
 | `poll-events` | handle | event tuple array below |
 
 Logical coordinates have a top-left origin and Y points down. A world pose places that top-left at its translation: local +X is right, local −Y is down. HUD units are pixels. World metres per pixel must be finite and between 0.000001 and 1000. Native LCD layout dimensions match the surface's actual `SurfaceSize`.
 
+`CreateWorld` retains this top-left convention across resize, using the shared plane mapper for provider sources and `PointerRay`. `CreateSurface` instead uses a centred world surface pose and a centred canvas of `width * metresPerPixel` by `height * metresPerPixel`. It accepts plane/cylinder/sphere/ellipsoid/authored mesh parameters matching the core mapper. Named settings are `anchor` with an actual block; `mapping` with angular/geodesic/pinhole and optional vertical FOV/source aspect; `sided` with two-sided/front/back opacity; and `error` with chord error in metres. Both `vector` and `svg` are supported. See the [exact composition calls](../../../docs/wiki/Composition.md#compose-in-a-client-local-mod-context).
+
 `replace` succeeds only after parsing and layout succeed. Its painter may still reject the new frame; inspect status to confirm visible output. Plain text and binding updates coalesce into one layout in the next update. An unchanged document does not parse or lay out every frame. Per-document input always refers to the last successfully committed visible frame, even when a newer candidate fails. Failed renderer mutations restore owned prior output when possible; if restoration fails, the context and its input are retired.
 
 Parser/layout defaults allow 131072 combined HTML/CSS characters, 512 nodes, depth 32, 256 CSS rules, 2048 declarations, 16384 text characters, 512 paint operations and 64 hit regions. A document admits at most 128 binding keys and 128 queued events. The selected HDR painter must also fit the renderer's actual owner/item/point/primitive limits; these are explicit errors, not silent quality reduction.
+
+Aggregate point/primitive allowance defaults to **0 = unlimited**, independently in `HtmlPainterLimits.MaxPoints` / `MaxPrimitives` and the underlying core owner. Positive configured painter allowances still apply; there is no fixed 8,192 aggregate grant. Exact preflight queries `geometry-limit-settings` → `MyTuple<int,int>` and checks actual owner usage before renderer mutation. `HdrHtmlApi.GeometryLimit(points=0, primitives=0)` / `GeometrySettings()` forward the owner-level core calls, with no document handle, across this hosted owner's HUD/world/surface contexts. A live core owner is required. Negative counts fail; local Int32.MaxValue remains a positive finite value and is returned unchanged. Accepted finite settings retire cached source frames exceeding the allowance and preserve desired slots; a finite configuration below existing ordinary/mapped artwork rejects atomically. Genuine physical native LCD output retains its actual sprite/payload limits. Per-item/operation limits and the separate local-owner 4,096 / global-mod 20,000 frame-work defaults remain in force.
+
+## Provider source attachments
+
+Existing HUD and world documents keep their original constructors:
+
+```csharp
+long document = html.CreateWorld(markup, css, 640, 360, topLeftPose, .005, "svg", 0);
+html.SetSourceAnchor(document, actualBlock);
+bool attached = html.AttachSource(document, "pov", "camera-panorama", cameraId);
+html.PointerRay(document, ownedRayOrigin, ownedRayDirection, held);
+var source = html.SourceStatus(document, "pov");
+```
+
+For a HUD, use `CreateHud`, the same `SetSourceAnchor`/`AttachSource` calls and existing cooperative `Pointer` pixels. HUD sources retain top-left Y-down pixel bounds/clip and flat HUD mapping. `CreateSurface` can set its initial anchor through settings or later `SetSourceAnchor`. Only genuine physical `CreateNativeLcd` rejects external engine texture embedding; use an HDR HUD/world/surface renderer for provider images.
+
+Attachments use explicit visible block IDs, retain full node content bounds and effective rectangular clip, and insert after node background/border before children. Clipped provider UVs crop without stretching. The source hint schema matches the [PB attachment API](PB-API.md#attach-a-source-to-a-layout-node): refresh, panorama, quality and opacity. Admission checks actual anchor validity and explicitly negotiated local-consumer provider capability before changing accepted declarations. Native providers need Client Renderer 0.9.14; missing/unsupported service returns its actual reason. Readiness is separate from declaration acceptance, visible document revision and viewer/GPU acceptance. Detach/replacement retires only the appropriate owned source consumer.
 
 ## Status and events
 
@@ -68,7 +97,7 @@ Input is cooperative. The consumer must already own a GUI/input session which pr
 
 Before calling `CreateNativeLcd`, the consumer must explicitly own the supplied target and configure `ContentType.SCRIPT` with no selected text-surface script. The frontend does not claim an arbitrary LCD, rename blocks, change content mode or select a script. It uses the actual surface's `Debug:Lcd` font measurements; the Inter vector profile is not substituted. Use an unspecified font family or the native Debug profile as documented by the layout profile.
 
-The native painter currently supports solid rectangles and measured Debug text, including the profile's rectangular range control. Authored rounded corners, strokes, images and SVG assets are explicit unsupported errors. A minimal native demo is supplied separately. This route still uses vanilla LCD texture size and update behavior. The separate [PB adapter](PB-API.md) runs on the host/server; curved HTML surfaces and plugin raster output remain future frontend work.
+The native painter currently supports solid rectangles and measured Debug text, including the profile's rectangular range control. Authored rounded corners, strokes, images and SVG assets are explicit unsupported errors. A minimal native demo is supplied separately. This route still uses vanilla LCD texture size and update behavior and cannot embed external engine source textures. Curved local HTML uses `CreateSurface`; the separate [PB adapter](PB-API.md) runs on the host/server and can map actual native LCD textures through its explicit projected relay.
 
 ## Manual prototype demo
 

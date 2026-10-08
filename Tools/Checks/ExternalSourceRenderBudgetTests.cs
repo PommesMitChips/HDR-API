@@ -12,7 +12,7 @@ internal static class ExternalSourceRenderBudgetTests
  sealed class Fixture
  {
   public readonly HoloMapSession Session=new();public readonly object Scene=New("Scene");public readonly IDictionary Screens,Items,Caches,Compiled;
-  public Fixture(){Set(Scene,"ConsoleId",20L);((IDictionary)Field(Session,"_scenes"))[20L]=Scene;Screens=(IDictionary)Field(Scene,"Screens");Items=(IDictionary)Field(Scene,"Items");Caches=(IDictionary)Field(Session,"_projectedCaches");Compiled=(IDictionary)Field(Session,"_clientGeometry");}
+  public Fixture(bool unlimited=false){Set(Scene,"ConsoleId",20L);if(!unlimited){Set(Scene,"PointBudget",4096);Set(Scene,"PrimitiveBudget",8192);}((IDictionary)Field(Session,"_scenes"))[20L]=Scene;Screens=(IDictionary)Field(Scene,"Screens");Items=(IDictionary)Field(Scene,"Items");Caches=(IDictionary)Field(Session,"_projectedCaches");Compiled=(IDictionary)Field(Session,"_clientGeometry");}
   public object Screen(string id,int mode=1,long caller=10)
   {
    var d=new HoloProjectedScreenData{CallerId=caller,Id=id,SourceProvider=mode==0?"":"sample",SourceId=mode==0?"":"source"};var screen=New("ProjectedScreen");Set(screen,"Data",d);Screens[caller+":"+id]=screen;
@@ -28,7 +28,21 @@ internal static class ExternalSourceRenderBudgetTests
   {object[] args={Scene,current,0,0};typeof(HoloMapSession).GetMethod("GetExternalSourceRenderBudget",BindingFlags.NonPublic|BindingFlags.Instance).Invoke(Session,args);return ((int)args[2],(int)args[3]);}
   public void Reclaim()=>ClientReplicationTests.Call(Session,"ReclaimExternalViews",Scene);
  }
- public static int Run(){checks=0;DemoAndCacheReplacement();StaticAndScopeAccounting();InactiveAndReclaim();PrimitivePressure();AdmissionConsistency();ActualStaticReclamation();ActualProjectedReclamation();return checks;}
+ public static int Run(){checks=0;DemoAndCacheReplacement();StaticAndScopeAccounting();InactiveAndReclaim();PrimitivePressure();AdmissionConsistency();ActualStaticReclamation();ActualProjectedReclamation();UnlimitedAllocation();return checks;}
+ static void UnlimitedAllocation()
+ {
+  var f=new Fixture(true);var a=f.Screen("a");var b=f.Screen("b");
+  f.Item("static",Mesh(Geometry.MaxPoints,Geometry.MaxPrimitives));f.Item("static2",Mesh(Geometry.MaxPoints,Geometry.MaxPrimitives));f.Item("static3",Mesh(Geometry.MaxPoints,Geometry.MaxPrimitives));
+  var retained=Mesh(Geometry.MaxPoints,Geometry.MaxPrimitives);Set(a,"View",retained);Set(b,"View",Mesh(Geometry.MaxPoints,Geometry.MaxPrimitives));
+  Check(f.Budget(a)==(Geometry.MaxPoints,Geometry.MaxPrimitives),"unlimited aggregate allowance gives each source its structural per-frame maximum despite accumulated static geometry");
+  Check(ReferenceEquals(Field(a,"View"),retained)&&Field(b,"View")!=null,"unlimited aggregate allocation retains valid sibling frames");
+  Set(f.Scene,"PointBudget",8192);var mixed=f.Budget(a);Check(mixed.Points==(8192-8-3*Geometry.MaxPoints)/2&&mixed.Primitives==Geometry.MaxPrimitives,"finite points and unlimited primitives allocate independently");
+  object Invoke(string name,params object[] args)=>typeof(HoloMapSession).GetMethod(name,BindingFlags.NonPublic|BindingFlags.Static).Invoke(null,args);
+  Check((int)Invoke("AddExternalBudgetCount",int.MaxValue-2,4)==int.MaxValue,"active geometry totals saturate rather than overflow");
+  Check((int)Invoke("ExternalSourceShare",int.MaxValue,int.MaxValue,16,Geometry.MaxPoints)==Geometry.MaxPoints,"unlimited source allocation remains valid when accumulated counts saturate");
+  Check((int)Invoke("ExternalSourceShare",4096,int.MaxValue,2,Geometry.MaxPoints)==0,"finite exhausted source allocation cannot underflow");
+  Check((int)Invoke("ExternalSourceShare",int.MaxValue,0,0,Geometry.MaxPoints)==0,"no source declarations allocate no geometry even with unlimited allowances");
+ }
  static void DemoAndCacheReplacement()
  {
   var f=new Fixture();var feeds=f.Screen("feeds");var fusion=f.Screen("fusion");

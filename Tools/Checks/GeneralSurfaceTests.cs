@@ -36,7 +36,7 @@ internal static class GeneralSurfaceTests
   Vector3D hit;Vector2 uv;Check(UiSurfaceHit.TryHit(Vector3D.Zero,basePoint,ellipse,10,out hit,out uv)&&Vector3D.Distance(hit,basePoint)<1e-8&&Vector2.Distance(uv,new Vector2(.8f,.4f))<1e-6,"ellipsoid UV hit projection round-trips ray-preserving pinhole mapping");
   Check(!UiSurfaceHit.TryHit(Vector3D.Zero,basePoint,ellipse,.1,out hit,out uv),"UV hit obeys interaction range");
   foreach(var bad in new[]{new Vector3D(0,1,1),new Vector3D(1,double.NaN,1),new Vector3D(-1,1,1)}){var style=Ellipse();style.Radii=bad;Reject(()=>SurfaceMapping.ValidateStyle(style),"invalid radii rejected");}
-  var geodesic=new SurfaceStyle{Kind=SurfaceKind.Sphere,Mapping=SurfaceMappingMode.Geodesic,Radius=2,HorizontalRadians=Math.PI,VerticalRadians=Math.PI/2,Inward=true};Check(!UiSurfaceHit.TryHit(Vector3D.Zero,Vector3D.UnitZ,geodesic,10,out hit,out uv),"unsupported geodesic sphere hit mapping fails closed instead of returning angular UVs");
+  var geodesic=new SurfaceStyle{Kind=SurfaceKind.Sphere,Mapping=SurfaceMappingMode.Geodesic,Radius=2,HorizontalRadians=Math.PI,VerticalRadians=Math.PI/2,Inward=true};Check(UiSurfaceHit.TryHit(Vector3D.Zero,Vector3D.UnitZ,geodesic,10,out hit,out uv)&&Vector2.Distance(uv,new Vector2(.5f))<1e-6,"geodesic sphere hit maps its centre to the same UV as rendering");
   var mesh=Mesh();var mapped=SurfaceMapping.BuildQuad(2,2,Vector4.One,mesh);
   Check(mapped.Geometry.Triangles.Length==6&&mapped.Geometry.Points.Length==4,"authored background reuses indexed triangles and UV vertices");
   Check(mapped.UV[0]==mesh.MeshUV[0],"author UVs preserved on display background");

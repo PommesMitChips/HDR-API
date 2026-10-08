@@ -10,7 +10,7 @@ namespace HoloMap
     {
         public long CallerId, TargetId, CharacterId, TileId, DefinitionRevision, ValueRevision;
         public long ViewerId;
-        public string ControlId, ValueId;
+        public string ControlId, ValueId, ScreenId;public long SurfaceGeneration;
         public int Mode;
         public double Value;
         public object Context;
@@ -52,6 +52,7 @@ namespace HoloMap
         int _resyncStarted,_resyncCount;
         public int MoveIntervalTicks = 6; // 60 simulation ticks / 10 Hz.
         public int IdleTicks = 180, LifetimeTicks = 1800;
+        public Func<UiDragBinding,UiDragRequest,double?> PointerValue;
         public const int MaxPeers = 128, MaxLeases = 32, BeginCapacity = 16;
         public UiDragTransactions(Func<ulong,UiDragRequest,UiDragBinding> begin, Func<ulong,UiDragBinding,bool> validate,
             Func<UiDragBinding,double,UiDragCommit> commit, Func<UiDragBinding,double?> worldValue, Action<ulong,UiDragAck> ack,
@@ -126,7 +127,7 @@ namespace HoloMap
         }
         static bool Matches(Lease lease, UiDragRequest p)
         {var b=lease.Binding;return p.RequestId==lease.RequestId&&p.CallerId==b.CallerId&&p.TargetId==b.TargetId&&p.ControlId==b.ControlId
-            &&p.DefinitionRevision==b.DefinitionRevision&&p.Mode==b.Mode&&p.ValueRevision<=b.ValueRevision&&p.ViewerId==b.ViewerId;}
+            &&p.DefinitionRevision==b.DefinitionRevision&&p.Mode==b.Mode&&p.ValueRevision<=b.ValueRevision&&p.ViewerId==b.ViewerId&&p.ScreenId==b.ScreenId&&p.SurfaceGeneration==b.SurfaceGeneration;}
         void QueueSequenceRejection(ulong sender,UiDragRequest request,Peer peer,int tick)
         {
             if(tick-_resyncStarted>=60){_resyncStarted=tick;_resyncCount=0;}
@@ -177,6 +178,7 @@ namespace HoloMap
             var p=work.Request;UiDragBinding b=null;try{if(_begin!=null)b=_begin(work.Sender,p);}catch{}
             if(b==null||b.CallerId!=p.CallerId||b.TargetId!=p.TargetId||b.ControlId!=p.ControlId||b.Mode!=p.Mode
                 ||b.CharacterId==0||b.TileId==0||b.DefinitionRevision!=p.DefinitionRevision||b.ValueRevision!=p.ValueRevision
+                ||b.ScreenId!=p.ScreenId||b.SurfaceGeneration!=p.SurfaceGeneration
                 ||!UiDragWire.Id(b.ValueId)||!UiDragWire.Finite(b.Value)) {Release(b,false);Reject(work,UiDragStatus.Stale);return;}
             string key=ValueKey(b);
             if(_leases.Count>=MaxLeases||_valueLocks.ContainsKey(key)||HasPeerLease(work.Sender)){Release(b,false);Reject(work,UiDragStatus.Busy);return;}
@@ -193,6 +195,8 @@ namespace HoloMap
                 double value=request.Value;
                 if(lease.Binding.Mode==(int)UiDragMode.WorldLook)
                 {double? derived=_worldValue==null?null:_worldValue(lease.Binding);if(!derived.HasValue)return new UiDragCommit{Status=UiDragStatus.Bounds};value=derived.Value;}
+                else if(lease.Binding.ScreenId!=null)
+                {double? derived=PointerValue==null?null:PointerValue(lease.Binding,request);if(!derived.HasValue)return new UiDragCommit{Status=UiDragStatus.Bounds};value=derived.Value;}
                 if(!UiDragWire.Finite(value)||_commit==null)return new UiDragCommit{Status=UiDragStatus.Bounds};
                 var result=_commit(lease.Binding,value);
                 if(result==null)return new UiDragCommit();
@@ -220,11 +224,11 @@ namespace HoloMap
         }
         void Reject(Work work,UiDragStatus status)
         {var p=work.Request;Send(work.Sender,new UiDragAck{Kind=p.Kind,CallerId=p.CallerId,TargetId=p.TargetId,ControlId=p.ControlId,
-            DefinitionRevision=p.DefinitionRevision,ValueRevision=p.ValueRevision,RequestId=p.RequestId,Sequence=p.Sequence,Status=(int)status,Terminal=true,MinimumSequence=work.MinimumSequence,ViewerId=p.ViewerId});}
+            DefinitionRevision=p.DefinitionRevision,ValueRevision=p.ValueRevision,RequestId=p.RequestId,Sequence=p.Sequence,Status=(int)status,Terminal=true,MinimumSequence=work.MinimumSequence,ViewerId=p.ViewerId,ScreenId=p.ScreenId,SurfaceGeneration=p.SurfaceGeneration});}
         void Emit(Lease lease,UiDragRequest request,UiDragStatus status,bool terminal)
         {var b=lease.Binding;Send(lease.Sender,new UiDragAck{Kind=request.Kind,CallerId=b.CallerId,TargetId=b.TargetId,ControlId=b.ControlId,
             DefinitionRevision=b.DefinitionRevision,ValueRevision=b.ValueRevision,RequestId=lease.RequestId,Sequence=request.Sequence,
-            LeaseId=lease.Id,Status=(int)status,Value=b.Value,TileId=b.TileId,CharacterId=b.CharacterId,Terminal=terminal,ViewerId=b.ViewerId});}
+            LeaseId=lease.Id,Status=(int)status,Value=b.Value,TileId=b.TileId,CharacterId=b.CharacterId,Terminal=terminal,ViewerId=b.ViewerId,ScreenId=b.ScreenId,SurfaceGeneration=b.SurfaceGeneration});}
         void ProcessViewer(Work work)
         {
             if(work.Request.Kind==(int)UiDragKind.Focus&&_peerViewers.Count>=MaxLeases&&!_peerViewers.ContainsKey(work.Sender))

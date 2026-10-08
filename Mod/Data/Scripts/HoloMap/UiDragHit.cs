@@ -20,6 +20,7 @@ namespace HoloMap
             tileId = 0;
             if (display == null || widget == null || widget.Control == null
                 || !widget.Visible || !UiControlSourceValid(display, widget,trustedHiddenBundle)) return false;
+            if(widget.ScreenId!=null)return TryUiProjectedHit(display,widget,origin,direction,out hit,out tileId);
 
             bool found = false;
             double nearest = UiInteractionRange * UiInteractionRange;
@@ -68,6 +69,7 @@ namespace HoloMap
             out Vector3D center, out Vector3D halfRight, out Vector3D halfUp,bool trustedHiddenBundle)
         {
             center = halfRight = halfUp = Vector3D.Zero;
+            if(widget!=null&&widget.ScreenId!=null)return false;
             Scene source;
             Item item;
             MatrixD mapping;

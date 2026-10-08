@@ -2,6 +2,16 @@
 
 These notes preserve release-time behavior and validation limits. Later releases supersede earlier defaults and limits. Current setup and commands are in [README.md](README.md) and the [client renderer guide](OptionalPlugins/HDRClientRenderer/README.md).
 
+## HDR API 0.9.11 / HTML Frontend 0.2.0 / Client Renderer 0.9.14 — alpha
+
+- Generic ordered source slots combine provider images, retained geometry, SVG, text, sprites and raster artwork on planes, cylinders, spheres, ellipsoids and authored meshes. Each slot owns its placement, clip, UV crop, ordering and source lifetime.
+- Projected controls use the same surface mapping as their artwork. Server-validated ray input and surface generations preserve gesture authority; replacing a camera feed does not recreate controls or cancel an unrelated value gesture.
+- The HTML frontend exposes projected document bindings and source attachments on explicit node IDs. Camera switching changes the attachment rather than reparsing or rebuilding the interface. A complete camera ellipsoid demo accompanies the composition guide.
+- Client mods gain generic projected contexts, mapped artwork/effects and cooperative ray input. Client Renderer 0.9.14 adds an explicit local-consumer bridge using real anchors and source identities. Existing PB camera/input routes retain their 0.9.13 minimum. GPU capture and shaders are unchanged.
+- Scene protocol 20 carries additive source slots and projected input metadata. Existing public API names and legacy provider callback arguments remain intact. Native LCD relay constraints are reported explicitly; the frontend remains bounded Profile1 without JavaScript.
+- Aggregate geometry allowances default to unlimited (`0`) for block scenes, client-mod owners and HTML painters. Callers can configure finite point/primitive limits; those limits include cached sources and preserve atomic admission and cleanup. Per-frame drawing work remains separately configurable.
+- Offline integration, compiler and provider lifecycle gates cover the combined paths. Live visual, GPU, player input and multiplayer acceptance remain pending; no game files or profiles are modified by building.
+
 ## HDR API 0.9.10 / HTML Frontend 0.1.1 — alpha prototype
 
 - Optional client-local HTML/CSS source frontend, separated from the core display API. `HDR.HTML/Profile1` supports bounded block/flex layout, measured text, rectangles, clipping, buttons and ranges. Unsupported features report errors; there is no JavaScript or complete browser engine.

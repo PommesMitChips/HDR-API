@@ -205,7 +205,7 @@ void Setup()
  var crop=Crop();
  feeds.Sort((a,b)=>{double pitchA=Math.Asin(Math.Max(-1,Math.Min(1,a.Pose.Backward.Y))),pitchB=Math.Asin(Math.Max(-1,Math.Min(1,b.Pose.Backward.Y)));int n=pitchB.CompareTo(pitchA);if(n!=0)return n;n=Math.Atan2(a.Pose.Backward.X,a.Pose.Backward.Z).CompareTo(Math.Atan2(b.Pose.Backward.X,b.Pose.Backward.Z));return n!=0?n:a.Camera.EntityId.CompareTo(b.Camera.EntityId);});
  if((_display.BlockDefinition.SubtypeName??"").IndexOf("Console",StringComparison.OrdinalIgnoreCase)>=0)H("volume",false);
- H("range",0);H("budget",32768,65536,60000);Retire();_feeds=feeds;
+ H("range",0);H("budget",0,0,60000);Retire();_feeds=feeds;
  for(int i=0;i<feeds.Count;i++)
  {
   var feed=feeds[i];feed.Id="cam"+i;

@@ -24,9 +24,9 @@ If a provider is missing, replaced, stopped or rejects validity, its image becom
 
 ## Rendering budgets
 
-Select the anchor before `H("budget", points, primitives, drawWork)`. Defaults are 4,096 points, 8,192 primitives and 20,000 draw-work units. Ranges are 256–65,536 points, 256–131,072 primitives and 1,000–200,000 work units. Lowering below already declared raw geometry is rejected. `budget-settings` returns `MyTuple<int,int,int>`.
+Select the anchor before `H("budget", points, primitives, drawWork)`. Geometry defaults are **0 points / 0 primitives = unlimited**, independently for each count; drawing work retains its separate **20,000** default and 1,000–200,000 range. Geometry settings accept nonnegative Int32 counts: positive values select finite allowances, and Int32.MaxValue normalizes to unlimited/query zero. Choosing a finite geometry allowance below declared geometry is rejected atomically. `budget-settings` returns `MyTuple<int,int,int>`, including zeros for unlimited geometry. An accepted change invalidates only that anchor's presentation caches.
 
-Visible static content has priority. Visible external-source screens share remaining preparation geometry fairly; hidden or orphaned cached content does not consume that allocation. Each prepared frame still has the existing per-object ceiling of 2,048 points and 4,096 primitives. The provider can reduce detail within the allowance, preserving its own data semantics.
+Visible static content has priority. When configured, finite geometry allowances are shared fairly by visible external-source screens; zero removes that aggregate ceiling. Hidden or orphaned cached content does not consume that allocation. Each prepared frame still has the existing per-object ceiling of 2,048 points and 4,096 primitives, and provider payload/resource bounds remain independent. The provider can reduce detail within an offered finite allowance, preserving its own data semantics.
 
 Each viewer separately controls its global draw-work cap with `/hdr work N`, initially 20,000 per frame. An anchor budget cannot raise another viewer's local cap. These are display allowances; they do not configure sensor rays, source memory or acquisition rates.
 

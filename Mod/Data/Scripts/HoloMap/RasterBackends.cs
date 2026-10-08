@@ -101,7 +101,7 @@ namespace HoloMap
   {
    var detached=new System.Collections.Generic.List<RasterImage>();
    foreach(var cache in _projectedCaches.Values)
-   {if(cache.UiRaster!=null)detached.Add(cache.UiRaster);cache.UiRaster=null;cache.UiRasterMesh=null;if(cache.SourceRaster!=null)detached.Add(cache.SourceRaster);cache.SourceRaster=null;if(cache.SourceTexture)ClearExternalBudgetView(cache);cache.NextSample=-1;cache.Mapped.Remove("ui");}
+   {ReleaseSourceSlots(cache);if(cache.UiRaster!=null)detached.Add(cache.UiRaster);cache.UiRaster=null;cache.UiRasterMesh=null;if(cache.SourceRaster!=null)detached.Add(cache.SourceRaster);cache.SourceRaster=null;if(cache.SourceTexture)ClearExternalBudgetView(cache);cache.NextSample=-1;cache.Mapped.Remove("ui");}
    foreach(var image in detached)ReleaseRasterImage(image);
   }
   void UnregisterRasterBackend()
@@ -126,7 +126,7 @@ namespace HoloMap
    {
     if(!(frame.Item2 is MyTuple<Vector2I,byte[],int>))throw new ArgumentException("RGBA frame requires size, bytes and format flags.");
     var bitmap=(MyTuple<Vector2I,byte[],int>)frame.Item2;if(bitmap.Item3!=0)throw new ArgumentException("Only straight-alpha sRGB RGBA8 is supported.");
-    uploaded=UploadRaster(PackedKey(data.CallerId,scene.ConsoleId,data.Id)+":source",bitmap.Item1,bitmap.Item2);
+    uploaded=UploadRaster(ProjectedConsumerKey(cache)+":source",bitmap.Item1,bitmap.Item2);
     if(uploaded==null)return null;material=uploaded.Material;size=uploaded.Size;
    }
    else if(frame.Item1==2)
@@ -142,7 +142,7 @@ namespace HoloMap
    DisplayProvider provider;if(!_displayProviders.TryGetValue(data.SourceProvider,out provider)||provider.Generation!=generation||!ReferenceEquals(provider.Endpoint,endpoint)){ReleaseRasterImage(uploaded);return null;}
    var oldEndpoint=cache.SourceProtocol==2?cache.SourceEndpoint:null;var oldEvidence=cache.SourceEvidence;var oldRaster=cache.SourceRaster;cache.SourceRaster=null;
    transferred=true;cache.SourceProvider=data.SourceProvider;cache.SourceId=data.SourceId;cache.SourceEndpoint=provider.Endpoint;cache.SourceGeneration=provider.Generation;cache.SourceProtocol=2;cache.SourceEvidence=frame.Item3;cache.SourceReduced=frame.Item4;
-   if(!ReferenceEquals(oldEvidence,frame.Item3))ReleaseProviderEvidence(oldEndpoint,oldEvidence);RetireRasterImage(oldRaster,uploaded);
+   if(!ReferenceEquals(oldEvidence,frame.Item3)||!ReferenceEquals(oldEndpoint,endpoint)){RetainProjectedProviderEvidence(endpoint,frame.Item3,cache);ReleaseProjectedProviderEvidence(oldEndpoint,oldEvidence,cache);}RetireRasterImage(oldRaster,uploaded);
    if(!ExternalEvidenceValid(scene,data,cache)){ReleaseRasterImage(uploaded);ClearExternalBudgetView(cache);return null;}
    cache.SourceRaster=uploaded;cache.SourceTexture=true;cache.SourceTextureMaterial=material;cache.SourceTextureSize=size;
    cache.NextCapture=_ticks/60d+1/Math.Min(frame.Item5,SourceRefreshLimit(data));

@@ -36,7 +36,7 @@ namespace HoloMap
      case "effect":case "effect-clear":case "effect-settings":case "transition":objectCommand=true;break;
      case "pose":objectCommand=values!=null&&values.Length>0&&values[0] is string;break;
      case "layer":case "setobjectlayer":objectCommand=true;secondLayer=1;break;
-     case "layer-order":case "layer-visible":case "setlayervisible":case "layer-opacity":case "setlayeropacity":case "layer-state":case "getlayerstate":case "toggle":case "togglelayer":case "solo":case "sololayer":layerCommand=true;break;
+     case "layer-remove":case "layer-order":case "layer-visible":case "setlayervisible":case "layer-opacity":case "setlayeropacity":case "layer-state":case "getlayerstate":case "toggle":case "togglelayer":case "solo":case "sololayer":layerCommand=true;break;
      case "rgb":case "rgba":case "version":case "findtargets":case "finddisplays":break;
      default:throw new ArgumentException("This command is not supported in a projected screen. Select the anchor again for anchor controls.");
     }
@@ -55,10 +55,12 @@ namespace HoloMap
    if(c.Caller==null||c.Caller.Closed||!ReferenceEquals(MyAPIGateway.Entities.GetEntityById(c.Caller.EntityId),c.Caller)||c.Target==null)throw new ArgumentException("Select a live display anchor first.");var target=Authorize(c.Caller,c.Target);
    if(!(target is IMyProjector))throw new ArgumentException("Floating HDR screens require a Console or Projector anchor.");
    if(op=="screen-exists"){string id=ScreenId(a.Text());a.End();Scene scene;return _scenes.TryGetValue(target.EntityId,out scene)&&scene.Screens.ContainsKey(Key(c.Caller.EntityId,id));}
+   if(op=="screen-slot-validate"){string provider=a.Text(),source=a.Text();a.End();ValidateDisplaySource(provider,source);if(string.IsNullOrEmpty(provider))throw new ArgumentException("Source slots require an explicit provider.");if(provider=="native-portal"){ScreenId(source);Scene scene;ProjectedScreen portal;if(!_scenes.TryGetValue(target.EntityId,out scene)||!scene.Screens.TryGetValue(Key(c.Caller.EntityId,source),out portal)||portal.Data.SourceProvider!="native-portal"||portal.Data.Portal==null)throw new ArgumentException("Native portal video windows require a real declared portal source screen.");}return true;}
    if(op=="screen-target") {string id=a.Text();a.End();if(id==""){c.ScreenId=null;return true;}ScreenId(id);var scene=GetScene(target.EntityId);if(!scene.Screens.ContainsKey(Key(c.Caller.EntityId,id)))throw new ArgumentException("Screen does not exist for this PB.");c.ScreenId=id;return true;}
    if(op=="screen")
    {string id=ScreenId(a.Text());if(!a.Has){a.End();var scene=GetScene(target.EntityId);if(!scene.Screens.ContainsKey(Key(c.Caller.EntityId,id)))throw new ArgumentException("Screen does not exist for this PB.");c.ScreenId=id;return true;}var pose=a.Typed<MatrixD>();double w=a.Number(2),h=a.Number(1.125),cw=a.Number(w),ch=a.Number(h);a.End();var scene2=GetScene(target.EntityId);ProjectedScreen old;var d=scene2.Screens.TryGetValue(Key(c.Caller.EntityId,id),out old)?CloneScreen(old.Data):new HoloProjectedScreenData{CallerId=c.Caller.EntityId,Id=id};d.Pose=MatrixValues(pose);d.Width=w;d.Height=h;d.CanvasWidth=cw;d.CanvasHeight=ch;CommitScreen(c,d);c.ScreenId=id;return true;}
    var selected=SelectedScreen(c);var data=CloneScreen(selected.Data);
+   if(op=="screen-slot"||op.StartsWith("screen-slot-",StringComparison.Ordinal))return SourceSlotCommand(c,op,a,data);
    switch(op)
    {
     case "screen-portal-plane":
@@ -100,7 +102,7 @@ namespace HoloMap
     case "screen-panorama-settings":a.End();return new MyTuple<double,double,double,int>(data.SourceFov,data.SourceFeather,data.SourceSaturation,data.SourceCaptureResolution);
     case "screen-source-clear":a.End();data.SourceProvider=null;data.SourceId=null;data.Portal=null;break;
     case "screen-settings":a.End();return new MyTuple<string,double,double,double>(data.Id,data.Width,data.Height,data.RefreshHz);
-    case "screen-remove":a.End();ClearScreenContent(GetScene(target.EntityId),selected);GetScene(target.EntityId).Screens.Remove(Key(c.Caller.EntityId,data.Id));c.ScreenId=null;_dirty=true;return true;
+    case "screen-remove":a.End();UiNotifyProjectedScreenRemoved(c.Caller.EntityId,target.EntityId,data.Id);ClearScreenContent(GetScene(target.EntityId),selected);GetScene(target.EntityId).Screens.Remove(Key(c.Caller.EntityId,data.Id));c.ScreenId=null;_dirty=true;return true;
     case "screen-refresh":data.RefreshHz=a.Number();a.End();break;
     case "screen-background":data.Background=ColorValues(new[]{a.Paint()});a.End();break;
     case "screen-opacity":data.Opacity=(float)a.Number();a.End();break;
@@ -131,7 +133,7 @@ namespace HoloMap
    if(!had&&scene.Screens.Count>=MaxScreensPerAnchor)throw new ArgumentException("Anchor screen limit reached.");scene.Screens[key]=prepared;
    try{ValidateCameraSourceSettings(scene);}
    catch{if(had)scene.Screens[key]=old;else scene.Screens.Remove(key);throw;}
-   try{int screens=0;foreach(var other in _scenes.Values)screens+=other.Screens.Count;if(screens>MaxProjectedScreens)throw new ArgumentException("Global screen limit reached.");int points,primitives;ProjectedSourceCounts(scene,out points,out primitives);foreach(var item in scene.Items.Values){points+=item.Geometry.Points.Length;primitives+=item.Geometry.Triangles.Length/3+item.Geometry.Edges.Length/2;}if(points>scene.PointBudget||primitives>scene.PrimitiveBudget||scene.Items.Count+scene.Screens.Count>MaxObjects)throw new ArgumentException("Shared anchor geometry/object budget exceeded.");ValidateSceneSources(scene,new Item[0],new HashSet<string>());}
+   try{int screens=0;foreach(var other in _scenes.Values)screens+=other.Screens.Count;if(screens>MaxProjectedScreens)throw new ArgumentException("Global screen limit reached.");int points,primitives;ProjectedSourceCounts(scene,out points,out primitives);foreach(var item in scene.Items.Values){points+=item.Geometry.Points.Length;primitives+=item.Geometry.Triangles.Length/3+item.Geometry.Edges.Length/2;}if(points>scene.PointBudget||primitives>scene.PrimitiveBudget||scene.Items.Count+scene.Screens.Count+ProjectedSourceSlotCount(scene)>MaxObjects)throw new ArgumentException("Shared anchor geometry/object budget exceeded.");ValidateSceneSources(scene,new Item[0],new HashSet<string>());UiStampProjectedSurfaceMutation(scene,had?old.Data:null,prepared.Data);}
    catch{if(had)scene.Screens[key]=old;else scene.Screens.Remove(key);throw;}_dirty=true;
   }
   void ClearScreenContent(Scene scene,ProjectedScreen s)
@@ -139,7 +141,7 @@ namespace HoloMap
    string prefix=ScreenPrefix(s.Data.Id),layerPrefix="s_"+s.Data.Id+"__";long caller=s.Data.CallerId;var keys=new List<string>();foreach(var pair in scene.Items)if(pair.Value.CallerId==caller&&pair.Value.Id.StartsWith(prefix,StringComparison.Ordinal))keys.Add(pair.Key);foreach(var key in keys)scene.Items.Remove(key);keys.Clear();foreach(var pair in scene.Labels)if(pair.Value.CallerId==caller&&pair.Value.Id.StartsWith(prefix,StringComparison.Ordinal))keys.Add(pair.Key);foreach(var key in keys)scene.Labels.Remove(key);keys.Clear();foreach(var pair in scene.Layers)if(pair.Value.CallerId==caller&&pair.Value.Name.StartsWith(layerPrefix,StringComparison.Ordinal))keys.Add(pair.Key);foreach(var key in keys)scene.Layers.Remove(key);
    keys.Clear();foreach(var pair in _drawAnimations)if(pair.Value.Data.CallerId==caller&&pair.Value.Data.ConsoleId==scene.ConsoleId&&pair.Value.Id.StartsWith(prefix,StringComparison.Ordinal))keys.Add(pair.Value.Id);foreach(string id in keys)RemoveDrawAnimation(caller,scene.ConsoleId,id);
    keys.Clear();foreach(var pair in _packed)if(pair.Value.CallerId==caller&&pair.Value.ConsoleId==scene.ConsoleId&&pair.Value.Id.StartsWith(prefix,StringComparison.Ordinal))keys.Add(pair.Value.Id);foreach(string id in keys)RemovePacked(caller,scene.ConsoleId,id);
-   var d=CloneScreen(s.Data);d.Sprites=null;d.SourcePoints=null;d.SourceTriangles=null;d.SourceColors=null;d.SourceProvider=null;d.SourceId=null;scene.Screens[Key(caller,d.Id)]=ReadScreen(d);_dirty=true;
+   var d=CloneScreen(s.Data);d.Sprites=null;d.SourcePoints=null;d.SourceTriangles=null;d.SourceColors=null;d.SourceProvider=null;d.SourceId=null;d.SourceSlots=null;scene.Screens[Key(caller,d.Id)]=ReadScreen(d);_dirty=true;
   }
  }
 }

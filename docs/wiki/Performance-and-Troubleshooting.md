@@ -4,18 +4,19 @@ Requested quality, admitted scene size, client resource ceilings and actual fram
 
 ## Scene budgets
 
-Select the anchor rather than a virtual screen before configuring:
+Anchor geometry allowance is **unlimited by default**: point and source-primitive settings are independently `0`. Select the anchor rather than a virtual screen before configuring or querying:
 
 ```csharp
 H("screen-target", "");
-H("budget", 32768, 65536, 60000);
+H("budget", 0, 0, 20000); // unlimited geometry; separate finite drawing work
 var budget = (VRage.MyTuple<int,int,int>)H("budget-settings");
 ```
 
 | Quantity | Default | Configurable range / retained bound |
 |---|---|---|
-| Anchor geometry points | 4096 | 256–65536 |
-| Anchor primitives | 8192 | 256–131072 |
+| Anchor geometry points | 0 = unlimited | Nonnegative Int32; positive values are explicit finite allowances; Int32.MaxValue normalizes to 0 |
+| Anchor primitives | 0 = unlimited | Nonnegative Int32; positive values are explicit finite allowances; Int32.MaxValue normalizes to 0 |
+| Client-mod owner aggregate points/primitives | 0 / 0 = unlimited | `geometry-limit`: independently nonnegative Int32 counts |
 | Anchor draw-work units | 20000 | 1000–200000 |
 | Viewer total draw-work | 20000 per frame | `/hdr work 1000..200000` |
 | Objects per anchor, including screen slots | 16 | Fixed admission bound |
@@ -25,7 +26,11 @@ var budget = (VRage.MyTuple<int,int,int>)H("budget-settings");
 | Ordinary display distance | 60 m | Retained renderer range |
 | Transformed scene/surface extent | 25 m about anchor | Retained validation bound |
 
-Lowering an anchor budget below already declared raw geometry is rejected. Raising it does not raise every other bound. Source preparation shares the remaining allowance fairly after visible static content. Hidden/orphaned caches do not reserve visible-source geometry. Invalid preparation leaves previous usable geometry where authorized; revoked source proofs cannot be bypassed by stale caching.
+`budget(points, primitives, drawWork)` and `render-budget` accept `0` independently for either geometry argument; `budget-settings` returns those zeros as `MyTuple<int,int,int>`. Drawing work keeps its separate 20,000 default and finite range. A call such as `budget(32768,65536,60000)` is an explicit finite preset, not the default.
+
+Choosing a finite anchor allowance below already declared geometry is rejected atomically. Accepted changes invalidate only that anchor's presentation caches. Per-object, descriptor, object/wire/payload and per-frame work bounds remain independent. With a configured finite geometry allowance, source preparation shares the remaining allowance fairly after visible static content; zero removes that aggregate ceiling. Hidden/orphaned caches do not reserve visible-source geometry. Invalid preparation leaves previous usable geometry where authorized; revoked source proofs cannot be bypassed by stale caching.
+
+Client mods use owner-scoped `geometry-limit(points=0, primitives=0)` and `geometry-limit-settings()` → `MyTuple<int,int>`, or SDK `GeometryLimit` / `GeometrySettings`. Negative counts fail; local Int32.MaxValue remains positive finite and queries unchanged, with zero as the only unlimited sentinel. A finite setting below current ordinary/mapped retained artwork is rejected atomically; an accepted finite allowance retires cached source frames that exceed it while retaining desired slots for later acquisition. The owner's separate `DrawLimit` remains 4,096 by default, and the global mod drawing share remains 20,000 per frame. Hosted `HdrHtmlApi` exposes the same owner-level helpers without a document handle. HTML painter aggregate points/primitives also default to zero and query the actual owner allowance; they add no fixed 8,192 aggregate ceiling.
 
 Six screens plus their overlay objects consume the same 16-slot admission bound. Combine related artwork into one SVG object where useful, remove unused declarations, and use a single direct panorama instead of six separate screens when the presentation permits it. “Console object limit reached” is not a GPU out-of-memory message; it is bounded retained scene admission.
 

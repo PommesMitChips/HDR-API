@@ -33,6 +33,7 @@ namespace HoloMap
         [ProtoMember(9)] public string Argument;
         [ProtoMember(10)] public string Label;
         [ProtoMember(11)] public UiControlData Control;
+        [ProtoMember(12)] public string ScreenId;
     }
     public static class UiRules
     {
@@ -55,6 +56,7 @@ namespace HoloMap
         public static void Widget(UiWidget w)
         {
             if(w==null)throw new ArgumentException("Missing UI widget.");Id(w.Id);Id(w.Bundle);Action(w.ActionKind,w.Argument);
+            if(w.ScreenId!=null){if(w.ScreenId.Length<1||w.ScreenId.Length>12)throw new ArgumentException("Invalid UI screen ID.");foreach(char c in w.ScreenId)if(!(c>='a'&&c<='z'||c>='0'&&c<='9'||c=='-'))throw new ArgumentException("Invalid UI screen ID.");}
             double extentX=Math.Abs(w.X)+w.Width/2,extentY=Math.Abs(w.Y)+w.Height/2;
             if(!Geometry.Finite(w.X)||!Geometry.Finite(w.Y)||!Geometry.Finite(w.Width)||!Geometry.Finite(w.Height)||w.Width<=0||w.Height<=0||(w.Control==null?extentX*extentX+extentY*extentY>625:extentX>1000000||extentY>1000000))throw new ArgumentException("UI bounds must be finite and positive; control rectangles use bounded artwork-local units.");
             if(w.Label!=null&&w.Label.Length>64)throw new ArgumentException("UI labels accept at most 64 characters.");
@@ -75,7 +77,7 @@ namespace HoloMap
         {
             var n=new UiDisplay{CallerId=d.CallerId,TargetId=d.TargetId,Revision=d.Revision,DataRevision=d.DataRevision,ValueNotify=d.ValueNotify};
             foreach(var b in d.Bundles)n.Bundles.Add(new UiBundle{Id=b.Id,Visible=b.Visible});
-            foreach(var w in d.Widgets)n.Widgets.Add(new UiWidget{Id=w.Id,Bundle=w.Bundle,X=w.X,Y=w.Y,Width=w.Width,Height=w.Height,Visible=w.Visible,ActionKind=w.ActionKind,Argument=w.Argument,Label=w.Label,Control=UiValueRules.Copy(w.Control)});foreach(var v in d.Values)n.Values.Add(UiValueRules.Copy(v));return n;
+            foreach(var w in d.Widgets)n.Widgets.Add(new UiWidget{Id=w.Id,Bundle=w.Bundle,X=w.X,Y=w.Y,Width=w.Width,Height=w.Height,Visible=w.Visible,ActionKind=w.ActionKind,Argument=w.Argument,Label=w.Label,Control=UiValueRules.Copy(w.Control),ScreenId=w.ScreenId});foreach(var v in d.Values)n.Values.Add(UiValueRules.Copy(v));return n;
         }
     }
 }

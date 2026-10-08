@@ -34,8 +34,8 @@ namespace HoloMap
    HoloProjectedScreenData settings=null;
    foreach(var screen in scene.Screens.Values)
    {
-    var d=screen.Data;if(d.CallerId!=caller||d.SourceProvider!="camera-panorama"||d.SourceId!=source)continue;
-    if(settings!=null&&!SameCameraSourceSettings(settings,d))return false;settings=d;
+    foreach(var d in ScreenSourceSettings(screen.Data)){if(d.CallerId!=caller||d.SourceProvider!="camera-panorama"||d.SourceId!=source)continue;
+    if(settings!=null&&!SameCameraSourceSettings(settings,d))return false;settings=d;}
    }
    if(settings==null)return false;
    var lenses=new CameraDensityLens[count];
@@ -113,6 +113,16 @@ namespace HoloMap
     var view=camera.ViewMatrix*camera.ProjectionMatrix;var surfaces=new List<CameraDemandSurface>();
     foreach(var screen in scene.Screens.Values)
     {
+     if(screen.Data.CallerId==caller&&screen.Data.SourceSlots!=null)foreach(var slot in screen.Data.SourceSlots)
+     {
+      var parent=screen.Data;if(slot.Provider!="camera-panorama"||slot.SourceId!=source||!SourceSlotVisible(scene,parent,slot)||!ScreenSurfaceVisible(parent,anchor.WorldMatrix,camera.Position))continue;
+      ProjectedCache slotParent;CompositionSlotCache slotCache;MappedScreenMesh slotMapped;
+      if(!_projectedCaches.TryGetValue(PackedKey(caller,anchorId,parent.Id),out slotParent)||!slotParent.Slots.TryGetValue(slot.Id,out slotCache)||slotCache.Canvas==null)return result;
+      SurfaceMesh mesh=slotCache.Canvas;MatrixD clip;var cropPose=ReadMatrix(parent.Pose);
+      if(parent.SurfaceKind!=0){if(!slotParent.Mapped.TryGetValue("slot:"+slot.Id,out slotMapped)||slotMapped.Mesh==null||!SameSurface(slotMapped.Settings,parent)||_ticks-slotMapped.Seen>120)return result;mesh=slotMapped.Mesh;clip=ReadMatrix(parent.Pose)*anchor.WorldMatrix*view;}
+      else{var content=ProjectedContentView(parent);if(slotCache.DemandCanvas==null||!ReferenceEquals(slotCache.DemandCanvasSource,mesh)||slotCache.DemandContent!=content){slotCache.DemandCanvas=TransformCanvasMesh(mesh,content);slotCache.DemandCanvasSource=mesh;slotCache.DemandContent=content;}mesh=slotCache.DemandCanvas;cropPose=ProjectedCanvas(parent,slotCache.Depth,parent.CanvasWidth,parent.CanvasHeight);clip=cropPose*anchor.WorldMatrix*view;}
+      if(mesh.UV==null)return result;surfaces.Add(new CameraDemandSurface{Settings=parent,Mesh=mesh,Clip=clip,Crop=CameraDensityCrop(parent,cropPose)});
+     }
      var d=screen.Data;if(d.CallerId!=caller||d.SourceProvider!="camera-panorama"||d.SourceId!=source||!ExternalBudgetScreenVisible(d)||!ScreenSurfaceVisible(d,anchor.WorldMatrix,camera.Position))continue;
      ProjectedCache cache;MappedScreenMesh mapped;
      if(!_projectedCaches.TryGetValue(PackedKey(caller,anchorId,d.Id),out cache)||!cache.Mapped.TryGetValue("source",out mapped)||mapped.Mesh==null||mapped.Mesh.UV==null||!SameSurface(mapped.Settings,d)||_ticks-mapped.Seen>120||mapped.Depth!=ScreenLayerDepth(d,anchor.WorldMatrix,camera.Position,.0005)||!SamePanorama(mapped.Panorama,PanoramaCameras(scene,d)))return result;

@@ -15,7 +15,7 @@ namespace HoloMap
         sealed class UiValueOwner
         {public long Caller,Target;public IMyProgrammableBlock CallerEntity;public IMyTerminalBlock TargetEntity;public string Program;public int LastWake=-10000;public readonly List<UiValueEvent> Events=new List<UiValueEvent>();public readonly Dictionary<string,UiBindingTrack> Bindings=new Dictionary<string,UiBindingTrack>();public readonly Dictionary<string,UiArtworkProof> Proofs=new Dictionary<string,UiArtworkProof>();}
         sealed class UiValueLease
-        {public long Id,Caller,Target,Player,Definition,Source;public string Control,ValueId;public int LastSeen;public bool Scalar,AllowHiddenBundle;public PathDragState Path;public RotationDragState Rotation;}
+        {public long Id,Caller,Target,Player,Definition,Source,SurfaceGeneration;public string Control,ValueId,ScreenId;public int LastSeen;public bool Scalar,AllowHiddenBundle;public PathDragState Path;public RotationDragState Rotation;}
         sealed class UiPoseCommit
         {public UiWidget Widget;public Item Item;public UiBindingTrack Track;public MatrixD Pose;}
         readonly Dictionary<string,UiValueOwner> _uiValueOwners=new Dictionary<string,UiValueOwner>();
@@ -64,7 +64,7 @@ namespace HoloMap
         void UiCommitNumericDefinition(DrawContext context,UiDisplay next,UiValueOwner owner)
         {
             if(_uiRevision==long.MaxValue)throw new ArgumentException("UI revision budget exhausted.");next.Revision=_uiRevision+1;UiRules.Display(next);
-            foreach(var widget in next.Widgets)if(widget.Control!=null){var item=GetItem(context.Caller,context.Target,widget.Control.Artwork);UiNoActiveAnimation(next.CallerId,next.TargetId,item.Id);UiValidateLcdConstraint(context.Target,widget.Control);UiValidateControlPose(context.Target,item,UiSourceProof(owner,item),item.Transform,GetScene(next.TargetId));}
+            foreach(var widget in next.Widgets)if(widget.Control!=null){var item=UiOwnedControlItem(context.Caller,context.Target,widget);UiNoActiveAnimation(next.CallerId,next.TargetId,item.Id);UiValidateLcdConstraint(context.Target,widget.Control);UiValidateControlPose(context.Target,item,UiSourceProof(owner,item),item.Transform,GetScene(next.TargetId));}
             int values=next.Values.Count,widgets=next.Widgets.Count;foreach(var d in _uiDisplays.Values)if(d.CallerId!=next.CallerId||d.TargetId!=next.TargetId){values+=d.Values.Count;widgets+=d.Widgets.Count;}
             if(values>UiValueRules.MaxTotalValues||widgets>UiRules.MaxTotalWidgets||GetUiDisplay(next.CallerId,next.TargetId)==null&&_uiDisplays.Count>=UiRules.MaxDisplays)throw new ArgumentException("Global UI value/control budget reached.");
             UiAdmitMetadata(next);
@@ -104,17 +104,17 @@ namespace HoloMap
                 string id=UiRules.Id(args.Text());double initial=args.Number(),min=args.Number(),max=args.Number(),step=args.Number(0);args.End();NumericRange range;double canonical;if(!NumericRange.TryCreate(min,max,step,out range)||!range.TryNormalize(initial,out canonical))throw new ArgumentException("Invalid numeric value/range/step.");var v=UiFindValue(next,id);
                 if(v!=null&&v.Min==min&&v.Max==max&&v.Step==step){result=new MyTuple<double,long>(v.Value,v.Revision);return true;}
                 long revision=UiNextDataRevision();if(v==null){if(next.Values.Count>=UiValueRules.MaxValues)throw new ArgumentException("UI value budget reached.");v=new UiNumericValue{Id=id};next.Values.Add(v);}v.Min=min;v.Max=max;v.Step=step;v.Value=canonical;v.Revision=revision;next.DataRevision=revision;
-                foreach(var w in next.Widgets)if(w.Control!=null&&w.Control.ValueId==id){var item=GetItem(context.Caller,target,w.Control.Artwork);UiNoActiveAnimation(owner.Caller,owner.Target,item.Id);UiRebaseControl(w,v,item,revision);}UiCommitNumericDefinition(context,next,owner);result=new MyTuple<double,long>(v.Value,v.Revision);return true;
+                foreach(var w in next.Widgets)if(w.Control!=null&&w.Control.ValueId==id){var item=UiOwnedControlItem(context.Caller,target,w);UiNoActiveAnimation(owner.Caller,owner.Target,item.Id);UiRebaseControl(w,v,item,revision);}UiCommitNumericDefinition(context,next,owner);result=new MyTuple<double,long>(v.Value,v.Revision);return true;
             }
             string controlId=UiRules.Id(args.Text());var widget=UiFindControl(next,controlId);
             if(op=="control")
             {
-                string bundle=UiRules.Id(args.Text()),artwork=args.Text();var item=GetItem(context.Caller,target,artwork);ValidateWriteId(context.Caller,target,artwork);UiNoActiveAnimation(owner.Caller,owner.Target,artwork);if(!next.Bundles.Exists(b=>b.Id==bundle))throw new ArgumentException("Declare the UI bundle first.");
+                string bundle=UiRules.Id(args.Text()),artwork=UiSelectedArtwork(context,args.Text());ValidateWriteId(context.Caller,target,artwork);var item=GetItem(context.Caller,target,artwork);UiNoActiveAnimation(owner.Caller,owner.Target,artwork);if(!next.Bundles.Exists(b=>b.Id==bundle))throw new ArgumentException("Declare the UI bundle first.");
                 foreach(var other in next.Widgets)if(other.Control!=null&&other.Id!=controlId&&other.Control.Artwork==artwork)throw new ArgumentException("Artwork already has a numeric control.");
-                var control=new UiWidget{Id=controlId,Bundle=bundle,X=args.Number(),Y=args.Number(),Width=args.Number(),Height=args.Number(),ActionKind="control",Argument="",Control=new UiControlData{Artwork=artwork}};args.End();long source=UiNextDataRevision();next.DataRevision=source;UiRebaseControl(control,null,item,source);
+                var control=new UiWidget{Id=controlId,Bundle=bundle,X=args.Number(),Y=args.Number(),Width=args.Number(),Height=args.Number(),ActionKind="control",Argument="",Control=new UiControlData{Artwork=artwork},ScreenId=context.ScreenId};args.End();long source=UiNextDataRevision();next.DataRevision=source;UiRebaseControl(control,null,item,source);
                 var prior=next.Widgets.Find(w=>w.Id==controlId);if(prior!=null){if(prior.Bundle!=bundle)throw new ArgumentException("Remove a control before moving it to another bundle.");next.Widgets.Remove(prior);}next.Widgets.Add(control);UiCommitNumericDefinition(context,next,owner);result=true;return true;
             }
-            if(widget==null)throw new ArgumentException("Artwork control does not exist.");var c=widget.Control;var sourceItem=GetItem(context.Caller,target,c.Artwork);UiNoActiveAnimation(owner.Caller,owner.Target,c.Artwork);long epoch=UiNextDataRevision();next.DataRevision=epoch;
+            if(widget==null)throw new ArgumentException("Artwork control does not exist.");var c=widget.Control;var sourceItem=UiOwnedControlItem(context.Caller,target,widget);UiNoActiveAnimation(owner.Caller,owner.Target,c.Artwork);long epoch=UiNextDataRevision();next.DataRevision=epoch;
             if(op=="bind-value"){string id=args.Text();args.End();if(id==""){c.ValueId=null;c.ConstraintKind=null;c.Points=c.Pivot=c.Axis=null;}else{UiRules.Id(id);if(UiFindValue(next,id)==null)throw new ArgumentException("Declare the UI value first.");c.ValueId=id;}}
             else if(op=="draggable"){c.Draggable=args.Flag(true);args.End();}
             else
@@ -130,7 +130,7 @@ namespace HoloMap
         {if(value is long)return (long)value;if(value is int)return (int)value;throw new ArgumentException("Expected revision must be an integer.");}
         UiBindingTrack UiTrack(UiDisplay display,UiWidget widget)
         {
-            UiValueOwner owner;if(!_uiValueOwners.TryGetValue(UiKey(display.CallerId,display.TargetId),out owner))throw new ArgumentException("Numeric control owner is inactive.");var caller=MyAPIGateway.Entities.GetEntityById(display.CallerId) as IMyProgrammableBlock;var target=MyAPIGateway.Entities.GetEntityById(display.TargetId) as IMyTerminalBlock;var item=GetItem(caller,target,widget.Control.Artwork);UiBindingTrack track;
+            UiValueOwner owner;if(!_uiValueOwners.TryGetValue(UiKey(display.CallerId,display.TargetId),out owner))throw new ArgumentException("Numeric control owner is inactive.");var caller=MyAPIGateway.Entities.GetEntityById(display.CallerId) as IMyProgrammableBlock;var target=MyAPIGateway.Entities.GetEntityById(display.TargetId) as IMyTerminalBlock;var item=UiOwnedControlItem(caller,target,widget);UiBindingTrack track;
             if(owner.Bindings.TryGetValue(widget.Id,out track)&&track.SourceRevision==widget.Control.SourceRevision){if(!ReferenceEquals(track.Item,item)||track.Expected!=item.Transform)throw new ArgumentException("Artwork changed; rebase the control before writing its value.");return track;}
             UiValidateControlPose(target,item,UiSourceProof(owner,item),item.Transform,GetScene(display.TargetId));track=new UiBindingTrack{Item=item,Expected=item.Transform,SourceRevision=widget.Control.SourceRevision};var value=UiFindValue(display,widget.Control.ValueId);if(widget.Control.ConstraintKind!=null&&!UiValueRules.Constraint(widget.Control,value,out track.Path,out track.Rotation))throw new ArgumentException("Invalid numeric control constraint.");owner.Bindings[widget.Id]=track;return track;
         }
@@ -141,7 +141,8 @@ namespace HoloMap
             try
             {
                 if(display==null||widget==null||widget.Control==null||!HasVisibleUiWidget(display,widget,allowHiddenBundle))return false;Scene scene;if(!_scenes.TryGetValue(display.TargetId,out scene))return false;Item item;if(!scene.Items.TryGetValue(Key(display.CallerId,widget.Control.Artwork),out item)||item.CallerId!=display.CallerId||!item.Visible||item.Opacity<=0)return false;
-                if(LayerAlpha(scene,item.CallerId,item.Layer)<=0){Layer layer;if(!allowHiddenBundle||item.Layer!="ui-"+widget.Bundle||!scene.Layers.TryGetValue(Key(item.CallerId,item.Layer),out layer)||layer.Opacity<=0)return false;}
+                if(widget.ScreenId!=null&&!item.Id.StartsWith(ScreenPrefix(widget.ScreenId),StringComparison.Ordinal)||widget.ScreenId==null&&IsProjectedId(item.Id))return false;
+                if(LayerAlpha(scene,item.CallerId,item.Layer)<=0){Layer layer;if(!allowHiddenBundle||item.Layer!=UiRenderLayer(widget.ScreenId,widget.Bundle)||!scene.Layers.TryGetValue(Key(item.CallerId,item.Layer),out layer)||layer.Opacity<=0)return false;}
                 if(MyAPIGateway.Multiplayer.IsServer){UiValueOwner owner;if(!_uiValueOwners.TryGetValue(UiKey(display.CallerId,display.TargetId),out owner)||!UiValueOwnerValid(owner))return false;UiNoActiveAnimation(display.CallerId,display.TargetId,item.Id);UiTrack(display,widget);}return true;
             }catch{return false;}
         }
@@ -165,7 +166,7 @@ namespace HoloMap
             {
                 if(!fromLease&&active)UiCancelLeases(callerId,targetId,valueId,"cancel");
                 if(changed){foreach(var p in poses){p.Item.Transform=p.Pose;p.Track.Expected=p.Pose;}value.Value=canonical;value.Revision=revision;display.DataRevision=revision;_uiDataRevision=revision;_dirty=true;UiPostValueEvent(display,lease==null?"":lease.Control,value,"change",player);}
-                if(!fromLease&&active){display.DataRevision=revision;_uiDataRevision=revision;foreach(var w in display.Widgets)if(w.Control!=null&&w.Control.ValueId==valueId){var item=GetItem(caller,target,w.Control.Artwork);UiRebaseControl(w,value,item,revision);owner.Bindings.Remove(w.Id);}_dirty=true;}
+                if(!fromLease&&active){display.DataRevision=revision;_uiDataRevision=revision;foreach(var w in display.Widgets)if(w.Control!=null&&w.Control.ValueId==valueId){var item=UiOwnedControlItem(caller,target,w);UiRebaseControl(w,value,item,revision);owner.Bindings.Remove(w.Id);}_dirty=true;}
             }finally{_uiValueMutation=false;}
             return new MyTuple<bool,double,long>(true,value.Value,value.Revision);
         }
@@ -184,6 +185,7 @@ namespace HoloMap
             leaseId=0;try
             {
                 UiValueServer();var d=GetUiDisplay(caller,target);var w=UiFindControl(d,control);if(d==null||d.Revision!=expectedDef||w==null||!w.Control.Draggable||w.Control.SourceRevision!=expectedSource||!UiLeaseHuman(d,w,player,allowHiddenBundle))return false;var v=UiFindValue(d,w.Control.ValueId);if(v==null||v.Revision!=expectedValue||w.Control.ConstraintKind==null)return false;string key=UiValueLock(caller,target,v.Id);if(_uiValueLocks.ContainsKey(key)||_uiValueLeaseSequence==long.MaxValue)return false;var track=UiTrack(d,w);var lease=new UiValueLease{Id=_uiValueLeaseSequence+1,Caller=caller,Target=target,Player=player,Definition=expectedDef,Source=expectedSource,Control=control,ValueId=v.Id,LastSeen=_ticks,Scalar=scalar,AllowHiddenBundle=allowHiddenBundle};
+                lease.ScreenId=w.ScreenId;lease.SurfaceGeneration=w.ScreenId==null?0:UiProjectedGeneration(d,w);if(lease.SurfaceGeneration<0)return false;
                 if(!scalar){bool begin=track.Path!=null?InteractionMath.TryBeginPathDrag(track.Path,ray,v.Value,out lease.Path):InteractionMath.TryBeginRotationDrag(track.Rotation,ray,UiValueRules.ToAngle(w.Control,v,v.Value),out lease.Rotation);if(!begin)return false;}
                 _uiValueLeaseSequence=lease.Id;_uiValueLeases.Add(lease.Id,lease);_uiValueLocks[key]=lease.Id;leaseId=lease.Id;UiPostValueEvent(d,control,v,"begin",player);return true;
             }catch{return false;}
@@ -198,7 +200,7 @@ namespace HoloMap
         {return UiTryBeginValueLeaseCore(caller,target,control,player,default(LocalRay),expectedDef,expectedValue,expectedSource,true,allowHiddenBundle,out lease);}
         bool UiValidateValueLease(long id,long player)
         {
-            UiValueLease lease;if(!_uiValueLeases.TryGetValue(id,out lease)||lease.Player!=player)return false;var d=GetUiDisplay(lease.Caller,lease.Target);var w=UiFindControl(d,lease.Control);return d!=null&&d.Revision==lease.Definition&&w!=null&&w.Control.SourceRevision==lease.Source&&w.Control.Draggable&&w.Control.ValueId==lease.ValueId&&UiLeaseHuman(d,w,player,lease.AllowHiddenBundle);
+            UiValueLease lease;if(!_uiValueLeases.TryGetValue(id,out lease)||lease.Player!=player)return false;var d=GetUiDisplay(lease.Caller,lease.Target);var w=UiFindControl(d,lease.Control);return d!=null&&d.Revision==lease.Definition&&w!=null&&w.ScreenId==lease.ScreenId&&(w.ScreenId==null||UiProjectedGeneration(d,w)==lease.SurfaceGeneration)&&w.Control.SourceRevision==lease.Source&&w.Control.Draggable&&w.Control.ValueId==lease.ValueId&&UiLeaseHuman(d,w,player,lease.AllowHiddenBundle);
         }
         bool UiTryCommitValueLeaseScalar(long id,long player,double requested,out MyTuple<bool,double,long> result)
         {
@@ -229,8 +231,8 @@ namespace HoloMap
         {
             foreach(var display in new List<UiDisplay>(_uiDisplays.Values))if(display.TargetId==target)
             {
-                UiValueOwner owner;if(!_uiValueOwners.TryGetValue(UiKey(display.CallerId,target),out owner))continue;long revision=UiNextDataRevision();UiCancelLeases(display.CallerId,target,null,"cancel");
-                foreach(var widget in display.Widgets)if(widget.Control!=null){Scene scene;Item item;if(_scenes.TryGetValue(target,out scene)&&scene.Items.TryGetValue(Key(display.CallerId,widget.Control.Artwork),out item))UiRebaseControl(widget,UiFindValue(display,widget.Control.ValueId),item,revision);}owner.Bindings.Clear();display.DataRevision=revision;_uiDataRevision=revision;_dirty=true;
+                UiValueOwner owner;if(!_uiValueOwners.TryGetValue(UiKey(display.CallerId,target),out owner)||!display.Widgets.Exists(w=>w.Control!=null&&w.ScreenId==null))continue;long revision=UiNextDataRevision();foreach(var lease in new List<UiValueLease>(_uiValueLeases.Values))if(lease.Caller==display.CallerId&&lease.Target==target&&lease.ScreenId==null)UiEndValueLease(lease.Id,lease.Player,false);
+                foreach(var widget in display.Widgets)if(widget.Control!=null&&widget.ScreenId==null){Scene scene;Item item;if(_scenes.TryGetValue(target,out scene)&&scene.Items.TryGetValue(Key(display.CallerId,widget.Control.Artwork),out item))UiRebaseControl(widget,UiFindValue(display,widget.Control.ValueId),item,revision);}owner.Bindings.Clear();display.DataRevision=revision;_uiDataRevision=revision;_dirty=true;
             }
         }
         void ReconcileUiValueDefinitions(UiDisplay previous,UiDisplay next)

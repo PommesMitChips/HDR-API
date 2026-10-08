@@ -12,7 +12,7 @@ namespace HoloMap
 {
     public sealed partial class HoloMapSession
     {
-        sealed class UiLocalMenu { public long Revision; public string Bundle; public int LastActionTick; }
+        sealed class UiLocalMenu { public long Revision,SurfaceGeneration; public string Bundle,ScreenId; public int LastActionTick; }
         readonly Dictionary<string, UiLocalMenu> _uiLocalMenus = new Dictionary<string, UiLocalMenu>();
         UiDisplay _uiHoveredDisplay;
         UiWidget _uiHoveredWidget;
@@ -48,16 +48,17 @@ namespace HoloMap
         {
             UiLocalMenu menu;
             bool opened = _uiLocalMenus.TryGetValue(UiKey(display.CallerId, display.TargetId), out menu)
-                && menu.Revision == display.Revision && menu.Bundle == widget.Bundle;
+                && menu.Revision == display.Revision && menu.Bundle == widget.Bundle&&menu.ScreenId==widget.ScreenId&&(widget.ScreenId==null||UiProjectedGeneration(display,widget)==menu.SurfaceGeneration);
             return HasVisibleUiWidget(display, widget, opened);
         }
         float ClientLayerAlpha(Scene scene, long caller, string name)
         {
-            if (name != null && name.StartsWith("ui-", StringComparison.Ordinal))
+            if (name != null && (name.StartsWith("ui-", StringComparison.Ordinal)||name.StartsWith("s_",StringComparison.Ordinal)))
             {
                 var display = GetUiDisplay(caller, scene.ConsoleId); UiLocalMenu menu;
                 if (display != null && _uiLocalMenus.TryGetValue(UiKey(caller, scene.ConsoleId), out menu)
-                    && menu.Revision == display.Revision && name == "ui-" + menu.Bundle)
+                    && menu.Revision == display.Revision && name == UiRenderLayer(menu.ScreenId,menu.Bundle)
+                    &&(menu.ScreenId==null||display.Widgets.Exists(w=>w.ScreenId==menu.ScreenId&&w.Bundle==menu.Bundle&&UiProjectedGeneration(display,w)==menu.SurfaceGeneration)))
                 {
                     Layer layer;
                     return scene.Layers.TryGetValue(Key(caller, name), out layer) ? layer.Opacity : 1;
@@ -156,6 +157,7 @@ namespace HoloMap
             if (ack == null || !ack.Accepted || !UiClientCanInteract()) return;
             var display = GetUiDisplay(ack.CallerId, ack.TargetId);
             if (display == null || display.Revision != ack.Revision) return;
+            var acknowledged=GetUiWidget(display.CallerId,display.TargetId,ack.WidgetId,false);if(acknowledged==null||acknowledged.ScreenId!=ack.ScreenId||acknowledged.ScreenId!=null&&UiProjectedGeneration(display,acknowledged)!=ack.SurfaceGeneration)return;
             if(UiFocusRequested&&_uiFocusDisplay.CallerId==display.CallerId&&_uiFocusDisplay.TargetId==display.TargetId)
                 _uiFocusLastActionTick=_ticks;
             UiLocalMenu existing;
@@ -164,7 +166,9 @@ namespace HoloMap
             {
                 if (!display.Bundles.Exists(bundle => bundle.Id == ack.Argument)) return;
                 _uiLocalMenus.Clear();
-                _uiLocalMenus[UiKey(display.CallerId, display.TargetId)] = new UiLocalMenu { Revision = display.Revision, Bundle = ack.Argument, LastActionTick = _ticks };
+                var source=GetUiWidget(display.CallerId,display.TargetId,ack.WidgetId,false);string screen=source==null?null:source.ScreenId;
+                _uiLocalMenus[UiKey(display.CallerId, display.TargetId)] = new UiLocalMenu { Revision = display.Revision, Bundle = ack.Argument, LastActionTick = _ticks,ScreenId=screen,SurfaceGeneration=screen==null?0:UiProjectedGeneration(display,source) };
+                if(screen!=null){ClearUiFocus();return;}
                 if (ack.ActionKind == "focus")
                 {
                     if(!BeginUiFocus(display,ack.Argument,ack.SourceTileId))

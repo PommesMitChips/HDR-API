@@ -102,6 +102,48 @@ namespace Hdr.Mods
         public void Clear(long context){Call("clear",context);}
         public void ContextVisible(long context,bool visible){Call("context-visible",context,visible);}
         public void ContextPose(long context,MatrixD pose){Call("context-pose",context,pose);}
+        /// <summary>Map ordinary retained content from a centred, Y-up canvas onto a client-local world surface.</summary>
+        public void ContextSurface(long context,string kind,double canvasWidth,double canvasHeight,params object[] parameters)
+        {var args=new object[4+(parameters==null?0:parameters.Length)];args[0]=context;args[1]=kind;args[2]=canvasWidth;args[3]=canvasHeight;if(parameters!=null)Array.Copy(parameters,0,args,4,parameters.Length);Call("context-surface",args);}
+        public void SurfacePlane(long context,double width,double height){ContextSurface(context,"plane",width,height);}
+        public void SurfaceCylinder(long context,double width,double height,double radius,double horizontalRadians=Math.PI*2,bool inside=true)
+        {ContextSurface(context,"cylinder",width,height,radius,horizontalRadians,Math.PI,inside?"inside":"outside");}
+        public void SurfaceSphere(long context,double width,double height,double radius,double horizontalRadians=Math.PI*2,double verticalRadians=Math.PI,bool inside=true)
+        {ContextSurface(context,"sphere",width,height,radius,horizontalRadians,verticalRadians,inside?"inside":"outside");}
+        public void SurfaceEllipsoid(long context,double width,double height,Vector3D radii,double horizontalRadians=Math.PI*2,double verticalRadians=Math.PI,bool inside=true)
+        {ContextSurface(context,"ellipsoid",width,height,radii,horizontalRadians,verticalRadians,inside?"inside":"outside");}
+        public void SurfaceMesh(long context,double width,double height,Vector3D[] points,int[] triangles,Vector2[] uv,bool inside=false)
+        {ContextSurface(context,"mesh",width,height,points,triangles,uv,inside?"inside":"outside");}
+        /// <summary>Angular, geodesic or pinhole; a zero source aspect uses the declared logical canvas aspect.</summary>
+        public void ContextMapping(long context,string mapping,double verticalFovRadians=Math.PI/2,double sourceAspect=0)
+        {Call("context-mapping",context,mapping,verticalFovRadians,sourceAspect);}
+        public void ContextSurfaceError(long context,double metres){Call("context-surface-error",context,metres);}
+        public void ContextSurfaceSided(long context,bool twoSided,double frontOpacity=1,double backOpacity=1){Call("context-surface-sided",context,twoSided,frontOpacity,backOpacity);}
+        public void ClearContextSurface(long context){Call("context-surface-clear",context);}
+        /// <summary>Read-only world ray inverse: hit, centred Y-up canvas metres, actual world hit. Does not acquire input or emit events.</summary>
+        public MyTuple<bool,Vector2,Vector3D> SurfaceRay(long context,Vector3D origin,Vector3D direction)
+        {return (MyTuple<bool,Vector2,Vector3D>)Call("context-surface-ray",context,origin,direction);}
+        /// <summary>Explicit actual-block authority for native sources. HDR checks access for the current viewer.</summary>
+        public void ContextAnchor(long context,IMyTerminalBlock anchor){Call("context-anchor",context,anchor);}
+        public MyTuple<bool,bool,string> ContextSourceStatus(long context,string provider=null)
+        {return provider==null?(MyTuple<bool,bool,string>)Call("context-source-status",context):(MyTuple<bool,bool,string>)Call("context-source-status",context,provider);}
+        /// <summary>Retain an independently ordered native source region. World rectangles and clips use centred Y-up canvas metres; HUD rectangles and clips use top-left Y-down pixels. UV uses normalized top-left XY/width/height.</summary>
+        public void SourceSlot(long context,string id,string provider,string sourceId,Vector4 rectangle,Vector4 clip,Vector4 uv,int order=0,double opacity=1)
+        {Call("context-slot",context,id,provider,sourceId,rectangle,clip,uv,order,opacity);}
+        public void RemoveSourceSlot(long context,string id){Call("context-slot-remove",context,id);}
+        public void SourceSlotVisible(long context,string id,bool visible){Call("context-slot-visible",context,id,visible);}
+        public void SourceSlotOpacity(long context,string id,double opacity){Call("context-slot-opacity",context,id,opacity);}
+        public void SourceSlotRefresh(long context,string id,double hz){Call("context-slot-refresh",context,id,hz);}
+        public void SourceSlotOrder(long context,string id,int order){Call("context-slot-order",context,id,order);}
+        public void SourceSlotPose(long context,string id,MatrixD pose){Call("context-slot-pose",context,id,pose);}
+        public void SourceSlotPanorama(long context,string id,double fov=105,double feather=8,double saturation=1.15,int resolution=1024)
+        {Call("context-slot-panorama",context,id,fov,feather,saturation,resolution);}
+        public void SourceSlotCameraQuality(long context,string id,string profile){Call("context-slot-camera-quality",context,id,profile);}
+        public void SourceSlotInherit(long context,string id){Call("context-slot-inherit",context,id);}
+        public MyTuple<bool,string> SourceSlotStatus(long context,string id){return (MyTuple<bool,string>)Call("context-slot-status",context,id);}
+        /// <summary>Return provider/source IDs, rectangle, clip, UV crop and order. World rectangles and clips use centred Y-up canvas metres; HUD rectangles and clips use top-left Y-down pixels. UV uses normalized top-left XY/width/height.</summary>
+        public MyTuple<string,string,Vector4,Vector4,Vector4,int> SourceSlotSettings(long context,string id)
+        {return (MyTuple<string,string,Vector4,Vector4,Vector4,int>)Call("context-slot-settings",context,id);}
         public void Mesh(long context,string id,Vector3D[] points,int[] triangles,Vector4 color,Vector2[] uv=null,string material=null)
         {Call("mesh",context,id,points,triangles,color,uv,material);}
         public void Wires(long context,string id,Vector3D[] points,Vector2I[] edges,Vector4 color,double width=1)
@@ -128,6 +170,10 @@ namespace Hdr.Mods
         public bool RenderingEnabled {get{return (bool)Call("rendering-enabled");}}
         /// <summary>Total retained points/primitives across this owner's contexts; no geometry compilation or mutation.</summary>
         public MyTuple<int,int> GeometryUsage(){return (MyTuple<int,int>)Call("geometry-usage");}
+        /// <summary>Set aggregate retained geometry allowances. Zero is unlimited; per-item structure and frame draw limits remain separate. Rejects a finite allowance below current artwork.</summary>
+        public void GeometryLimit(int points=0,int primitives=0){Call("geometry-limit",points,primitives);}
+        /// <summary>Current aggregate point/primitive allowances; zero means unlimited.</summary>
+        public MyTuple<int,int> GeometrySettings(){return (MyTuple<int,int>)Call("geometry-limit-settings");}
         public void Remove(long context,string id){Call("remove",context,id);}
         /// <summary>Configure retained flicker, scan, volume, particles, beams, rays or budget. World distances are model units; HUD distances are pixels. No client plugin is required.</summary>
         public void Effect(long context,string id,string type,params object[] parameters)

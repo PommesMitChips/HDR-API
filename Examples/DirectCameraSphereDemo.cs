@@ -30,7 +30,7 @@ void Setup()
  _cameras.Sort((a,b)=>a.EntityId.CompareTo(b.EntityId));
  _height=1.5+_display.CubeGrid.GridSize;
  if((_display.BlockDefinition.SubtypeName??"").IndexOf("Console",StringComparison.OrdinalIgnoreCase)>=0)H("volume",false);
- H("range",0);H("budget",32768,65536,60000);Retire();
+ H("range",0);H("budget",0,0,60000);Retire();
  H("screen","panorama",MatrixD.CreateTranslation(0,_height,0),6,3,6,3);
  H("screen-surface","sphere",3,Math.PI*2,Math.PI,"inside");
  H("screen-mapping","angular");H("screen-aspect","stretch");H("screen-quality",.015);

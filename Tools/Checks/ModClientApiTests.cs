@@ -43,7 +43,7 @@ internal static class ModClientApiTests
         for(int i=0;i<64;i++){var item=ModClientRules.Mesh("i"+i,mesh.Geometry.Points,new[]{0,1,2},Vector4.One);ModClientRules.Admit(owner,c,item);c.Items.Add(item.Id,item);}
         Reject(()=>ModClientRules.Admit(owner,c,ModClientRules.Mesh("overflow",mesh.Geometry.Points,new[]{0,1,2},Vector4.One)),"item cap");
         ModClientRules.Admit(owner,c,ModClientRules.Mesh("i0",mesh.Geometry.Points,new[]{0,1,2},Vector4.One));count++;
-        var largeOwner=new ModClientOwner();var largeContext=new ModClientContext();largeOwner.Contexts.Add(1,largeContext);
+        var largeOwner=new ModClientOwner{PointLimit=8192,PrimitiveLimit=8192};var largeContext=new ModClientContext();largeOwner.Contexts.Add(1,largeContext);
         var largePoints=new Vector3D[2048];for(int i=0;i<largePoints.Length;i++)largePoints[i]=new Vector3D(i,0,0);
         for(int i=0;i<4;i++){var item=ModClientRules.Mesh("large"+i,largePoints,new[]{0,1,2},Vector4.One);ModClientRules.Admit(largeOwner,largeContext,item);largeContext.Items.Add(item.Id,item);}
         Reject(()=>ModClientRules.Admit(largeOwner,largeContext,ModClientRules.Mesh("overflow",largePoints,new[]{0,1,2},Vector4.One)),"aggregate consumer point cap");

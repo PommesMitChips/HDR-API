@@ -15,7 +15,7 @@ namespace HoloMap
             public ulong Sender;
             public long Id, CallerId, TargetId, DefinitionRevision, SourceRevision;
             public long CharacterId, Identity, TileId, TileSource, RequestId, Sequence;
-            public string ControlId, Bundle;
+            public string ControlId, Bundle,ScreenId;public long SurfaceGeneration;
             public Vector3D EntryLocal;
             public MatrixD View;
             public double[] Layout;
@@ -41,6 +41,7 @@ namespace HoloMap
             ack.CallerId=grant.CallerId;ack.TargetId=grant.TargetId;ack.ControlId=grant.ControlId;ack.DefinitionRevision=grant.DefinitionRevision;
             ack.RequestId=grant.RequestId;ack.ViewerId=grant.Id;ack.LeaseId=grant.Id;ack.TileId=grant.TileId;ack.CharacterId=grant.CharacterId;
             ack.ValueRevision=grant.SourceRevision;
+            ack.ScreenId=grant.ScreenId;ack.SurfaceGeneration=grant.SurfaceGeneration;
             return ack;
         }
         UiDragAck ProcessUiDragViewerRequest(ulong sender,UiDragRequest request)
@@ -56,6 +57,7 @@ namespace HoloMap
                         ||request.RequestId!=closing.RequestId||request.CallerId!=closing.CallerId||request.TargetId!=closing.TargetId
                         ||request.ControlId!=closing.ControlId||request.DefinitionRevision!=closing.DefinitionRevision
                         ||request.ValueRevision!=closing.SourceRevision||request.Mode!=(int)UiDragMode.FocusedPointer
+                        ||request.ScreenId!=closing.ScreenId||request.SurfaceGeneration!=closing.SurfaceGeneration
                         ||request.Sequence<=closing.Sequence)
                     {
                         var rejected=UiDragViewerAcknowledgement(request,null,UiDragStatus.Invalid,true);
@@ -77,6 +79,7 @@ namespace HoloMap
                     if(request.LeaseId!=existing.Id||request.RequestId!=existing.RequestId||request.CallerId!=existing.CallerId||request.TargetId!=existing.TargetId
                         ||request.ControlId!=existing.ControlId||request.DefinitionRevision!=existing.DefinitionRevision
                         ||request.ValueRevision!=existing.SourceRevision
+                        ||request.ScreenId!=existing.ScreenId||request.SurfaceGeneration!=existing.SurfaceGeneration
                         ||request.Mode!=(int)UiDragMode.FocusedPointer||request.Sequence<=existing.Sequence)
                     {
                         var rejected=UiDragViewerAcknowledgement(request,null,UiDragStatus.Invalid,true);
@@ -103,6 +106,7 @@ namespace HoloMap
                 if(display==null||display.Revision!=request.DefinitionRevision||widget==null||widget.Control==null
                     ||UiDragViewerStamp(display,widget)!=request.ValueRevision)
                     return UiDragViewerAcknowledgement(request,null,UiDragStatus.Stale,true);
+                if(widget.ScreenId!=request.ScreenId||widget.ScreenId!=null&&UiProjectedGeneration(display,widget)!=request.SurfaceGeneration)return UiDragViewerAcknowledgement(request,null,UiDragStatus.Stale,true);
                 bool opened=false;UiPeer peer;if(_uiPeers.TryGetValue(sender,out peer))opened=UiDragBundleGrant(peer,player,display,widget);
                 if(!HasVisibleUiWidget(display,widget,opened)||!UiControlSourceValid(display,widget,opened))
                     return UiDragViewerAcknowledgement(request,null,UiDragStatus.ContextLost,true);
@@ -125,7 +129,8 @@ namespace HoloMap
                     Caller=caller,Target=anchor,Tile=tile,TileId=tileId,TileSource=tileScene.LcdSourceId,RequestId=request.RequestId,Sequence=request.Sequence,
                     EntryLocal=Vector3D.Transform(hit,MatrixD.Invert(tile.WorldMatrix)),View=LocalView(source),Layout=CaptureUiFocusLayout(source,tileScene),
                     HiddenBundle=opened,Started=_ticks,LastSeen=_ticks};
-                foreach(var control in display.Widgets)if(control.Bundle==grant.Bundle&&control.Control!=null)
+                grant.ScreenId=widget.ScreenId;grant.SurfaceGeneration=widget.ScreenId==null?0:UiProjectedGeneration(display,widget);
+                foreach(var control in display.Widgets)if(control.Bundle==grant.Bundle&&control.ScreenId==grant.ScreenId&&control.Control!=null)
                 {
                     if(control.Visible&&!UiControlSourceValid(display,control,opened))return UiDragViewerAcknowledgement(request,null,UiDragStatus.ContextLost,true);
                     grant.Sources.Add(control.Id,control.Control.SourceRevision);
@@ -159,8 +164,9 @@ namespace HoloMap
                 var display=GetUiDisplay(grant.CallerId,grant.TargetId);var initial=GetUiWidget(grant.CallerId,grant.TargetId,grant.ControlId,false);
                 if(display==null||display.Revision!=grant.DefinitionRevision||initial==null||initial.Control==null||initial.Bundle!=grant.Bundle
                     ||initial.Control.SourceRevision!=grant.SourceRevision||!HasVisibleUiWidget(display,initial,grant.HiddenBundle))return false;
+                if(initial.ScreenId!=grant.ScreenId||initial.ScreenId!=null&&UiProjectedGeneration(display,initial)!=grant.SurfaceGeneration)return false;
                 int sourceCount=0;
-                foreach(var widget in display.Widgets)if(widget.Bundle==grant.Bundle&&widget.Control!=null)
+                foreach(var widget in display.Widgets)if(widget.Bundle==grant.Bundle&&widget.ScreenId==grant.ScreenId&&widget.Control!=null)
                 {
                     long epoch;if(!grant.Sources.TryGetValue(widget.Id,out epoch)||epoch!=widget.Control.SourceRevision
                         ||widget.Visible&&!UiControlSourceValid(display,widget,grant.HiddenBundle))return false;
@@ -169,7 +175,7 @@ namespace HoloMap
                 if(sourceCount!=grant.Sources.Count)return false;
                 Scene source,tileScene;MatrixD mapping;
                 if(!_scenes.TryGetValue(grant.TargetId,out source)||!_scenes.TryGetValue(grant.TileId,out tileScene)
-                    ||tileScene.LcdSourceId!=grant.TileSource||LocalView(source)!=grant.View||!UiDragWorldMapping(display,grant.TileId,out mapping))return false;
+                    ||tileScene.LcdSourceId!=grant.TileSource||grant.ScreenId==null&&(LocalView(source)!=grant.View||!UiDragWorldMapping(display,grant.TileId,out mapping)))return false;
                 var layout=CaptureUiFocusLayout(source,tileScene);if(grant.Layout==null||layout.Length!=grant.Layout.Length)return false;
                 for(int i=0;i<layout.Length;i++)if(layout[i]!=grant.Layout[i])return false;
                 var head=player.Character.GetHeadMatrix(true,true,true,true);var entry=Vector3D.Transform(grant.EntryLocal,tile.WorldMatrix);var toward=entry-head.Translation;
@@ -189,11 +195,13 @@ namespace HoloMap
         {
             grant=null;UiDragViewerGrant found;if(!UiDragViewerPreflight(sender,id,player,out found))return false;
             if(display==null||widget==null||widget.Control==null||display.CallerId!=found.CallerId||display.TargetId!=found.TargetId
-                ||display.Revision!=found.DefinitionRevision||widget.Bundle!=found.Bundle
+                ||display.Revision!=found.DefinitionRevision||widget.Bundle!=found.Bundle||widget.ScreenId!=found.ScreenId
                 ||!HasVisibleUiWidget(display,widget,found.HiddenBundle)||!UiControlSourceValid(display,widget,found.HiddenBundle))return false;
             grant=found;return true;
         }
         bool UiDragViewerClick(ulong sender,long expectedViewerId,UiDisplay display,UiWidget widget,IMyPlayer player,out Vector3D hit,out long tileId)
+        {return UiDragViewerClick(sender,expectedViewerId,display,widget,player,out hit,out tileId,null);}
+        bool UiDragViewerClick(ulong sender,long expectedViewerId,UiDisplay display,UiWidget widget,IMyPlayer player,out Vector3D hit,out long tileId,UiPress press)
         {
             hit=Vector3D.Zero;tileId=0;UiDragViewerGrant current,grant;
             // Check the packet's viewer nonce before context validation can
@@ -202,6 +210,11 @@ namespace HoloMap
                 ||!UiDragViewerPreflight(sender,expectedViewerId,player,out grant)
                 ||widget==null||widget.Control==null||widget.Control.Draggable
                 ||!UiDragViewerFor(sender,expectedViewerId,display,widget,player,out grant))return false;
+            if(widget.ScreenId!=null)
+            {
+                if(press==null)return false;var request=new UiDragRequest{ScreenId=press.ScreenId,SurfaceGeneration=press.SurfaceGeneration,OriginX=press.OriginX,OriginY=press.OriginY,OriginZ=press.OriginZ,DirectionX=press.DirectionX,DirectionY=press.DirectionY,DirectionZ=press.DirectionZ};HDR.Interactions.LocalRay ray;
+                return UiProjectedRequestRay(player,display,widget,request,out ray)&&TryUiProjectedHit(display,widget,new Vector3D(press.OriginX,press.OriginY,press.OriginZ),new Vector3D(press.DirectionX,press.DirectionY,press.DirectionZ),out hit,out tileId);
+            }
             var tile=MyAPIGateway.Entities.GetEntityById(grant.TileId) as IMyTerminalBlock;
             if(tile==null)return false;hit=Vector3D.Transform(grant.EntryLocal,tile.WorldMatrix);tileId=grant.TileId;return true;
         }

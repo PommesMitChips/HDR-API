@@ -65,7 +65,7 @@ void Bind(string control, string artwork, string value, double initial, double m
 void Setup()
 {
  U("clear"); H("clear");
- H("budget", 4096, 8192, 20000);
+ H("budget", 0, 0, 20000);
  H("volume", false); H("range", 4); H("view", new Vector3D(0, 1.7, 0));
  H("text", "title", "HOLOGRAPHIC / CONTROLS", 0, .96, 0, .075, "#c4faff");
  H("text", "line-label", "THROTTLE / LINE / 5% STEPS", -.75, .72, 0, .045, "#92d6de");

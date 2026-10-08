@@ -13,9 +13,11 @@ namespace Hdr.Html
         readonly string program;
         bool cleanup;
         readonly bool sprites;
+        readonly string fixedScreenId;
         Func<string,object[],object> draw,ui;
-        internal HtmlPbBridge(IMyProgrammableBlock caller,IMyTerminalBlock target,bool sprites=false)
-        {this.caller=caller;this.target=target;this.sprites=sprites;program=caller==null?null:caller.ProgramData;if(!ReadyIdentity())throw new ArgumentException("PB HTML requires a live working authorized PB and display with the requested manual content mode.");Acquire();}
+        internal HtmlPbBridge(IMyProgrammableBlock caller,IMyTerminalBlock target,bool sprites=false,string screenId=null)
+        {this.caller=caller;this.target=target;this.sprites=sprites;fixedScreenId=screenId;program=caller==null?null:caller.ProgramData;if(!ReadyIdentity())throw new ArgumentException("PB HTML requires a live working authorized PB and display with the requested manual content mode.");Acquire();if(screenId!=null)Draw("screen-settings");}
+        internal string ScreenId{get{return fixedScreenId;}}
         internal void Acquire()
         {
             var d=caller.GetProperty("HDR.Draw");var u=caller.GetProperty("HDR.UI");
@@ -25,7 +27,12 @@ namespace Hdr.Html
         }
         public bool Ready
         {
-            get{return ReadyIdentity()&&draw!=null&&ui!=null;}
+            get
+            {
+                if(!ReadyIdentity()||draw==null||ui==null)return false;
+                if(fixedScreenId==null)return true;
+                try{draw("target",new object[]{(PbBlock)target});return (bool)draw("screen-exists",new object[]{fixedScreenId});}catch{return false;}
+            }
         }
         bool ReadyIdentity()
         {
@@ -39,11 +46,13 @@ namespace Hdr.Html
         public object Draw(string operation,params object[] args)
         {
             if(!Ready)throw new ArgumentException("PB HTML caller or target was retired.");
-            if(operation!="version"&&operation!="measure-text"&&operation!="geometry-cost"&&operation!="capabilities")draw("target",new object[]{(PbBlock)target});
+            Select(operation=="budget-settings");
             return draw(operation,args);
         }
         public object Ui(string operation,params object[] args)
-        {if(!Ready)throw new ArgumentException("PB HTML caller or target was retired.");draw("target",new object[]{(PbBlock)target});return ui(operation,args);}
+        {if(!Ready)throw new ArgumentException("PB HTML caller or target was retired.");Select(false);if(fixedScreenId!=null)ui("screen",new object[]{fixedScreenId});return ui(operation,args);}
+        void Select(bool anchorUtility)
+        {draw("target",new object[]{(PbBlock)target});if(!anchorUtility&&fixedScreenId!=null)draw("screen",new object[]{fixedScreenId});}
         internal object DrawSelectedScreen(string screen,string operation,params object[] args)
         {if(!Ready)throw new ArgumentException("PB HTML caller or target was retired.");draw("target",new object[]{(PbBlock)target});draw("screen",new object[]{screen});return draw(operation,args);}
     }

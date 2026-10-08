@@ -100,6 +100,8 @@ internal static class Program
             _checks+=ProjectedSpriteTests.Run();
             _checks+=ProjectedScreenNetworkTests.Run();
             _checks+=ProjectedScreenIntegrationTests.Run();
+            _checks+=CompositionSourceSlotTests.Run();
+            _checks+=ProjectedUiCompositionTests.Run();
             _checks+=ExternalSourceRenderBudgetTests.Run();
             _checks+=DisplaySourceBridgeTests.Run();
             _checks+=PortalSourceTests.Run();
@@ -118,6 +120,8 @@ internal static class Program
             _checks+=LcdTriangleTests.Run(root);
             _checks+=DisplayCapabilityTests.Run();
             _checks+=ModClientApiTests.Run();
+            _checks+=ModClientSurfaceCompositionTests.Run();
+            _checks+=ModClientSourceCompositionTests.Run();
             _checks+=ClientBudgetPartitionTests.Run();
             _checks+=PluginCapabilityTests.Run();
             _checks+=HologramEffectTests.Run();

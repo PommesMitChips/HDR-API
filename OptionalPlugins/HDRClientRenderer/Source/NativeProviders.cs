@@ -113,12 +113,14 @@ namespace HDRClientRenderer
             public double Now { get { return System.Diagnostics.Stopwatch.GetTimestamp() / (double)System.Diagnostics.Stopwatch.Frequency; } }
             public bool Active(long anchor, long caller, string source, string screen)
             {
+                if(plugin.IsModSourceKey(caller)){var consumer=plugin.ModSourceCurrent(anchor,caller,PortalProviderId,source);return consumer!=null&&screen==LocalModScreen(consumer);}
                 if (source != screen || plugin.hdrService == null) return false;
                 try { var state = plugin.hdrService("source-state", new object[] { PortalProviderId, anchor, caller, source }); return state is bool && (bool)state; }
                 catch { return false; }
             }
             public bool Authorized(long anchor, long caller, string source)
             {
+                if(plugin.IsModSourceKey(caller))return plugin.ModSourceCurrent(anchor,caller,PortalProviderId,source)!=null;
                 if (!Ready() || !plugin.registered || MyAPIGateway.Session.Player == null || MyAPIGateway.Session.Player.Character == null) return false;
                 var block = MyAPIGateway.Entities.GetEntityById(anchor) as GameBlock;
                 var pb = MyAPIGateway.Entities.GetEntityById(caller) as PbBlock;
@@ -130,6 +132,7 @@ namespace HDRClientRenderer
             public bool TryDescriptor(long anchor, long caller, string source, out object[] descriptor)
             {
                 descriptor = null; if (plugin.hdrService == null) return false;
+                if(plugin.IsModSourceKey(caller)){var consumer=plugin.ModSourceCurrent(anchor,caller,PortalProviderId,source);if(consumer==null)return false;descriptor=consumer.State.Data as object[];return descriptor!=null;}
                 try { descriptor = plugin.hdrService("source-portaldescriptor", new object[] { PortalProviderId, anchor, caller, source }) as object[]; return descriptor != null; }
                 catch { return false; }
             }

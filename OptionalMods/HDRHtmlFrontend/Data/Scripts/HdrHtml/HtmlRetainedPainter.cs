@@ -60,12 +60,15 @@ namespace Hdr.Html
                     points=checked(points+item.Points);primitives=checked(primitives+item.Primitives);
                 }
                 report.EstimatedPoints=points;report.EstimatedTriangles=primitives;
-                if(points>Limits.MaxPoints||primitives>Limits.MaxPrimitives) throw new ArgumentException("HTML compiled geometry exceeds the painter's retained point/primitive grant.");
+                if(Limits.MaxPoints>0&&points>Limits.MaxPoints||Limits.MaxPrimitives>0&&primitives>Limits.MaxPrimitives) throw new ArgumentException("HTML compiled geometry exceeds the painter's retained point/primitive grant.");
                 if(!Api.Ready||current!=Api.Generation) { LoseContext();throw new InvalidOperationException("HDR endpoint changed during paint preparation."); }
                 // Counts include other contexts belonging to this caller's endpoint, not just this document.
                 var usage=(MyTuple<int,int>)CheckedCall("geometry-usage");int oldPoints=0,oldPrimitives=0;
                 foreach(var item in retained.Values){oldPoints+=item.Points;oldPrimitives+=item.Primitives;}
-                if(usage.Item1-oldPoints+points>8192||usage.Item2-oldPrimitives+primitives>8192) throw new ArgumentException("HTML frame plus the caller's other contexts exceeds HDR's owner geometry grant.");
+                var allowance=(MyTuple<int,int>)CheckedCall("geometry-limit-settings");
+                if(allowance.Item1<0||allowance.Item2<0)throw new ArgumentException("HDR returned an invalid owner geometry allowance.");
+                long projectedPoints=(long)usage.Item1-oldPoints+points,projectedPrimitives=(long)usage.Item2-oldPrimitives+primitives;
+                if(allowance.Item1>0&&projectedPoints>allowance.Item1||allowance.Item2>0&&projectedPrimitives>allowance.Item2) throw new ArgumentException("HTML frame plus the caller's other contexts exceeds HDR's owner geometry grant.");
                 if(Context==0){Context=(long)CheckedCall(IsHud?"create-hud":"create-world",IsHud?new object[]{contextOrder}:new object[]{contextOrder,worldPose});generation=current;report.MutatingCalls++;}
                 var previous=new Dictionary<string,HtmlPreparedItem>(retained,StringComparer.Ordinal);
                 try

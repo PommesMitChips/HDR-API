@@ -63,11 +63,23 @@ namespace Hdr.Mods
             if(disposed||!ReferenceEquals(before,endpoint)||generation!=ConnectionGeneration)throw new InvalidOperationException("HDR HTML endpoint changed during capabilities query.");
             return result;
         }
+        /// <summary>Aggregate allowance across this hosted HTML owner's Core contexts. Zero means unlimited; structural document limits remain separate.</summary>
+        public void GeometryLimit(int points=0,int primitives=0){Call("geometry-limit",points,primitives);}
+        public MyTuple<int,int> GeometrySettings(){return (MyTuple<int,int>)Call("geometry-limit-settings");}
         public long CreateHud(string markup,string css,double width,double height,string backend="vector",int order=0)
         {return (long)Call("create-hud",markup,css,width,height,backend,order);}
         /// <summary>World pose is the document's top-left origin; local +X is right and local -Y is down.</summary>
         public long CreateWorld(string markup,string css,double width,double height,MatrixD pose,double metresPerPixel,string backend="vector",int order=0)
         {return (long)Call("create-world",markup,css,width,height,pose,metresPerPixel,backend,order);}
+        /// <summary>Centered HTML canvas mapped by Core onto plane, cylinder, sphere, ellipsoid or authored mesh. Named settings select actual source anchor, mapping, sidedness and error tolerance.</summary>
+        public long CreateSurface(string markup,string css,double width,double height,MatrixD worldPose,double metresPerPixel,string surfaceKind,object[] surfaceParameters,MyTuple<string,object[]>[] settings=null,string backend="svg",int order=0)
+        {return (long)Call("create-surface",markup,css,width,height,worldPose,metresPerPixel,surfaceKind,surfaceParameters??new object[0],settings??new MyTuple<string,object[]>[0],backend,order);}
+        public bool AttachSource(long document,string nodeId,string provider,string sourceId,MyTuple<string,object[]>[] settings=null)
+        {return (bool)(settings==null?Call("attach-source",document,nodeId,provider,sourceId):Call("attach-source",document,nodeId,provider,sourceId,settings));}
+        public bool DetachSource(long document,string nodeId){return (bool)Call("detach-source",document,nodeId);}
+        public void SetSourceAnchor(long document,Sandbox.ModAPI.Ingame.IMyTerminalBlock actualAnchor){Call("source-anchor",document,actualAnchor);}
+        public MyTuple<bool,string> SourceStatus(long document,string nodeId){return (MyTuple<bool,string>)Call("source-status",document,nodeId);}
+        public string[] SourceCapabilities(long document){return (string[])Call("source-capabilities",document);}
         /// <summary>Consumer must own this surface, select SCRIPT and clear its selected text-surface script first.</summary>
         public long CreateNativeLcd(string markup,string css,IMyTextSurface ownedSurface,bool callerOwnsSurface)
         {return (long)Call("create-lcd",markup,css,ownedSurface,callerOwnsSurface);}
@@ -77,6 +89,8 @@ namespace Hdr.Mods
         public bool Resize(long document,double width,double height){return (bool)Call("resize",document,width,height);}
         /// <summary>Call only from a consumer-owned GUI which already prevents game input from using this press.</summary>
         public void Pointer(long document,double x,double y,bool pressed){Call("pointer",document,x,y,pressed);}
+        /// <summary>Consumer-owned cooperative world ray; the Core inverse follows the published mapped surface.</summary>
+        public void PointerRay(long document,Vector3D origin,Vector3D direction,bool pressed){Call("pointer-ray",document,origin,direction,pressed);}
         public void CancelPointer(long document){Call("pointer-cancel",document);}
         public MyTuple<string,string,string,MyTuple<double,long>>[] PollEvents(long document)
         {return (MyTuple<string,string,string,MyTuple<double,long>>[])Call("poll-events",document);}

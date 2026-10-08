@@ -3,7 +3,7 @@
   <Import Project="../GameReferences.props" />
   <ItemGroup>
     <ProjectReference Include="CoreCompile.csproj" />
-    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/*.cs" Exclude="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlFrontend*.cs;$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlPrototypeDemo.cs;$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlPb*.cs" />
+    <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/*.cs" Exclude="$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlFrontend*.cs;$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlPrototypeDemo.cs;$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlPb*.cs;$(FrontendRoot)/Data/Scripts/HdrHtml/HtmlSurfacePainter.cs" />
     <Compile Include="RendererChecks.cs" />
   </ItemGroup>
 </Project>

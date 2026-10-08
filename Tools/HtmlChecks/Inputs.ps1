@@ -12,7 +12,8 @@ function Get-HtmlGateInputs([string]$RepositoryRoot) {
 }
 function Get-HtmlGateSuites([string]$RepositoryRoot) {
     $suites = @(Get-Content -LiteralPath (Join-Path $RepositoryRoot 'Tools/HtmlChecks/Suites.json') -Raw | ConvertFrom-Json)
-    if ($suites.Count -ne 7 -or @($suites | Where-Object { -not $_.Expected -or [int]$_.Expected -lt 1 }).Count) { throw 'The seven HTML test suites need reviewed, frozen assertion counts in Suites.json before the release gate can run.' }
+    $required = @('Parser','Layout','Retained','NativeLcd','Host','CoreSeams','Pb','Composition')
+    if ($suites.Count -ne $required.Count -or (($suites.Name | Sort-Object) -join ',') -ne (($required | Sort-Object) -join ',') -or @($suites | Where-Object { -not $_.Expected -or [int]$_.Expected -lt 1 }).Count) { throw 'The eight HTML test suites need reviewed, frozen assertion counts in Suites.json before the release gate can run.' }
     return $suites
 }
 function Get-HtmlFrontendVersion([string]$RepositoryRoot) {

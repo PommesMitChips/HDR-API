@@ -23,7 +23,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'LCD screen calibration does not match installed models.' }
     & dotnet run --project (Join-Path $taskRoot 'Tools\Checks\Checks.csproj') "-p:GameBin=$GameBin" -- $taskRoot
     if ($LASTEXITCODE -ne 0) { throw 'HDR API checks failed.' }
-    Compress-Archive -Path (Join-Path $taskRoot 'Mod\*') -DestinationPath (Join-Path $taskRoot 'artifacts\HDR-API-0.9.10.zip') -Force
+    Compress-Archive -Path (Join-Path $taskRoot 'Mod\*') -DestinationPath (Join-Path $taskRoot 'artifacts\HDR-API-0.9.11.zip') -Force
     Write-Host "Paste-ready PB demo: $(Join-Path $taskRoot 'artifacts\ConsoleDemo.pb.cs')"
     Write-Host "Paste-ready SVG/image demo: $(Join-Path $taskRoot 'artifacts\SvgDemo.pb.cs')"
     Write-Host "Paste-ready exported animation demo: $(Join-Path $taskRoot 'artifacts\SvgFramesDemo.pb.cs')"

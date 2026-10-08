@@ -80,13 +80,14 @@ namespace HDRClientRenderer
             internal LcdWorld(HDRClientRendererPlugin plugin) { this.plugin = plugin; }
             public bool Active(long anchor, long caller, string sourceId)
             {
+                if(plugin.IsModSourceKey(caller))return plugin.ModSourceCurrent(anchor,caller,ProviderId,sourceId)!=null;
                 try { if (plugin.hdrService == null) return false;
                     object result = plugin.hdrService("source-state", new object[] { ProviderId, anchor, caller, sourceId });
                     return result is bool && (bool)result; }
                 catch { return false; }
             }
             public bool Authorized(long anchor, long caller, long source)
-            { return HDRClientRendererPlugin.Authorized(anchor, caller, source); }
+            { return plugin.IsModSourceKey(caller)?plugin.ModSourceEntityAuthorized(anchor,caller,source,ProviderId):HDRClientRendererPlugin.Authorized(anchor, caller, source); }
             public bool TryTexture(long source, int index, out string texture, out int width, out int height)
             {
                 Vector2I size;
@@ -112,6 +113,7 @@ namespace HDRClientRenderer
             internal PanoramaWorld(HDRClientRendererPlugin plugin) { this.plugin = plugin; }
             public bool Active(long anchor, long caller, string sourceId)
             {
+                if(plugin.IsModSourceKey(caller))return plugin.ModSourceCurrent(anchor,caller,PanoramaProviderId,sourceId)!=null;
                 try { if (plugin.hdrService == null || !plugin.directCapture.Ready || !plugin.panoramaGpu.Ready || !plugin.cameraCompatibility.Ready) return false;
                     object state = plugin.hdrService("source-state", new object[] { PanoramaProviderId, anchor, caller, sourceId });
                     return state is bool && (bool)state; }
@@ -120,6 +122,12 @@ namespace HDRClientRenderer
             public bool TrySettings(long anchor, long caller, string sourceId, out PanoramaStore.Settings settings)
             {
                 settings = null;
+                if(plugin.IsModSourceKey(caller))
+                {
+                    var consumer=plugin.ModSourceCurrent(anchor,caller,PanoramaProviderId,sourceId);if(consumer==null)return false;
+                    var local=(MyTuple<MyTuple<double,double,double,int>,int>)consumer.State.Data;var values=local.Item1;
+                    settings=new PanoramaStore.Settings{FovDegrees=values.Item1,FeatherDegrees=values.Item2,Saturation=values.Item3,CaptureResolution=values.Item4,Profile=local.Item2,Rate=consumer.State.Demand.Item3};return settings.Valid;
+                }
                 if (plugin.hdrService == null) return false;
                 object value = plugin.hdrService("source-panoramasettings", new object[] { PanoramaProviderId, anchor, caller, sourceId });
                 if (!(value is MyTuple<double, double, double, int>)) return false;
@@ -134,6 +142,8 @@ namespace HDRClientRenderer
             public bool DisplayDemand(long anchor,long caller,string sourceId,out int width,out int height,out double rate)
             {
                 width=height=0;rate=0;
+                if(plugin.IsModSourceKey(caller))
+                {var consumer=plugin.ModSourceCurrent(anchor,caller,PanoramaProviderId,sourceId);if(consumer==null)return false;var demand=consumer.State.Demand;width=demand.Item1;height=demand.Item2;rate=demand.Item3;return demand.Item4;}
                 try
                 {
                     if(plugin.hdrService==null)return false;
@@ -148,7 +158,7 @@ namespace HDRClientRenderer
             public bool TryFace(long anchor, long caller, long cameraId, PanoramaStore.Settings settings, PanoramaDensity density, out PanoramaStore.Face face)
             {
                 face = null;
-                if (!CameraAuthorized(anchor, caller, cameraId)) { plugin.directCapture.Revoke(cameraId); return false; }
+                if (!Authorized(anchor, caller, cameraId)) { plugin.directCapture.Revoke(cameraId); return false; }
                 var camera = MyAPIGateway.Entities.GetEntityById(cameraId) as Sandbox.Game.Entities.MyCameraBlock;
                 var anchorBlock = MyAPIGateway.Entities.GetEntityById(anchor) as GameBlock;
                 if (camera == null || anchorBlock == null) return false;
@@ -170,13 +180,14 @@ namespace HDRClientRenderer
             }
             public bool Authorized(long anchor, long caller, long camera)
             {
-                bool allowed = CameraAuthorized(anchor, caller, camera);
+                bool allowed = plugin.IsModSourceKey(caller)?plugin.ModSourceEntityAuthorized(anchor,caller,camera,PanoramaProviderId):CameraAuthorized(anchor, caller, camera);
                 if (!allowed) plugin.directCapture.Revoke(camera);
                 return allowed;
             }
             public PanoramaDemand Demand(long anchor, long caller, string sourceId, long[] cameras, PanoramaStore.Settings settings)
             {
                 var fallback = PanoramaDemand.Full(cameras.Length, settings.CaptureResolution);
+                if(plugin.IsModSourceKey(caller))return fallback;
                 try
                 {
                     var block = MyAPIGateway.Entities.GetEntityById(anchor) as GameBlock;
@@ -207,7 +218,7 @@ namespace HDRClientRenderer
             public void Warm(long camera) { plugin.directCapture.Warm(camera); }
             public bool ValidFace(long anchor, long caller, PanoramaStore.Face face, PanoramaStore.Settings settings)
             {
-                if (!CameraAuthorized(anchor, caller, face.Camera)) { plugin.directCapture.Revoke(face.Camera); return false; }
+                if (!Authorized(anchor, caller, face.Camera)) { plugin.directCapture.Revoke(face.Camera); return false; }
                 var snapshot = face.Evidence as DirectCameraCapture.Snapshot;
                 return snapshot != null && snapshot.Camera == face.Camera && snapshot.FovDegrees == settings.FovDegrees &&
                     snapshot.Profile<=settings.Profile&&
@@ -289,6 +300,7 @@ namespace HDRClientRenderer
                 world = session; renderThread = thread; renderSettings = settings;
             }
             if (!registered) Register();
+            if(modSourceConsumers!=null)modSourceConsumers.Prune();
             lcd.Prune();
             panorama.Prune();
             panorama.RefreshDemands();
@@ -344,6 +356,7 @@ namespace HDRClientRenderer
             MyAPIGateway.Utilities.SendModMessage(RasterRegistration,
                 new MyTuple<int, Func<string, object[], object>>(1, rasterEndpoint));
             MyAPIGateway.Utilities.SendModMessage(CubeCaptureDiscovery, null);
+            NegotiateModSourceConsumers();
         }
         private void ReceiveCubeCapture(object message)
         {
@@ -368,6 +381,7 @@ namespace HDRClientRenderer
         }
         private void LeaveWorld()
         {
+            LeaveModSourceConsumers();
             if (registered && MyAPIGateway.Utilities != null)
             {
                 try { if (hdrService != null) hdrService("unregister", new object[] { ProviderId, displayEndpoint }); } catch { }

@@ -121,7 +121,7 @@ namespace HoloMap
     public sealed partial class HoloMapSession
     {
         const ushort NetworkChannel = 49783;
-        const int NetworkProtocol = 19;
+        const int NetworkProtocol = 20;
         const int ChunkBytes = 2800, MaxSnapshotBytes = 2 * 1024 * 1024;
         long _revision, _receivedRevision;
         HoloSnapshot _sentSnapshot, _networkSnapshot;
@@ -477,7 +477,7 @@ namespace HoloMap
                 foreach(var screen in scene.Screens.Values)foreach(var item in scene.Items.Values)if(item.CallerId==screen.Data.CallerId&&item.Id.StartsWith(ScreenPrefix(screen.Data.Id),StringComparison.Ordinal))ValidateProjectedHologramEffects(item.Effects,screen.Data);
                 projectedScreenCount += scene.Screens.Count;
                 int projectedPoints, projectedPrimitives; ProjectedSourceCounts(scene, out projectedPoints, out projectedPrimitives);
-                if (projectedScreenCount > MaxProjectedScreens || totalPoints + projectedPoints > scene.PointBudget
+                if (projectedScreenCount > MaxProjectedScreens || scene.Items.Count + scene.Screens.Count + ProjectedSourceSlotCount(scene) > MaxObjects || totalPoints + projectedPoints > scene.PointBudget
                     || totalPrimitives + projectedPrimitives > scene.PrimitiveBudget) throw new ArgumentException("Projected screen scene budget exceeded.");
                 replacement.Add(scene.ConsoleId, scene);
             }

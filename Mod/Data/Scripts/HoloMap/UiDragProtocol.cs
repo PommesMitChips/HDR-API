@@ -25,6 +25,14 @@ namespace HoloMap
         [ProtoMember(11)] public int Mode;
         [ProtoMember(12)] public double Value;
         [ProtoMember(13)] public long ViewerId;
+        [ProtoMember(14)] public double OriginX;
+        [ProtoMember(15)] public double OriginY;
+        [ProtoMember(16)] public double OriginZ;
+        [ProtoMember(17)] public double DirectionX;
+        [ProtoMember(18)] public double DirectionY;
+        [ProtoMember(19)] public double DirectionZ;
+        [ProtoMember(20)] public string ScreenId;
+        [ProtoMember(21)] public long SurfaceGeneration;
     }
     [ProtoContract]
     public sealed class UiDragAck
@@ -46,6 +54,8 @@ namespace HoloMap
         [ProtoMember(15)] public bool Terminal;
         [ProtoMember(16)] public long MinimumSequence;
         [ProtoMember(17)] public long ViewerId;
+        [ProtoMember(18)] public string ScreenId;
+        [ProtoMember(19)] public long SurfaceGeneration;
     }
     public static class UiDragWire
     {
@@ -79,7 +89,7 @@ namespace HoloMap
         {
             return p != null && p.Protocol == 1 && p.Kind >= 1 && p.Kind <= 7 && p.CallerId != 0 && p.TargetId != 0
                 && Id(p.ControlId) && p.DefinitionRevision > 0 && p.ValueRevision > 0 && p.RequestId > 0 && p.Sequence > 0
-                && (p.Mode == 0 || p.Mode == 1) && Finite(p.Value)&&p.ViewerId>=0
+                && (p.Mode == 0 || p.Mode == 1) && Finite(p.Value)&&p.ViewerId>=0&&Screen(p.ScreenId)&&p.SurfaceGeneration>=0&&Finite(p.OriginX)&&Finite(p.OriginY)&&Finite(p.OriginZ)&&Finite(p.DirectionX)&&Finite(p.DirectionY)&&Finite(p.DirectionZ)
                 && (p.Kind == (int)UiDragKind.Begin||p.Kind==(int)UiDragKind.Focus ? p.LeaseId == 0 : p.Kind == (int)UiDragKind.Cancel||p.Kind==(int)UiDragKind.Blur ? p.LeaseId >= 0 : p.LeaseId > 0)
                 && (p.Kind!=(int)UiDragKind.KeepAlive||p.ViewerId>0&&p.LeaseId==p.ViewerId)
                 && (p.Kind!=(int)UiDragKind.Blur||p.ViewerId==0&&p.LeaseId==0||p.ViewerId>0&&p.LeaseId==p.ViewerId);
@@ -88,12 +98,13 @@ namespace HoloMap
         {
             return p != null && p.Protocol == 1 && p.Kind >= 1 && p.Kind <= 7 && p.CallerId != 0 && p.TargetId != 0
                 && Id(p.ControlId) && p.DefinitionRevision > 0 && p.ValueRevision > 0 && p.RequestId > 0 && p.Sequence > 0
-                && p.Status >= 0 && p.Status <= 8 && Finite(p.Value) && p.MinimumSequence>=0&&p.ViewerId>=0
+                && p.Status >= 0 && p.Status <= 8 && Finite(p.Value) && p.MinimumSequence>=0&&p.ViewerId>=0&&Screen(p.ScreenId)&&p.SurfaceGeneration>=0
                 && (p.Status != 0 || p.LeaseId > 0 && p.TileId != 0 && p.CharacterId != 0);
         }
         internal static UiDragRequest Copy(UiDragRequest p)
         { return new UiDragRequest { Protocol=p.Protocol,Kind=p.Kind,CallerId=p.CallerId,TargetId=p.TargetId,ControlId=p.ControlId,
             DefinitionRevision=p.DefinitionRevision,ValueRevision=p.ValueRevision,RequestId=p.RequestId,Sequence=p.Sequence,
-            LeaseId=p.LeaseId,Mode=p.Mode,Value=p.Value,ViewerId=p.ViewerId }; }
+            LeaseId=p.LeaseId,Mode=p.Mode,Value=p.Value,ViewerId=p.ViewerId,OriginX=p.OriginX,OriginY=p.OriginY,OriginZ=p.OriginZ,DirectionX=p.DirectionX,DirectionY=p.DirectionY,DirectionZ=p.DirectionZ,ScreenId=p.ScreenId,SurfaceGeneration=p.SurfaceGeneration }; }
+        static bool Screen(string id){if(id==null)return true;if(id.Length<1||id.Length>12)return false;foreach(char c in id)if(!(c>='a'&&c<='z'||c>='0'&&c<='9'||c=='-'))return false;return true;}
     }
 }

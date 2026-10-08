@@ -87,7 +87,7 @@ static class NativeLcdChecks
     }
     static void Main()
     {
-        OwnershipAndRects(); TextAndClip(); FailureAndLimits(); CleanupLifecycle(); ReentrantLifecycle(); MetricsAndNoopPerformance();
+        OwnershipAndRects(); TextAndClip(); FailureAndLimits(); CleanupLifecycle(); ReentrantLifecycle(); MetricsAndNoopPerformance(); SourceRegionsNoop();
         Console.WriteLine("Native LCD checks passed: " + checks);
     }
     static void ReentrantLifecycle()
@@ -268,5 +268,26 @@ static class NativeLcdChecks
         long allocated = GC.GetAllocatedBytesForCurrentThread() - before; watch.Stop();
         Check(f.Measurements == measurements && f.Mutations == mutations, "unchanged frames do not remeasure or redraw");
         Console.WriteLine("Cached native LCD: 10000 calls, " + watch.Elapsed.TotalMilliseconds.ToString("F2") + " ms, " + allocated + " bytes (diagnostic reports plus DispatchProxy surface getter overhead); zero MeasureStringInPixels/DrawFrame calls.");
+    }
+    static void SourceRegionsNoop()
+    {
+        var f = new Fixture(); var painter = new HtmlNativeLcdPainter(f.Surface, true); var frame = Frame();
+        frame.Operations.Add(Text(10, 10));
+        var region = new HtmlSourceRegion { NodeId = "camera-slot", Bounds = new HtmlRect(0, 0, 120, 80), Clip = new HtmlRect(0, 0, 512, 256), Opacity = .8, Order = 0, Visible = true };
+        frame.SourceRegions.Add(region);
+        HtmlPaintReport report; Check(painter.TryPaint(frame, out report), "source-region metadata frame commits ordinary native text only");
+        int measurements = f.Measurements, mutations = f.Mutations;
+        bool noOp = true;
+        for (int i = 0; i < 100; i++) noOp &= painter.TryPaint(frame, out report) && !report.Changed && report.MutatingCalls == 0;
+        Check(noOp, "ID-bearing source-region frames remain cached over repeated calls");
+        Check(f.Measurements == measurements && f.Mutations == mutations, "cached source regions cause no native text preparation or draw");
+        var snapshot = (HtmlPaintFrame)typeof(HtmlNativeLcdPainter).GetField("_lastFrame", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(painter);
+        Check(snapshot.SourceRegions.Count == 1 && !ReferenceEquals(region, snapshot.SourceRegions[0]), "source-region cache owns a detached record");
+        region.NodeId = "changed-slot"; region.Bounds = new HtmlRect(20, 30, 60, 40); region.Clip = new HtmlRect(25, 35, 50, 30); region.Opacity = .3; region.Order = 1; region.Visible = false;
+        Check(snapshot.SourceRegions[0].NodeId == "camera-slot" && snapshot.SourceRegions[0].Bounds.X == 0 && snapshot.SourceRegions[0].Clip.X == 0 && snapshot.SourceRegions[0].Opacity == .8 && snapshot.SourceRegions[0].Order == 0 && snapshot.SourceRegions[0].Visible, "caller metadata mutation cannot change the admitted native cache");
+        Check(painter.TryPaint(frame, out report) && !report.Changed && f.Mutations == mutations, "metadata-only changes do not publish source media or redraw equal sprites");
+        measurements = f.Measurements;
+        Check(painter.TryPaint(frame, out report) && !report.Changed && f.Measurements == measurements, "updated source-region metadata snapshot restores early no-op");
+        painter.Dispose();
     }
 }

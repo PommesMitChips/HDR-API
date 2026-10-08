@@ -26,7 +26,8 @@ namespace Hdr.Html
     }
     internal sealed class HtmlPbItem
     {
-        internal string Id,Source;
+        internal string Id,Source,Layer;
+        internal int Order;
         internal MatrixD Pose;
         internal int Points,Primitives;
     }
@@ -45,5 +46,51 @@ namespace Hdr.Html
         internal HtmlPaintFrame Frame;
         internal readonly List<HtmlPbItem> Items=new List<HtmlPbItem>();
         internal readonly List<HtmlPbControl> Controls=new List<HtmlPbControl>();
+        internal readonly List<HtmlPbSourceSlot> Sources=new List<HtmlPbSourceSlot>();
+    }
+    internal sealed class HtmlPbSourceAttachment
+    {
+        internal string Node,Provider,Source,Slot;
+        internal MyTuple<string,object[]>[] Settings;
+    }
+    internal sealed class HtmlPbSourceSlot
+    {
+        internal HtmlPbSourceAttachment Attachment;
+        internal Vector4 Rect,Clip,UV;
+        internal MatrixD Pose=MatrixD.Identity;
+        internal int Order;
+        internal double Opacity;
+        internal bool Same(HtmlPbSourceSlot b)
+        {return b!=null&&Attachment.Provider==b.Attachment.Provider&&Attachment.Source==b.Attachment.Source&&ReferenceEquals(Attachment.Settings,b.Attachment.Settings)&&Rect==b.Rect&&Clip==b.Clip&&UV==b.UV&&Pose==b.Pose&&Order==b.Order&&Opacity==b.Opacity;}
+    }
+    internal static class HtmlPbSourceOptions
+    {
+        internal static MyTuple<string,object[]>[] Copy(MyTuple<string,object[]>[] settings)
+        {
+            if(settings==null)return new MyTuple<string,object[]>[0];
+            if(settings.Length>4)throw new ArgumentException("Source attachments allow at most four named settings.");
+            var copy=new MyTuple<string,object[]>[settings.Length];var names=new HashSet<string>(StringComparer.Ordinal);
+            for(int i=0;i<settings.Length;i++)
+            {
+                string name=settings[i].Item1;var values=settings[i].Item2;
+                if(name=="camera-quality")name="quality";
+                if(name==null||values==null||!names.Add(name))throw new ArgumentException("Source settings require unique names and argument arrays.");
+                if(name=="refresh"){Count(values,1);Number(values[0],1,120);}
+                else if(name=="opacity"){Count(values,1);Number(values[0],0,1);}
+                else if(name=="quality"){Count(values,1);if(!(values[0] is string)||((string)values[0]!="normal"&&(string)values[0]!="lite"))throw new ArgumentException("Source quality requires normal or lite.");}
+                else if(name=="panorama")
+                {Count(values,4);Number(values[0],60,120);Number(values[1],0,25);Number(values[2],0,2);if(!(values[3] is int)||((int)values[3]!=256&&(int)values[3]!=512&&(int)values[3]!=1024&&(int)values[3]!=2048))throw new ArgumentException("Panorama resolution requires 256, 512, 1024 or 2048.");}
+                else throw new ArgumentException("Unsupported source attachment setting: "+name);
+                copy[i]=new MyTuple<string,object[]>(name,(object[])values.Clone());
+            }
+            return copy;
+        }
+        static void Count(object[] values,int count){if(values.Length!=count)throw new ArgumentException("Source setting has an invalid argument count.");}
+        static double Number(object value,double min,double max)
+        {double n;if(value is double)n=(double)value;else if(value is int)n=(int)value;else if(value is float)n=(float)value;else throw new ArgumentException("Source setting requires a number.");if(double.IsNaN(n)||double.IsInfinity(n)||n<min||n>max)throw new ArgumentException("Source setting is outside its allowed range.");return n;}
+        internal static double Opacity(MyTuple<string,object[]>[] settings)
+        {foreach(var option in settings)if(option.Item1=="opacity")return Number(option.Item2[0],0,1);return 1;}
+        internal static void Apply(IHtmlPbBridge bridge,HtmlPbSourceAttachment source)
+        {foreach(var option in source.Settings)if(option.Item1!="opacity"){var values=new object[option.Item2.Length+1];values[0]=source.Slot;Array.Copy(option.Item2,0,values,1,option.Item2.Length);bridge.Draw("screen-slot-"+(option.Item1=="quality"?"camera-quality":option.Item1),values);}}
     }
 }

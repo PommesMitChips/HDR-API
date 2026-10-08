@@ -56,7 +56,7 @@ void SelectDisplay()
 void Setup()
 {
  H("clear");
- H("budget", 4096, 8192, 20000);
+ H("budget", 0, 0, 20000);
  if (_world)
  {
   // Dedicated demo anchor: open its envelope so projector rays reach the source.

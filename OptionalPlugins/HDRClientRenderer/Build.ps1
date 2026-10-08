@@ -5,7 +5,7 @@ param(
 $ErrorActionPreference = 'Stop'
 function Complete-ClientPackage([string]$TaskFolder,[string]$TaskRuntime) {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'HDRClientRenderer.dll.xml') -Destination $TaskFolder -Force
-    Compress-Archive -LiteralPath (Join-Path $TaskFolder 'HDRClientRenderer.dll'),(Join-Path $TaskFolder 'HDRClientRenderer.dll.xml') -DestinationPath (Join-Path $PSScriptRoot ('artifacts\HDR-Client-Renderer-0.9.13-'+$TaskRuntime+'.zip')) -Force
+    Compress-Archive -LiteralPath (Join-Path $TaskFolder 'HDRClientRenderer.dll'),(Join-Path $TaskFolder 'HDRClientRenderer.dll.xml') -DestinationPath (Join-Path $PSScriptRoot ('artifacts\HDR-Client-Renderer-0.9.14-'+$TaskRuntime+'.zip')) -Force
 }
 if ($Runtime -eq 'Interim') {
     $taskNet10Output = Join-Path $PSScriptRoot 'artifacts\Interim'

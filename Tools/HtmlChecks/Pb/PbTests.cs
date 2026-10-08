@@ -281,6 +281,7 @@ internal static partial class PbTests
         Run("actual session lifetime ends before queued repaint", ActualSessionRetiresBeforeRepaint);
         Run("LCD admission requires existing HDR content mode", LcdModeAdmission);
         Run("canonical whole PB demo admits on LCD, Console and Projector", CanonicalDemoAdmission);
+        Run("PB HTML unlimited geometry sentinel and explicit finite budget", UnlimitedPbGeometry);
         RunNative();
         string summary = "PB HTML tests: " + assertions + " assertions; " + cases + " cases, " + failures + " failures; actual frontend/Core compilers and retained/UI delegates against installed SE assemblies.";
         Console.WriteLine(summary);
@@ -290,5 +291,24 @@ internal static partial class PbTests
             File.WriteAllText(Path.Combine(args[0], "RESULTS.txt"), string.Join(Environment.NewLine, results) + Environment.NewLine + summary + Environment.NewLine);
         }
         return failures == 0 ? 0 : 1;
+    }
+    static void UnlimitedPbGeometry()
+    {
+        var html=new StringBuilder();for(int i=0;i<16;i++)html.Append("<button id='dense-").Append(i).Append("'>").Append(new string('A',64)).Append("</button>");
+        const string css="button {width:600px;height:24px;padding:0;font-size:8px;}";
+        using(var f=new PbFixture())
+        {
+            var budget=(MyTuple<int,int,int>)f.Draw("budget-settings");Equal(0,budget.Item1,"Default PB point allowance is unlimited");Equal(0,budget.Item2,"Default PB primitive allowance is unlimited");
+            var controller=Layout(f,html.ToString(),css,800,1000);using(var painter=new HtmlPbPainter(91,f,MatrixD.Identity,.005))
+            {
+                Check(painter.Paint(controller.Frame,controller.Document),"Actual PB compiler accepts dense controls under unlimited scene geometry: "+painter.LastError);
+                Check(painter.Accepted.Items.Sum(i=>i.Points)>8192&&painter.Accepted.Items.Sum(i=>i.Primitives)>8192,"Actual compiled PB artwork exceeds both earlier aggregate grants");Equal(16,painter.Accepted.Controls.Count,"Unlimited geometry preserves the independent retained-object structural cap");
+            }
+        }
+        using(var f=new PbFixture())
+        {
+            f.Draw("budget",8192,8192,20000);var controller=Layout(f,html.ToString(),css,800,1000);using(var painter=new HtmlPbPainter(92,f,MatrixD.Identity,.005))
+            {int before=f.Mutations;Check(!painter.Paint(controller.Frame,controller.Document),"Explicit finite PB allowance still rejects excessive aggregate geometry");Equal(before,f.Mutations,"Finite PB preflight rejection mutates no artwork/control declaration");Check(painter.Accepted==null,"Finite PB preflight allocates no published state");}
+        }
     }
 }

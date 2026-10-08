@@ -21,7 +21,7 @@ public void Main(string argument,UpdateType source)
   if(argument.StartsWith("rate ")){H("screen","canvas");H("screen-refresh",double.Parse(argument.Substring(5)));return;}
   if(argument=="toggle"){H("screen","canvas");H("toggle","menu");return;}
   if((display.BlockDefinition.SubtypeName??"").IndexOf("Console",StringComparison.OrdinalIgnoreCase)>=0)H("volume",false);
-  H("range",0);H("budget",8192,16384,30000);
+  H("range",0);H("budget",0,0,30000);
   H("screen","canvas",MatrixD.CreateTranslation(0,1.5,0),4,2,4,2);
   H("clear");H("screen-mapping","angular");H("screen-surface",_surface,3,Math.PI*2,Math.PI,"inside");
   H("screen-renderer",_renderer,2048,1024,4);H("screen-refresh",6);

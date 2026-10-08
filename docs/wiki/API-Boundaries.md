@@ -2,6 +2,8 @@
 
 HDR separates **who declares content**, **where it appears**, **who produces its data**, and **who owns rendering resources**. Product versions do not replace interface versions.
 
+[Composition](Composition.md) connects those boundaries through ordered canvas source slots and one surface mapper. HTML layout, camera images, SVG, controls and effects retain their own ownership and capabilities when combined. A source attachment selects content; it grants neither sensor access nor a native resource handle. Core 0.9.11 / scene 20 adds this composition, and Client Renderer 0.9.14 supplies the explicit local-mod native-source bridge.
+
 [Interactive artwork controls](Interactive-Controls.md) are implemented for HDR API **0.9.9 / scene 19** boundary. Optional HDR Client Renderer **0.9.13** is required on the viewer for native mouse focus; live-input acceptance remains unverified. Numeric state, local binding callbacks, viewer authority and native input ownership have separate lifetimes.
 
 ![API execution boundaries](diagrams/architecture-boundaries.svg)

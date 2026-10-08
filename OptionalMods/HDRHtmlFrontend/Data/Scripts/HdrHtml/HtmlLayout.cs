@@ -25,7 +25,7 @@ namespace Hdr.Html
             var context = new LayoutContext(document, metrics, data, limits, width, height);
             LayoutBox root = context.Create(document.Root, null, width, 0);
             context.Place(root, 0, 0, width, height, width, height);
-            context.Paint(root, new HtmlRect(0, 0, width, height));
+            context.Paint(root, new HtmlRect(0, 0, width, height), 1);
             HtmlPaintValidation.Validate(context.Frame, limits);
             return context.Frame;
         }
@@ -473,7 +473,7 @@ namespace Hdr.Html
                 string type; if (!box.Node.Attributes.TryGetValue("type", out type) || !string.Equals(type, "range", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("Only input type=range is supported.");
                 return Math.Max(20, box.Style.Font * box.Style.Line);
             }
-            internal void Paint(LayoutBox box, HtmlRect inheritedClip)
+            internal void Paint(LayoutBox box, HtmlRect inheritedClip, double inheritedOpacity)
             {
                 if (box.Hidden || box.Consumed || box.Style.Opacity == 0 || inheritedClip.Empty) return;
                 HtmlBoxStyle s = box.Style; string identity = Identity(box.Node);
@@ -487,6 +487,17 @@ namespace Hdr.Html
                 }
                 HtmlRect contentClip = inheritedClip;
                 if (s.Overflow == "hidden") contentClip = Intersect(inheritedClip, new HtmlRect(box.X + s.Border[3], box.Y + s.Border[0], Math.Max(0, box.Width - s.Border[1] - s.Border[3]), Math.Max(0, box.Height - s.Border[0] - s.Border[2])));
+                double accumulatedOpacity = inheritedOpacity * s.Opacity;
+                if (!box.TextGroup && !string.IsNullOrEmpty(box.Node.Id) && (s.Display == "block" || s.Display == "flex"))
+                {
+                    HtmlRect contentBounds = new HtmlRect(box.ContentX, box.ContentY, box.ContentWidth, box.ContentHeight);
+                    HtmlRect visibleClip = Intersect(contentBounds, contentClip);
+                    if (!contentBounds.Empty && !visibleClip.Empty && accumulatedOpacity > 0)
+                    {
+                        if (Frame.SourceRegions.Count >= _limits.MaxNodes || Frame.SourceRegions.Count >= 512) throw new ArgumentException("HTML source region limit exceeded.");
+                        Frame.SourceRegions.Add(new HtmlSourceRegion { NodeId = box.Node.Id, Bounds = contentBounds, Clip = visibleClip, Opacity = accumulatedOpacity, Order = Frame.Operations.Count, Visible = true });
+                    }
+                }
                 for (int i = 0; i < box.Text.Count; i++)
                 {
                     TextSegment text = box.Text[i];
@@ -506,7 +517,7 @@ namespace Hdr.Html
                 }
                 if (box.Node.Tag == "input") PaintRange(box, contentClip);
                 else if (box.Node.Tag == "button") Hit(box, "button", Intersect(bounds, contentClip), 0, 0, 0, 0);
-                for (int i = 0; i < box.Children.Count; i++) Paint(box.Children[i], contentClip);
+                for (int i = 0; i < box.Children.Count; i++) Paint(box.Children[i], contentClip, accumulatedOpacity);
             }
             private void PaintRange(LayoutBox box, HtmlRect clip)
             {

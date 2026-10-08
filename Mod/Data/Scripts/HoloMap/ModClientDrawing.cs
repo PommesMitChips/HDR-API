@@ -34,6 +34,7 @@ namespace HoloMap
         }
         void DrawModClientApi(ref int sharedBudget)
         {
+            ModClientMaintainSourceSlots();
             if(!_modClientActive||_modClientDrawing||MyAPIGateway.Session==null||MyAPIGateway.Session.Camera==null)return;
             var camera=MyAPIGateway.Session.Camera;var viewport=camera.ViewportSize;
             if(viewport.X<1||viewport.Y<1)return;
@@ -53,10 +54,10 @@ namespace HoloMap
                     foreach(var context in contexts)
                     {
                         int budget=contextShare;if(!context.Visible||budget<=0)continue;
-                        var items=context.DrawItems;items.Clear();foreach(var item in context.Items.Values)items.Add(item);items.Sort((a,b)=>a.Order!=b.Order?a.Order.CompareTo(b.Order):string.CompareOrdinal(a.Id,b.Id));
+                        var items=context.DrawItems;items.Clear();foreach(var item in context.Items.Values)items.Add(item);ModClientCollectSourceItems(owner,context,items);items.Sort(ModClientCompositionCompare);
                         foreach(var item in items)
                         {
-                            if(!item.Visible||budget<=0)continue;
+                            if(!item.Visible||budget<=0||!ModClientSourceItemCurrent(owner,context,item))continue;
                             // One malformed render item cannot disable another consumer or HDR's PB scenes.
                             try{DrawModClientItem(context,item,viewport,inverseProjection,cameraWorld,camera.Position,ref budget);}catch{}
                         }
@@ -69,12 +70,13 @@ namespace HoloMap
             }
             finally{_modClientDrawing=false;}
         }
-        static bool ModClientHasVisibleItems(ModClientOwner owner)
+        bool ModClientHasVisibleItems(ModClientOwner owner)
         {foreach(var context in owner.Contexts.Values)if(ModClientHasVisibleItems(context))return true;return false;}
-        static bool ModClientHasVisibleItems(ModClientContext context)
-        {if(!context.Visible)return false;foreach(var item in context.Items.Values)if(item.Visible)return true;return false;}
+        bool ModClientHasVisibleItems(ModClientContext context)
+        {if(!context.Visible)return false;foreach(var item in context.Items.Values)if(item.Visible)return true;return ModClientHasSourceSlots(context);}
         void DrawModClientItem(ModClientContext context,ModClientItem item,Vector2 viewport,MatrixD inverseProjection,MatrixD cameraWorld,Vector3D eye,ref int budget)
         {
+            if(context.Surface!=null){DrawModClientSurfaceItem(context,item,eye,ref budget);return;}
             item.EffectBaseComplete=false;
             var g=item.Geometry;var points=g.WorldPoints;
             for(int i=0;i<points.Length;i++)
@@ -117,11 +119,13 @@ namespace HoloMap
         {
             if(context.Hud)point.Z=0;
             var local=Vector3D.Transform(point,item.Transform);
+            if(context.Surface!=null){var p=SurfaceMapping.MapPoint(local,context.Surface.CanvasWidth,context.Surface.CanvasHeight,ModClientSurfaceStyle(context.Surface,context.SurfaceSourceAspect));if(context.Surface.SurfaceKind!=0&&context.Surface.SurfaceSide==0&&context.Surface.SurfaceKind!=4)p.X=-p.X;return Vector3D.Transform(p,context.Pose);}
             return context.Hud?ModClientRules.PixelWorld(local,viewport,inverseProjection,cameraWorld,_modClientHudDistance):Vector3D.Transform(local,context.Pose);
         }
         void DrawModClientEffects(ModClientContext context,ModClientItem item,Vector2 viewport,MatrixD inverseProjection,MatrixD cameraWorld,Vector3D eye,ref int sharedBudget)
         {
             var s=item.Effects;if(s==null||!item.EffectBaseComplete)return;
+            if(context.Surface!=null){DrawModClientSurfaceEffects(context,item,cameraWorld,eye,ref sharedBudget);return;}
             var frame=HologramEffectKernel.Evaluate(s,_modClientEffectNow,item.EffectStart,item.EffectEntering);
             var plan=HologramEffectKernel.Plan(s,item.EffectBaseCost,sharedBudget+item.EffectBaseCost);
             if(!plan.BaseAccepted)return;

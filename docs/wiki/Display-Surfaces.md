@@ -1,6 +1,6 @@
 # Display surfaces
 
-The artwork definition and the surface that presents it are separate. A line, SVG or raster interface can share composition controls while each surface maps its canvas differently.
+The artwork definition and the surface that presents it are separate. A line, SVG, HTML layout or provider image can share a bounded canvas while each surface maps it differently. **HDR API 0.9.11 / scene 20** adds keyed source slots and projected control routing; see [Composition](Composition.md) for a complete camera-in-HTML ellipsoid example and backend constraints.
 
 ![Flat content mapped to planes, cylinders, ellipsoids and meshes](diagrams/composition-surfaces.svg)
 
@@ -57,7 +57,7 @@ H("text", "title", "FLIGHT", 0, .6, 0, .12, "cyan");
 
 Planes face local +Z. For curved shapes, front means the chosen inside/outside side. Reverse-side artwork is shared and text appears mirrored; this does not generate a separate reverse interface. Side multipliers affect backgrounds, source imagery and overlays, and multiply screen/layer/object alpha. Zero alpha avoids that side's source demand. Foreground offsets face the viewer on either side.
 
-A selected screen supports geometry, SVG, images, text, layers and timelines. Anchor-wide controls and callback curves require anchor selection. Legacy `HDR.Api` methods address the anchor; they do not become virtual-screen methods merely because `HDR.Draw` selected a screen.
+A selected screen supports geometry, SVG, images, text, layers and timelines. Select the same existing owned ID explicitly through `HDR.UI`'s `screen` command to bind ordinary controls to its canvas; selecting `HDR.Draw` alone does not scope a separate UI endpoint. Anchor-wide commands and callback curves still require anchor selection. Legacy `HDR.Api` methods address the anchor; they do not become virtual-screen methods merely because `HDR.Draw` selected a screen.
 
 ## Analytic and authored surfaces
 
@@ -95,6 +95,47 @@ Raster UI needs the optional client renderer. It composes supported vector text/
 Packaged textured image layers and per-object emission currently require vector mode for ordinary UI composition. External camera/native image textures are a separate source layer and can coexist with either UI mode. Raster mode does not turn HDR's SVG importer into a browser engine.
 
 `screen-source(providerId,sourceId)` binds an external client-local image/mesh source. Missing/invalid sources leave ordinary overlay/background artwork available, but do not authorize retained stale output. `screen-source-clear` detaches the source and portal declaration. Providers configure acquisition through their own boundary. See [cameras and portals](Cameras-and-Portals.md) and [mod integration](Mod-Integration.md).
+
+## Source slots and ordered canvas
+
+`screen-source` preserves its legacy default whole-screen source. A selected screen can additionally contain up to **16 keyed source slots**, each with its own provider/source identity, placement, clip, UV crop, order, opacity and consumer lifetime. Slots, retained artwork, labels and compatibility sprites use one ordered canvas stream. Raster artwork is split into contiguous runs where sources divide the paint order.
+
+```csharp
+H("screen", "main");
+H("screen-slot", "feed", "camera-panorama", cameraId,
+  new Vector4(-1.2f, -.55f, 2.4f, 1.1f),
+  new Vector4(-1.2f, -.55f, 2.4f, 1.1f),
+  new Vector4(0, 0, 1, 1), 10, 1.0);
+var state = (VRage.MyTuple<bool,string>)H("screen-slot-status", "feed");
+```
+
+The two canvas `Vector4` values are **lower-left X/Y and positive width/height in centred canvas metres**. The provider UV is **top-left X/Y and normalized width/height**. Clip against the full placement rectangle before mapping onto the surface: partial clipping crops the image instead of stretching the visible remainder. `screen-slot-pose` applies an affine canvas transform; the selected screen's shape, aspect/view transform and surface clip then apply normally.
+
+| Command | Arguments | Meaning |
+| --- | --- | --- |
+| `screen-slot` | ID, provider, source ID, `Vector4` rect, `Vector4` clip, `Vector4` UV, `[order=0, opacity=1]` | Create/replace a complete slot declaration; returns Boolean acceptance |
+| `screen-slot-pose` | ID, `MatrixD` | Affine source canvas pose |
+| `screen-slot-visible` | ID, Boolean | Retain/hide the slot |
+| `screen-slot-opacity` | ID, 0–1 | Slot paint multiplier |
+| `screen-slot-layer` | ID, local layer name or empty string | Select a local layer or clear that association |
+| `screen-slot-order` | ID, integer −10000–10000 | Canvas paint order |
+| `screen-slot-refresh` | ID, `[Hz=0]` | 1–120 requested ceiling; 0 inherits screen cadence |
+| `screen-slot-panorama` | ID, `[FOV=105, feather=8, saturation=1.15, captureSize=1024]` | Slot-specific camera settings; same bounds as `screen-panorama` |
+| `screen-slot-camera-quality` | ID, `normal`/`lite` | Slot-specific capture profile |
+| `screen-slot-inherit` | ID | Restore screen camera/cadence inheritance and clear the slot's layer association |
+| `screen-slot-status` | ID | `MyTuple<bool,string>` readiness and actual state/reason |
+| `screen-slot-settings` | ID | `MyTuple<string,string,Vector4,Vector4,Vector4,int>` provider, source ID, rect, clip, UV and order |
+| `screen-slot-remove` | ID | Remove only this slot and release its consumer |
+
+Replacing a slot with `screen-slot` resets optional per-slot overrides; apply any desired pose/layer/camera settings again. IDs and local layer names are at most 12 characters. Canvas values must be finite and bounded to 24 m; positive rectangle dimensions are at most 12 m. At most 16 slots fit a screen, within existing shared anchor/object, provider, allocation and update budgets. Repeated source IDs do not remove those limits. Registration, pending acquisition, budget exhaustion and readiness are separate facts; preserve `RequiresPlugin:<provider>`, `Pending` or the actual provider/budget reason in diagnostics.
+
+The [HTML frontend](HTML-Frontend.md) lowers attachments on visible explicit block IDs into the same slots. `bind-screen` retains the existing shape; `bind-sprites-screen` maps a real owned source LCD onto it. A native LCD source remains opaque RGB with real padding/update limits; it cannot supply arbitrary per-pixel alpha or embed an engine camera texture into a physical LCD. Unsupported overlap on the native backend is rejected, with no synthetic compatibility fallback.
+
+## Controls on projected surfaces
+
+Projected controls use the actual plane, cylinder, sphere, ellipsoid or mesh hit, then invert the declared canvas/view and artwork transform. Supported angular/pinhole/geodesic mappings share the renderer's coordinate conventions, including inward reflection and authored mesh UVs. Controls must reference current bounded planar artwork that fits the canvas; paths and rotation constraints retain their XY source-plane rules. Reverse sides use the declared visibility/opacity.
+
+Screen pose, shape, mapping, canvas/view, clip, visibility and side changes advance the surface generation and cancel stale grants/gestures. Ordinary camera frames and source-slot changes preserve that coordinate generation. Automatic persistent mouse interaction requires the Client Renderer 0.9.13+ on the interacting viewer; the native pointer ABI is unchanged; the current 0.9.14 package adds the separate local source bridge. Existing server authorization, range, occlusion and viewer lifecycle rules remain in force. See [interactive controls](Interactive-Controls.md) and the [runnable ellipsoid demo](../../OptionalMods/HDRHtmlFrontend/Examples/HtmlCameraEllipsoidDemo.cs).
 
 ## Synthetic perspective and sprite compatibility
 

@@ -89,6 +89,7 @@ namespace HoloMap
             out Vector3D center, out Vector3D halfRight, out Vector3D halfUp)
         {
             center = halfRight = halfUp = Vector3D.Zero;
+            if(widget!=null&&widget.ScreenId!=null)return false;
             Scene source;
             if (display == null || widget == null || !_scenes.TryGetValue(display.TargetId, out source)) return false;
             var block = MyAPIGateway.Entities.GetEntityById(tile.ConsoleId) as IMyTerminalBlock;
@@ -125,6 +126,7 @@ namespace HoloMap
         bool TryUiWidgetHit(UiDisplay display, UiWidget widget, Vector3D rayOrigin, Vector3D rayDirection, out Vector3D worldHit, out long hitTileId)
         {
             worldHit = Vector3D.Zero; hitTileId = 0; bool found = false; double nearest = UiInteractionRange * UiInteractionRange;
+            if(widget!=null&&widget.ScreenId!=null)return TryUiProjectedHit(display,widget,rayOrigin,rayDirection,out worldHit,out hitTileId);
             foreach (var tile in _scenes.Values)
             {
                 if (tile.ConsoleId != display.TargetId && tile.LcdSourceId != display.TargetId) continue;

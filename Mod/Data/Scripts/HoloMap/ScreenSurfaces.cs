@@ -176,7 +176,7 @@ namespace HoloMap
     }
     // All source items have priority over optional particle work.
     foreach(var entry in cache.Items)if(entry.Item!=null)RasterEffectParticles(compositor,entry.Item,view,entry.Item.Opacity*ClientLayerAlpha(scene,entry.Caller,entry.Item.Layer));
-    var image=UploadRaster(PackedKey(d.CallerId,scene.ConsoleId,d.Id)+":ui",size,compositor.Finish());
+    var image=UploadRaster(ProjectedConsumerKey(cache)+":ui",size,compositor.Finish());
     if(image==null){SetUiRasterError(cache,"Raster upload is unavailable or busy.");ReleaseUiRaster(cache);return;}
     var old=cache.UiRaster;cache.UiRaster=image;RetireRasterImage(old,image);
     if(cache.UiRasterMesh==null||cache.UiQuadWidth!=d.CanvasWidth||cache.UiQuadHeight!=d.CanvasHeight){cache.UiRasterMesh=RasterQuad(d.CanvasWidth,d.CanvasHeight);cache.UiQuadWidth=d.CanvasWidth;cache.UiQuadHeight=d.CanvasHeight;}

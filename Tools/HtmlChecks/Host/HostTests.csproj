@@ -5,6 +5,6 @@
     <Compile Include="$(FrontendRoot)/Data/Scripts/HdrHtml/*.cs" />
     <Compile Include="$(RepositoryRoot)/Api/Mods/HdrHtmlApi.cs" />
     <Compile Include="$(FrontendRoot)/Examples/HtmlConsumerExample.cs" />
-    <Compile Include="HostTests.cs" />
+    <Compile Include="Host*.cs" />
   </ItemGroup>
 </Project>

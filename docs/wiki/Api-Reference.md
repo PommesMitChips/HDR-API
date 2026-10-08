@@ -18,6 +18,8 @@ This page indexes public contracts and specifies the mod-facing envelopes. Drawi
 
 Interface versions, release versions, multiplayer protocol numbers and opaque resource generations are separate. The multiplayer scene protocol is an internal replication contract; do not use it as the public API version or send provider delegates through it. Existing protobuf tags and compatibility envelopes remain preserved.
 
+Current packages are HDR API **0.9.11 / scene protocol 20**, HTML Frontend **0.2.0** and optional Client Renderer **0.9.14**. Existing PB camera capture and native mouse input retain their **0.9.13** minimum. Client-local native source consumers require **0.9.14**. See the [composition contract](Composition.md) for ordered source slots, generic surface mapping and HTML attachments.
+
 ## PB command index
 
 | Area | Canonical reference |
@@ -30,6 +32,7 @@ Interface versions, release versions, multiplayer protocol numbers and opaque re
 | Direct camera panorama, relay sources, synthetic perspective, portal declarations | [Cameras and portals](Cameras-and-Portals.md) |
 | Client work/pixel/capture settings, diagnostics and fallback | [Performance and troubleshooting](Performance-and-Troubleshooting.md) |
 | Combinations and runnable snippets | [Composition recipes](Composition-Recipes.md) |
+| Ordered source slots, shared surface input and HTML composition | [Composition API](Composition.md) |
 
 `HdrIngameApi` exposes constants for `Supported=1`, `NativeLcd=2`, `CalibratedVectorLcd=4`, `Floating3D=8`, `TableVolume=16`, `ProjectedSurfaces=32`, `Ui=64`. Capability tuples are `(schema, kind, flags)` with kind `lcd`, `console`, `projector` or `unsupported`. Flags describe the **block**, not the optional renderer installed on this client. Querying capabilities does not create content or select the target.
 
@@ -82,6 +85,8 @@ Arguments are ordered after the command name. `[x=default]` denotes an optional 
 | `measure-text` | `text, [height=1, lineHeight=1.3]` | Mesh-free packaged Inter cap-height metrics; tuple below |
 | `geometry-cost` | `"text"` or `"svg", source, [height=1, segments=12]` | `MyTuple<int,int>`: compiled points, triangles + wire edges |
 | `geometry-usage` | None | `MyTuple<int,int>`: retained point/primitive counts across this owner |
+| `geometry-limit` | `[points=0, primitives=0]` | `true`; aggregate owner allowances, independently `0` for unlimited; finite limits validate existing artwork and retire overflowing cached sources |
+| `geometry-limit-settings` | None | `MyTuple<int,int>`: configured point/primitive allowances; defaults `(0,0)` |
 | `plugin-status` | Feature name (`string`) | Local registration tuple, not GPU/frame readiness |
 | `draw-limit` | `[primitives=4096]`, 1–8,192 | `true`; owner cap within fair shared budget |
 | `release` | None | `true`; revoke owner and all its handles |
@@ -89,6 +94,17 @@ Arguments are ordered after the command name. `[x=default]` denotes an optional 
 | `clear` | `context` | `true`; reset drawing, bounds, values, controls and events |
 | `context-visible` | `context, bool` | `true`; hidden context stops drawing/hits and clears input state |
 | `context-pose` | `context, MatrixD` | `true`; world contexts only |
+| `context-surface` | `context, kind, canvasWidth, canvasHeight, ...shapeParameters` | `true`; plane/cylinder/sphere/ellipsoid/mesh on a world context; exact typed shape helpers in `HdrModApi` |
+| `context-mapping` | `context, angular/geodesic/pinhole, [verticalFovRadians=π/2, sourceAspect=0]` | `true`; zero aspect uses canvas aspect |
+| `context-surface-sided` | `context, twoSided, [frontOpacity=1, backOpacity=1]` | `true`; independent side multipliers |
+| `context-surface-error` | `context, metres` | `true`; bounded surface chord error |
+| `context-surface-clear` | `context` | `true`; clear mapping and source slots |
+| `context-surface-ray` | `context, worldOrigin, worldDirection` | `MyTuple<bool,Vector2,Vector3D>` hit, centred Y-up canvas metres, world hit; read-only, no input grant |
+| `context-anchor` | `context, actual IMyTerminalBlock or null` | `true`; physical source authority for HUD/world contexts |
+| `context-source-status` | `context, [provider]` | `MyTuple<bool,bool,string>` negotiated provider availability, current anchor validity, reason |
+| `context-slot` | `context, id, provider, sourceId, Vector4 rect, Vector4 clip, Vector4 UV, [order=0, opacity=1]` | `true`; ordered local source region; HUD top-left pixels or world centred Y-up canvas metres |
+| `context-slot-status` | `context, id` | `MyTuple<bool,string>` frame readiness and reason |
+| `context-slot-remove` | `context, id` | `true`; retire only this source slot |
 | `mesh` | `context, id, Vector3D[] points, int[] triangles, [paint="white", Vector2[] UV=null, string material=null]` | `true`; indexed triangle mesh, optional registered material |
 | `wires` | `context, id, Vector3D[] points, Vector2I[] edges, [paint="white", width]` | `true`; indexed segments; width defaults 1 HUD pixel or .01 world metre |
 | `text` | `context, id, string text, Vector3D position, height, [paint="white", alignment="start"]` | `true`; retained vector glyphs |
@@ -127,7 +143,9 @@ Numeric event fields are kind/control ID/value ID/(canonical value, revision, pl
 
 The [effects reference](Special-Effects.md) gives the shared PB/mod effect grammar, numeric descriptor, defaults and limits. World contexts support depth layers and projection rays; HUD contexts accept the planar subset and reject world-only settings. Canonical items submit before their optional embellishments. Effects capabilities are `hologram-effects`, `procedural-particles` and `hologram-transitions`; numeric capabilities are `constrained-controls`, `values-cas` and `cooperative-drag`.
 
-Current safety bounds from [ModClientDefinitions.cs](../../Mod/Data/Scripts/HoloMap/ModClientDefinitions.cs) and [ModClientInteractions.cs](../../Mod/Data/Scripts/HoloMap/ModClientInteractions.cs): 16 owners, 16 contexts/owner, 64 items, regions, numeric values and controls/context, and separate bounded 64-entry event queues; 8,192 retained points and 8,192 retained primitives/owner. A mesh still respects the common 2,048-point/4,096-primitive item bound. IDs are 1–64 characters without control characters. Numeric progress uses at most 63 slots, reserving the 64th for a terminal event; excess terminal accumulation can drop the oldest. Draw budgets are configurable within admitted bounds; geometry bounds limit retained memory separately.
+Aggregate geometry allowances default to **unlimited**. Use `geometry-limit(points, primitives)` or `HdrModApi.GeometryLimit` to select finite allowances, and `geometry-limit-settings` / `GeometrySettings` to read them. Zero disables each allowance independently. Finite fitting includes mapped artwork and cached source geometry; lowering below existing artwork is rejected atomically, while a permitted change retires overflowing source caches.
+
+Structural bounds from [ModClientDefinitions.cs](../../Mod/Data/Scripts/HoloMap/ModClientDefinitions.cs) and [ModClientInteractions.cs](../../Mod/Data/Scripts/HoloMap/ModClientInteractions.cs) remain separate: 16 owners, 16 contexts/owner, 64 items, regions, numeric values and controls/context, and bounded 64-entry event queues. A mesh respects the common 2,048-point/4,096-primitive item format. IDs are 1–64 characters without control characters. Numeric progress uses at most 63 slots, reserving the 64th for a terminal event; excess terminal accumulation can drop the oldest. Per-frame draw work has its own configurable allowance.
 
 The shared mod primitive budget and each owner's limit are also bounded by the viewer's global `/hdr work` allowance. Eligible powered nearby PB content or active block UI focus reserves a block share: mod contexts receive at most half the global grant, rounded up. Otherwise the mod category can use the full grant. Only submitted work is charged; unused mod grant flows to block drawing. Active owners/contexts share the mod allocation. `/hdr off` disables local HDR output. No consumer may increase the viewer's global allowance through this service.
 
@@ -221,6 +239,26 @@ General protocol 2 refresh accepts .1–60 Hz, then applies declaration/client l
 | `source-demand-any` | `providerId, sourceId` | Same tuple aggregated across matching anchors/callers |
 
 Missing/hidden/offscreen demand returns `(0,0,0,false)`. Demand combines visible consumers and bounds effective dimensions; it is **not** permission evidence, acquisition configuration or a promise of GPU completion. Current ordinary image demand is bounded to 2,048 per side/1,048,576 pixels; wide native source requests use a 4,096-side/8,388,608-pixel path, before further provider/GPU allocation caps. See [AdaptiveScreens.cs](../../Mod/Data/Scripts/HoloMap/AdaptiveScreens.cs) and [DisplayLod.cs](../../Mod/Data/Scripts/HoloMap/DisplayLod.cs).
+
+### Opt-in client-local source consumers
+
+Core 0.9.11 adds `local-mod-native-consumers(1, endpoint)` to the display-source service. A currently registered protocol-1/2 provider passes its **exact registered delegate** to opt into local mod contexts. HDR Client Renderer 0.9.14 negotiates the same extension for its native providers. Success returns `Func<object,object[]>`, a resolver for current opaque Core-owned bindings; failure returns `false`.
+
+After negotiation, local frame calls use `frame(binding, width, height)`, `valid(binding, evidence)` and `release(evidence)`. Frame payloads retain the existing protocol-1 mesh and protocol-2 image/material formats. Legacy PB calls retain their original caller/screen arguments. A local binding is not a PB entity ID and never enters scene replication.
+
+The resolver returns a detached ten-field descriptor, or `null` when the owner/context/slot, endpoint generation, visibility, anchor or source access is stale:
+
+| Index | Value |
+| --- | --- |
+| 0–1 | Schema `1`, caller kind `"local-mod"` |
+| 2 | `MyTuple<string,long,long,long,long>` owner ID, owner generation, context handle, context revision, source revision |
+| 3–5 | Actual `IMyTerminalBlock` anchor, provider ID, source ID |
+| 6 | Actual `IMyTerminalBlock[]` source identities; custom providers receive the anchor and validate their own source |
+| 7 | `MyTuple<int,int,double,bool>` requested width, height, refresh ceiling, active demand |
+| 8 | Provider data: camera panorama/settings profile tuple, existing portal descriptor, or `null` |
+| 9 | Opaque current source-declaration identity |
+
+Provider replacement/unregistration, source retirement, owner replacement and context cleanup revoke these bindings and release owned frames. Custom providers still own their data permissions. A registered provider that has not opted in reports `Unsupported consumer capability`; absent native registration reports the required plugin. A local portal window consumes an existing declared portal's texture; it does not relocate the transported entry. Exact implementation: [Core bridge](../../Mod/Data/Scripts/HoloMap/ModClientNativeSources.cs), [native consumer registry](../../OptionalPlugins/HDRClientRenderer/Source/ModSourceConsumers.cs).
 
 ### Specialized native-provider service extensions
 

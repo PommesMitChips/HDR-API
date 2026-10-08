@@ -14,12 +14,13 @@ namespace Hdr.Html
 
     public sealed class HtmlPainterLimits
     {
-        public int MaxItems = 64, MaxPoints = 8192, MaxPrimitives = 8192;
+        // Zero is the explicit unlimited aggregate geometry allowance.
+        public int MaxItems = 64, MaxPoints = 0, MaxPrimitives = 0;
         public int MaxSvgCharacters = 65536, MaxOperations = 512;
         public int SvgOperationsPerChunk = 8, CurveSegments = 12;
         internal void Validate()
         {
-            if (MaxItems < 1 || MaxItems > 64 || MaxPoints < 1 || MaxPoints > 8192 || MaxPrimitives < 1 || MaxPrimitives > 8192 || MaxSvgCharacters < 1 || MaxSvgCharacters > 65536 || MaxOperations < 1 || MaxOperations > 512 || SvgOperationsPerChunk < 1 || SvgOperationsPerChunk > 32 || CurveSegments < 2 || CurveSegments > 32) throw new ArgumentException("HTML painter limits exceed the current HDR grants.");
+            if (MaxItems < 1 || MaxItems > 64 || MaxPoints < 0 || MaxPrimitives < 0 || MaxSvgCharacters < 1 || MaxSvgCharacters > 65536 || MaxOperations < 1 || MaxOperations > 512 || SvgOperationsPerChunk < 1 || SvgOperationsPerChunk > 32 || CurveSegments < 2 || CurveSegments > 32) throw new ArgumentException("HTML painter limits require nonnegative aggregate allowances and bounded structural grants.");
         }
         internal HtmlPainterLimits Snapshot(){return new HtmlPainterLimits {MaxItems=MaxItems,MaxPoints=MaxPoints,MaxPrimitives=MaxPrimitives,MaxSvgCharacters=MaxSvgCharacters,MaxOperations=MaxOperations,SvgOperationsPerChunk=SvgOperationsPerChunk,CurveSegments=CurveSegments};}
     }
